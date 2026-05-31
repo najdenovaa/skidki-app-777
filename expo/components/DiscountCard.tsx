@@ -87,14 +87,22 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
             <Text style={styles.discountNumber}>−{discount.percent}%</Text>
           </View>
 
-          {/* Timers — smooth gradient darkening */}
-          <LinearGradient
-            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.timersPill}
-            pointerEvents="box-none"
-          >
+          {/* Timers — smooth gradient darkening on all 4 sides */}
+          <View style={styles.timersPill} pointerEvents="box-none">
+            <LinearGradient
+              colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0)"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.timerGradient}
+              pointerEvents="none"
+            />
+            <LinearGradient
+              colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0)"]}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={styles.timerGradient}
+              pointerEvents="none"
+            />
             <Text style={styles.timerElapsed}>
               {elapsed}
             </Text>
@@ -106,7 +114,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
                 </Text>
               </>
             )}
-          </LinearGradient>
+          </View>
 
           {/* Bookmark */}
           <Pressable onPress={onSave} hitSlop={10} style={styles.bookmarkBtn}>
@@ -303,7 +311,7 @@ const styles = StyleSheet.create({
   },
   discountNumber: { color: Colors.text, fontSize: 18, letterSpacing: -0.5, fontWeight: "700" as const },
 
-  // ── Timers pill (smooth gradient darkening, no sharp edges) ──
+  // ── Timers pill (smooth gradient darkening on all 4 sides) ──
   timersPill: {
     position: "absolute",
     top: 12,
@@ -313,6 +321,11 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     gap: 4,
     alignItems: "center",
+    overflow: "hidden",
+  },
+  timerGradient: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
   },
   timerElapsed: {
     fontSize: 12,

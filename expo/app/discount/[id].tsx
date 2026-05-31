@@ -176,13 +176,21 @@ export default function DiscountDetailScreen() {
                 <View style={styles.discountBadge}>
                   <Text style={styles.discountNumber}>−{discount.percent}%</Text>
                 </View>
-                <LinearGradient
-                  colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={styles.timersPill}
-                  pointerEvents="box-none"
-                >
+                <View style={styles.timersPill} pointerEvents="box-none">
+                  <LinearGradient
+                    colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0)"]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={styles.timerGradient}
+                    pointerEvents="none"
+                  />
+                  <LinearGradient
+                    colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0)"]}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={styles.timerGradient}
+                    pointerEvents="none"
+                  />
                   <View style={styles.timerRow}>
                     <Clock size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
                     <Text style={styles.timerText}>{elapsed}</Text>
@@ -193,7 +201,7 @@ export default function DiscountDetailScreen() {
                       <Text style={styles.timerTextExpiry}>{expiresIn}</Text>
                     </>
                   )}
-                </LinearGradient>
+                </View>
               </View>
             </ImageCarousel>
           </View>
@@ -476,13 +484,18 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     letterSpacing: -0.7,
   },
-  // ── Timers pill (smooth gradient darkening, no sharp edges) ──
+  // ── Timers pill (smooth gradient darkening on all 4 sides) ──
   timersPill: {
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 7,
     gap: 4,
     alignItems: "center",
+    overflow: "hidden",
+  },
+  timerGradient: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
   },
   timerRow: {
     flexDirection: "row",
