@@ -3,7 +3,10 @@
     {
       "name": "Скидки",
       "path": "expo",
-      "framework": "react-native"
+      "framework": "react-native",
+      "settings": {
+        "displayName": "Скидки"
+      }
     }
   ],
   "$schema": "https://rork.com/schema/rork.json"
