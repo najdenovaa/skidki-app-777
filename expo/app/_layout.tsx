@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { CityPicker } from "@/components/CityPicker";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Colors from "@/constants/colors";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { DiscountsProvider } from "@/providers/DiscountsProvider";
@@ -153,9 +154,11 @@ export default function RootLayout() {
           <AuthProvider>
             <PushProvider>
               <DiscountsProvider>
-                <StatusBar style="light" />
-                <GuestCityGate />
-                <RootLayoutNav />
+                <ErrorBoundary>
+                  <StatusBar style="light" />
+                  <GuestCityGate />
+                  <RootLayoutNav />
+                </ErrorBoundary>
               </DiscountsProvider>
             </PushProvider>
           </AuthProvider>
