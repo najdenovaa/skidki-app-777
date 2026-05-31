@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Bell, MapPin, Tag } from "lucide-react-native";
+import { Bell, LifeBuoy, MapPin, Tag } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
@@ -58,6 +58,21 @@ function FeedHeader() {
     router.push("/notifications");
   }, [isGuest, router]);
 
+  const onSupportPress = useCallback(() => {
+    if (isGuest) {
+      Alert.alert(
+        "Требуется авторизация",
+        "Войди или зарегистрируйся, чтобы написать в поддержку",
+        [
+          { text: "Войти", onPress: () => router.push("/auth/login") },
+          { text: "Позже", style: "cancel" as const },
+        ]
+      );
+      return;
+    }
+    router.push("/support");
+  }, [isGuest, router]);
+
   return (
     <>
       <View style={styles.headerRow} pointerEvents="box-none">
@@ -75,6 +90,9 @@ function FeedHeader() {
           </Pressable>
         </View>
         <View style={styles.headerActions}>
+          <Pressable hitSlop={10} style={styles.iconBtn} onPress={onSupportPress}>
+            <LifeBuoy size={22} color={Colors.text} strokeWidth={2} />
+          </Pressable>
           <Pressable hitSlop={10} style={styles.iconBtn} onPress={onBellPress}>
             <Bell size={24} color={Colors.text} strokeWidth={2} />
             <View style={styles.notifyDot} />

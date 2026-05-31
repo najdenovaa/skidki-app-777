@@ -9,6 +9,7 @@ export interface User {
   avatar: string;
   createdAt: number;
   role: 'user' | 'admin';
+  displayId?: number;
 }
 
 export interface AuthState {

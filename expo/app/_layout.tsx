@@ -137,6 +137,38 @@ function RootLayoutNav() {
           animation: "slide_from_bottom",
         }}
       />
+      <Stack.Screen
+        name="support"
+        options={{
+          title: "Поддержка",
+          presentation: "modal",
+          animation: "slide_from_bottom",
+        }}
+      />
+      <Stack.Screen
+        name="admin/user/[id]"
+        options={{
+          title: "Пользователь",
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.text,
+        }}
+      />
+      <Stack.Screen
+        name="admin/discount/[id]"
+        options={{
+          title: "Редактировать",
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.text,
+        }}
+      />
+      <Stack.Screen
+        name="admin/support/[userId]"
+        options={{
+          title: "Чат поддержки",
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.text,
+        }}
+      />
     </Stack>
     </>
   );

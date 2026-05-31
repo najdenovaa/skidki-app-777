@@ -3,7 +3,9 @@ import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import type {
   AdminDiscount,
   AdminStats,
+  AdminSupportThread,
   AdminUser,
+  AdminUserDetail,
   ApiResponse,
   CreateDiscountDTO,
   UpdateDiscountDTO,
@@ -13,6 +15,7 @@ import type {
   NotificationSubscription,
   SignInDTO,
   SignUpDTO,
+  SupportMessage,
   UpdateProfileDTO,
 } from "@/types/api";
 import type { Category, Comment, Discount } from "@/types/discount";
@@ -411,6 +414,35 @@ export const api = {
     }
   },
 
+  // ═══ Support ════════════════════════════════════════════════════════
+
+  async getSupport(): Promise<ApiResponse<SupportMessage[]>> {
+    try {
+      const data = await http.get<SupportMessage[]>("/support");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async sendSupportMessage(body: string): Promise<ApiResponse<SupportMessage>> {
+    try {
+      const data = await http.post<SupportMessage>("/support/messages", { body });
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getSupportUnread(): Promise<ApiResponse<{ count: number }>> {
+    try {
+      const data = await http.get<{ count: number }>("/support/unread");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
   // ═══ Admin ═══════════════════════════════════════════════════════════
 
   async getAdminStats(): Promise<ApiResponse<AdminStats>> {
@@ -422,10 +454,29 @@ export const api = {
     }
   },
 
-  async getAdminDiscounts(): Promise<ApiResponse<AdminDiscount[]>> {
+  async getAdminDiscounts(search?: string): Promise<ApiResponse<AdminDiscount[]>> {
     try {
-      const data = await http.get<AdminDiscount[]>("/admin/discounts");
+      const qs = search ? `?search=${encodeURIComponent(search)}&limit=50` : "?limit=50";
+      const data = await http.get<AdminDiscount[]>(`/admin/discounts${qs}`);
       return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getAdminDiscount(id: string): Promise<ApiResponse<Discount>> {
+    try {
+      const data = await http.get<Discount>(`/admin/discounts/${String(id)}`);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async updateAdminDiscount(id: string, data: Partial<UpdateDiscountDTO>): Promise<ApiResponse<Discount>> {
+    try {
+      const discount = await http.patch<Discount>(`/admin/discounts/${String(id)}`, data);
+      return ok(discount);
     } catch (err) {
       return handleError(err);
     }
@@ -440,9 +491,73 @@ export const api = {
     }
   },
 
-  async getAdminUsers(): Promise<ApiResponse<AdminUser[]>> {
+  async getAdminUsers(search?: string): Promise<ApiResponse<AdminUser[]>> {
     try {
-      const data = await http.get<AdminUser[]>("/admin/users");
+      const qs = search ? `?search=${encodeURIComponent(search)}&limit=50` : "?limit=50";
+      const data = await http.get<AdminUser[]>(`/admin/users${qs}`);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getAdminUser(id: string): Promise<ApiResponse<AdminUserDetail>> {
+    try {
+      const data = await http.get<AdminUserDetail>(`/admin/users/${String(id)}`);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async updateAdminUser(id: string, data: { name?: string; email?: string; role?: string; city?: string; cityId?: number; regionId?: string; username?: string }): Promise<ApiResponse<AdminUser>> {
+    try {
+      const user = await http.patch<AdminUser>(`/admin/users/${String(id)}`, data);
+      return ok(user);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async resetAdminPassword(id: string, password: string): Promise<ApiResponse<null>> {
+    try {
+      await http.post(`/admin/users/${String(id)}/reset-password`, { password });
+      return ok(null);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async deleteAdminUser(id: string): Promise<ApiResponse<null>> {
+    try {
+      await http.del(`/admin/users/${String(id)}`);
+      return ok(null);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getAdminSupportThreads(): Promise<ApiResponse<AdminSupportThread[]>> {
+    try {
+      const data = await http.get<AdminSupportThread[]>("/admin/support/threads");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getAdminSupportChat(userId: string): Promise<ApiResponse<SupportMessage[]>> {
+    try {
+      const data = await http.get<SupportMessage[]>(`/admin/support/${String(userId)}`);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async sendAdminSupportReply(userId: string, body: string): Promise<ApiResponse<SupportMessage>> {
+    try {
+      const data = await http.post<SupportMessage>(`/admin/support/${String(userId)}/messages`, { body });
       return ok(data);
     } catch (err) {
       return handleError(err);
