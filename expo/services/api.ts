@@ -309,6 +309,22 @@ export const api = {
 
   // ═══ Media ══════════════════════════════════════════════════════════════
 
+  async uploadAvatar(uri: string): Promise<ApiResponse<{ url: string }>> {
+    try {
+      const formData = new FormData();
+      formData.append("avatar", {
+        uri,
+        type: "image/jpeg",
+        name: "avatar.jpg",
+      } as unknown as Blob);
+
+      const data = await http.upload<{ url: string }>("/media/avatar", formData);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
   async uploadImage(uri: string): Promise<ApiResponse<{ url: string }>> {
     try {
       const formData = new FormData();

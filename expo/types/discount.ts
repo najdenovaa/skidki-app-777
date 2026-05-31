@@ -49,4 +49,5 @@ export interface Comment {
   author: Author;
   text: string;
   postedAt: number;
+  createdAt?: number;
 }

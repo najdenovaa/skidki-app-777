@@ -130,8 +130,8 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
   );
 
   const myPosts = useMemo<Discount[]>(
-    () => discounts.filter((d) => d.id.startsWith("user-")),
-    [discounts]
+    () => (user ? discounts.filter((d) => d.author.id === user.id) : []),
+    [discounts, user]
   );
 
   return useMemo(

@@ -84,8 +84,8 @@ function AuthenticatedProfile() {
   }, [deleteAccount, router]);
 
   const handleEditProfile = useCallback(() => {
-    Alert.alert("Скоро", "Редактирование профиля появится в следующем обновлении.");
-  }, []);
+    router.push("/edit-profile");
+  }, [router]);
 
   if (!user) return null;
 
@@ -105,11 +105,13 @@ function AuthenticatedProfile() {
           />
           {/* Avatar + Identity */}
           <View style={styles.identity}>
-            <Image
-              source={{ uri: resolveImageUrl(user.avatar) }}
-              style={styles.avatar}
-              contentFit="cover"
-            />
+            <Pressable onPress={() => router.push("/edit-profile")}>
+              <Image
+                source={{ uri: resolveImageUrl(user.avatar) }}
+                style={styles.avatar}
+                contentFit="cover"
+              />
+            </Pressable>
             <Text style={styles.name}>{user.name}</Text>
             <Text style={styles.handle}>
               {user.username}

@@ -15,6 +15,7 @@ import {
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -60,7 +61,14 @@ export default function DiscountDetailScreen() {
     if (id) {
       incrementViews(id);
       api.getComments(id).then((res) => {
-        if (res.success && res.data) setComments(res.data);
+        if (res.success && res.data) {
+          setComments(
+            res.data.map((c) => ({
+              ...c,
+              postedAt: c.postedAt ?? c.createdAt ?? Date.now(),
+            }))
+          );
+        }
       });
     }
   }, [id, incrementViews]);
@@ -69,8 +77,22 @@ export default function DiscountDetailScreen() {
     const txt = comment.trim();
     if (!txt || !id) return;
     const res = await api.addComment(id, txt);
-    if (res.success && res.data) {
+    if (!res.success) {
+      Alert.alert("Ошибка", res.error ?? "Не удалось отправить");
+      return;
+    }
+    if (res.data) {
       setComments((cs) => [res.data!, ...cs]);
+    } else {
+      const reloadRes = await api.getComments(id);
+      if (reloadRes.success && reloadRes.data) {
+        setComments(
+          reloadRes.data.map((c) => ({
+            ...c,
+            postedAt: c.postedAt ?? c.createdAt ?? Date.now(),
+          }))
+        );
+      }
     }
     setComment("");
     impact();
