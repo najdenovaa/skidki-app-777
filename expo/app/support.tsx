@@ -4,17 +4,16 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
 import type { SupportMessage } from "@/types/api";
@@ -135,6 +134,8 @@ export default function SupportScreen() {
     []
   );
 
+  const insets = useSafeAreaInsets();
+
   if (isGuest) return null;
 
   return (
@@ -146,41 +147,38 @@ export default function SupportScreen() {
           headerTintColor: Colors.text,
         }}
       />
-      <SafeAreaView edges={["bottom"]} style={styles.safe}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.flex}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-        >
-          <FlatList
-            ref={flatRef}
-            data={messages}
-            keyExtractor={(m) => String(m.id)}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={() =>
-              flatRef.current?.scrollToEnd({ animated: false })
-            }
-            ListEmptyComponent={
-              loaded ? (
-                <View style={styles.empty}>
-                  <MessageCircle
-                    size={40}
-                    color={Colors.textMuted}
-                    strokeWidth={1.5}
-                  />
-                  <Text style={styles.emptyTitle}>Поддержка</Text>
-                  <Text style={styles.emptyText}>
-                    Напишите нам — ответим как можно скорее
-                  </Text>
-                </View>
-              ) : null
-            }
-          />
+      <View style={styles.flex}>
+        <FlatList
+          ref={flatRef}
+          data={messages}
+          keyExtractor={(m) => String(m.id)}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          onContentSizeChange={() =>
+            flatRef.current?.scrollToEnd({ animated: false })
+          }
+          ListEmptyComponent={
+            loaded ? (
+              <View style={styles.empty}>
+                <MessageCircle
+                  size={40}
+                  color={Colors.textMuted}
+                  strokeWidth={1.5}
+                />
+                <Text style={styles.emptyTitle}>Поддержка</Text>
+                <Text style={styles.emptyText}>
+                  Напишите нам — ответим как можно скорее
+                </Text>
+              </View>
+            ) : null
+          }
+        />
 
-          {/* Input bar */}
-          <View style={styles.inputBar}>
+        <KeyboardStickyFooter>
+          <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
             <TextInput
               style={styles.input}
               placeholder="Сообщение..."
@@ -190,6 +188,7 @@ export default function SupportScreen() {
               multiline
               maxLength={2000}
               textAlignVertical="center"
+              onFocus={() => setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100)}
             />
             <Pressable
               style={[
@@ -207,15 +206,14 @@ export default function SupportScreen() {
               />
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+        </KeyboardStickyFooter>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-  safe: { flex: 1 },
   flex: { flex: 1 },
 
   list: {

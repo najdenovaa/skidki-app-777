@@ -1,20 +1,19 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { SendHorizonal, ArrowUpLeft, User as UserIcon } from "lucide-react-native";
+import { SendHorizonal, User as UserIcon } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { api } from "@/services/api";
 import type { SupportMessage } from "@/types/api";
 import { formatDateTime } from "@/utils/time";
@@ -126,6 +125,8 @@ export default function AdminSupportChatScreen() {
     []
   );
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.root}>
       <Stack.Screen
@@ -144,29 +145,28 @@ export default function AdminSupportChatScreen() {
           ),
         }}
       />
-      <SafeAreaView edges={["bottom"]} style={styles.safe}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.flex}
-        >
-          <FlatList
-            ref={flatRef}
-            data={messages}
-            keyExtractor={(m) => String(m.id)}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={() =>
-              flatRef.current?.scrollToEnd({ animated: false })
-            }
-            ListEmptyComponent={
-              <View style={styles.empty}>
-                <Text style={styles.emptyText}>Нет сообщений</Text>
-              </View>
-            }
-          />
+      <View style={styles.flex}>
+        <FlatList
+          ref={flatRef}
+          data={messages}
+          keyExtractor={(m) => String(m.id)}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          onContentSizeChange={() =>
+            flatRef.current?.scrollToEnd({ animated: false })
+          }
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>Нет сообщений</Text>
+            </View>
+          }
+        />
 
-          <View style={styles.inputBar}>
+        <KeyboardStickyFooter>
+          <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
             <TextInput
               style={styles.input}
               placeholder="Ответить..."
@@ -176,6 +176,7 @@ export default function AdminSupportChatScreen() {
               multiline
               maxLength={2000}
               textAlignVertical="center"
+              onFocus={() => setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100)}
             />
             <Pressable
               style={[
@@ -193,15 +194,14 @@ export default function AdminSupportChatScreen() {
               />
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+        </KeyboardStickyFooter>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
-  safe: { flex: 1 },
   flex: { flex: 1 },
   headerBtn: {
     width: 36,
