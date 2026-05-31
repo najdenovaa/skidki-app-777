@@ -126,6 +126,17 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
     []
   );
 
+  const updatePost = useCallback(
+    async (id: string, data: Record<string, unknown>): Promise<boolean> => {
+      const res = await api.updateDiscount(id, data as Parameters<typeof api.updateDiscount>[1]);
+      if (res.success && res.data) {
+        patchDiscount(id, res.data);
+      }
+      return res.success;
+    },
+    [patchDiscount]
+  );
+
   const incrementViews = useCallback(
     async (id: string) => {
       const res = await api.incrementView(id);
@@ -169,6 +180,7 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       toggleSave,
       toggleGoing,
       addPost,
+      updatePost,
       incrementViews,
       deletePost,
       savedList,
@@ -185,6 +197,7 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       toggleSave,
       toggleGoing,
       addPost,
+      updatePost,
       incrementViews,
       deletePost,
       savedList,

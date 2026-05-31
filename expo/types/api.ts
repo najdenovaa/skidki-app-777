@@ -1,5 +1,7 @@
 import type { Category } from "./discount";
 
+export type UpdateDiscountDTO = CreateDiscountDTO;
+
 export interface CreateDiscountDTO {
   title: string;
   category: Category;

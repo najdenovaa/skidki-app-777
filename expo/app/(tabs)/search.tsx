@@ -103,8 +103,8 @@ export default function SearchScreen() {
                 <Open2GisLink
                   lat={d.lat}
                   lng={d.lng}
-                  label={d.placeName || d.title}
                   address={d.address}
+                  city={d.cityName}
                 />
               </View>
             );

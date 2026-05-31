@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Check, MapPin, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -37,10 +37,11 @@ const EXPIRY_OPTIONS: { id: "today" | "date" | "stock"; label: string; hours: nu
 
 const PERCENT_PRESETS: number[] = [10, 20, 30, 50, 70];
 
-export default function PostModalScreen() {
+export default function EditPostScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { user, guestCity } = useAuth();
-  const { addPost } = useDiscounts();
+  const { discounts, updatePost } = useDiscounts();
 
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState<string>("");
@@ -57,10 +58,36 @@ export default function PostModalScreen() {
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [expiry, setExpiry] = useState<"today" | "date" | "stock">("today");
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Init city from profile / guest on mount
+  // Load existing discount data
   useEffect(() => {
-    if (user?.cityId) {
+    if (!id) return;
+    const d = discounts.find((x) => x.id === id);
+    if (!d) {
+      Alert.alert("Ошибка", "Скидка не найдена");
+      router.back();
+      return;
+    }
+    setTitle(d.title);
+    setCategory(d.category);
+    setPercentInput(String(d.percent));
+    if (d.originalPrice !== undefined) setOriginalPrice(String(d.originalPrice));
+    if (d.discountedPrice !== undefined) setDiscountedPrice(String(d.discountedPrice));
+    if (d.placeName) setPlaceName(d.placeName);
+    if (d.address) setAddress(d.address);
+    if (d.note) setNote(d.note);
+    if (d.lat) setLat(d.lat);
+    if (d.lng) setLng(d.lng);
+    if (d.images) setImages(d.images);
+    if (d.cityName && d.cityId) {
+      setSelectedCity({
+        cityId: String(d.cityId),
+        cityName: d.cityName,
+        regionId: "",
+        regionName: "",
+      });
+    } else if (user?.cityId) {
       setSelectedCity({
         cityId: String(user.cityId),
         cityName: user.city,
@@ -70,12 +97,10 @@ export default function PostModalScreen() {
     } else if (guestCity) {
       setSelectedCity(guestCity);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    setLoading(false);
+  }, [id, discounts]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-fill city from user profile
   const displayCity = selectedCity?.cityName || user?.city;
-  const displayRegion = selectedCity?.regionName;
-
   const canPublish = title.trim().length > 0;
 
   const effectivePercent = useMemo(() => {
@@ -124,14 +149,10 @@ export default function PostModalScreen() {
       setLng(longitude);
 
       let addr = "";
-
-      // Server reverse geocode first (better address with house number)
       const serverRes = await api.reverseGeocode(latitude, longitude);
       if (serverRes.success && serverRes.data?.address) {
         addr = serverRes.data.address;
       }
-
-      // Device fallback — streetNumber + street
       if (!addr) {
         const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
         if (geo.length > 0) {
@@ -149,7 +170,7 @@ export default function PostModalScreen() {
   }, []);
 
   const onSubmit = useCallback(async () => {
-    if (!title.trim()) {
+    if (!title.trim() || !id) {
       Alert.alert("Заполни название", "Расскажи, что за скидка");
       return;
     }
@@ -157,16 +178,18 @@ export default function PostModalScreen() {
     const orig = parseFloat(originalPrice);
     const disc = parseFloat(discountedPrice);
 
-    // Upload images first
-    let imageUrls: string[] | undefined;
-    if (images.length > 0) {
-      const uploadRes = await api.uploadImages(images);
+    // Upload new images (local URIs only — skip already-uploaded URLs)
+    const newUris = images.filter((uri) => !uri.startsWith("http"));
+    const existingUrls = images.filter((uri) => uri.startsWith("http"));
+    let imageUrls: string[] = [...existingUrls];
+
+    if (newUris.length > 0) {
+      const uploadRes = await api.uploadImages(newUris);
       if (uploadRes.success && uploadRes.data) {
-        imageUrls = uploadRes.data.urls;
+        imageUrls = [...existingUrls, ...uploadRes.data.urls];
       }
     }
 
-    // Geocode address if user typed it manually
     let finalLat = lat;
     let finalLng = lng;
     if (address.trim() && !addressFromGps) {
@@ -177,15 +200,13 @@ export default function PostModalScreen() {
       }
     }
 
-    const cityId = selectedCity?.cityId ?? (user?.cityId ? String(user.cityId) : guestCity?.cityId);
-
-    const res = await api.createDiscount({
+    const ok = await updatePost(id, {
       title: title.trim(),
       category,
       percent: effectivePercent || 10,
       originalPrice: !isNaN(orig) ? orig : undefined,
       discountedPrice: !isNaN(disc) ? disc : undefined,
-      images: imageUrls && imageUrls.length > 0 ? imageUrls : undefined,
+      images: imageUrls.length > 0 ? imageUrls : undefined,
       locationName: address || placeName || "Моё место",
       lat: finalLat ?? 0,
       lng: finalLng ?? 0,
@@ -193,32 +214,38 @@ export default function PostModalScreen() {
       address: address.trim() || undefined,
       note: note.trim() || undefined,
       expiresAt: Date.now() + opt.hours * 60 * 60 * 1000,
-      cityId,
+      cityId: selectedCity?.cityId ?? (user?.cityId ? String(user.cityId) : guestCity?.cityId),
     });
 
-    if (res.success) {
-      // Refresh feed via provider
-      addPost(res.data!);
+    if (ok) {
       if (Platform.OS !== "web") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       }
       router.back();
     } else {
-      Alert.alert("Ошибка", res.error ?? "Не удалось опубликовать");
+      Alert.alert("Ошибка", "Не удалось сохранить");
     }
-  }, [title, category, images, address, placeName, note, lat, lng, addressFromGps, displayCity, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
+  }, [title, category, images, address, placeName, note, lat, lng, addressFromGps, displayCity, effectivePercent, originalPrice, discountedPrice, expiry, router, selectedCity, user, guestCity, id, updatePost]);
+
+  if (loading) {
+    return (
+      <View style={[styles.root, { alignItems: "center", justifyContent: "center" }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <Text style={{ color: Colors.textMuted }}>Загрузка...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Modal header */}
       <SafeAreaView edges={["top"]} style={styles.headerSafe}>
         <View style={styles.headerRow}>
           <Pressable onPress={() => router.back()} hitSlop={10} style={styles.headerBtn}>
             <X size={22} color={Colors.text} strokeWidth={2} />
           </Pressable>
-          <Text style={styles.headerTitle}>Новая скидка</Text>
+          <Text style={styles.headerTitle}>Редактировать</Text>
           <Pressable
             onPress={onSubmit}
             disabled={!canPublish}
@@ -226,7 +253,7 @@ export default function PostModalScreen() {
             style={[styles.publishBtn, !canPublish && styles.publishBtnDisabled]}
           >
             <Text style={[styles.publishBtnText, !canPublish && styles.publishBtnTextDisabled]}>
-              Опубликовать
+              Сохранить
             </Text>
           </Pressable>
         </View>
@@ -235,7 +262,6 @@ export default function PostModalScreen() {
       <KeyboardSafeScrollView
         contentContainerStyle={styles.scroll}
       >
-          {/* Images — horizontal preview strip */}
           <View style={styles.imagesSection}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imagesRow}>
               {images.map((uri, i) => (
@@ -429,7 +455,7 @@ export default function PostModalScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 14, paddingHorizontal: 14 }}>
                 <MapPin size={16} color={displayCity ? Colors.primary : Colors.textMuted} strokeWidth={2} />
                 <Text style={[styles.input, { flex: 1, paddingVertical: 0 }, !displayCity && { color: Colors.textMuted }]}>
-                  {displayCity ? `${displayCity}${displayRegion ? `, ${displayRegion}` : ""}` : "Выбери город"}
+                  {displayCity ? `${displayCity}${selectedCity?.regionName ? `, ${selectedCity.regionName}` : ""}` : "Выбери город"}
                 </Text>
               </View>
             </Pressable>

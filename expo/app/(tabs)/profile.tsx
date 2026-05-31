@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Bell, MapPin, Shield, Trash2, User as UserIcon } from "lucide-react-native";
+import { Bell, MapPin, Pencil, Shield, Trash2, User as UserIcon } from "lucide-react-native";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Alert,
@@ -214,6 +214,7 @@ function AuthenticatedProfile() {
                 discount={d}
                 onPress={() => router.push(`/discount/${d.id}`)}
                 onDelete={tab === "posts" ? () => handleDeletePost(d) : undefined}
+                onEdit={tab === "posts" ? () => router.push(`/edit-post?id=${d.id}`) : undefined}
               />
             ))}
           </View>
@@ -296,10 +297,12 @@ function Tile({
   discount,
   onPress,
   onDelete,
+  onEdit,
 }: {
   discount: Discount;
   onPress: () => void;
   onDelete?: () => void;
+  onEdit?: () => void;
 }) {
   return (
     <Pressable onPress={onPress} style={styles.tile}>
@@ -318,6 +321,15 @@ function Tile({
           hitSlop={8}
         >
           <Trash2 size={14} color="#fff" strokeWidth={2} />
+        </Pressable>
+      ) : null}
+      {onEdit ? (
+        <Pressable
+          onPress={onEdit}
+          style={styles.tileEditBtn}
+          hitSlop={8}
+        >
+          <Pencil size={12} color="#fff" strokeWidth={2} />
         </Pressable>
       ) : null}
       <View style={styles.tileBody}>
@@ -522,6 +534,17 @@ const styles = StyleSheet.create({
     position: "absolute" as const,
     top: 8,
     right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  tileEditBtn: {
+    position: "absolute" as const,
+    top: 8,
+    right: 42,
     width: 28,
     height: 28,
     borderRadius: 14,

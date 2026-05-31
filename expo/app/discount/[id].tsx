@@ -30,6 +30,8 @@ import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
+import { shareDiscount } from "@/utils/share";
+import { useAuth } from "@/providers/AuthProvider";
 import { resolveImageUrl } from "@/utils/image";
 import { CATEGORY_MAP } from "@/constants/categories";
 import { useTick } from "@/hooks/useTick";
@@ -54,6 +56,7 @@ export default function DiscountDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const discount = useDiscount(id ?? "");
   const { toggleLike, toggleSave, toggleGoing, incrementViews } = useDiscounts();
+  const { user } = useAuth();
   const [comment, setComment] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
 
@@ -147,7 +150,7 @@ export default function DiscountDetailScreen() {
                         fill={discount.saved ? Colors.primary : "transparent"}
                       />
                     </Pressable>
-                    <Pressable style={styles.headerBtn} hitSlop={12}>
+                    <Pressable style={styles.headerBtn} hitSlop={12} onPress={() => shareDiscount({ title: discount.title, address: discount.address, placeName: discount.placeName, originalPrice: discount.originalPrice, discountedPrice: discount.discountedPrice, note: discount.note })}>
                       <Share2 size={20} color={Colors.text} strokeWidth={2} />
                     </Pressable>
                   </View>
@@ -320,7 +323,7 @@ export default function DiscountDetailScreen() {
                 <MessageCircle size={22} color={Colors.textMuted} strokeWidth={2} />
                 <Text style={styles.actionLabel}>{discount.comments}</Text>
               </Pressable>
-              <Pressable style={styles.actionBtn} hitSlop={8}>
+              <Pressable style={styles.actionBtn} hitSlop={8} onPress={() => shareDiscount({ title: discount.title, address: discount.address, placeName: discount.placeName, originalPrice: discount.originalPrice, discountedPrice: discount.discountedPrice, note: discount.note })}>
                 <Share2 size={22} color={Colors.textMuted} strokeWidth={2} />
               </Pressable>
             </View>
@@ -344,8 +347,8 @@ export default function DiscountDetailScreen() {
               <Open2GisLink
                 lat={discount.lat}
                 lng={discount.lng}
-                label={discount.placeName || discount.title}
                 address={discount.address}
+                city={discount.cityName}
               />
             </View>
 

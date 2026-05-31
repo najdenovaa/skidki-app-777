@@ -8,14 +8,14 @@ import { openIn2Gis } from "@/utils/maps";
 interface Props {
   lat?: number;
   lng?: number;
-  label?: string;
   address?: string;
+  city?: string;
 }
 
-export function Open2GisLink({ lat, lng, label, address }: Props) {
+export function Open2GisLink({ lat, lng, address, city }: Props) {
   return (
     <Pressable
-      onPress={() => openIn2Gis({ lat, lng, label, address })}
+      onPress={() => openIn2Gis({ lat, lng, address, city })}
       style={styles.btn}
     >
       <Navigation size={14} color={Colors.primary} strokeWidth={2} />

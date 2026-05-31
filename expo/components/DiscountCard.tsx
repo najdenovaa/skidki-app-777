@@ -176,6 +176,12 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
               </View>
               <Text style={styles.metaTime}>{formatTimeAgo(discount.postedAt)}</Text>
             </View>
+            {discount.cityName ? (
+              <View style={styles.cityRow}>
+                <MapPin size={12} color={Colors.textMuted} strokeWidth={2} />
+                <Text style={styles.cityText}>{discount.cityName}</Text>
+              </View>
+            ) : null}
 
             {/* Prices */}
             {discount.discountedPrice !== undefined && (

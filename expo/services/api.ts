@@ -6,6 +6,7 @@ import type {
   AdminUser,
   ApiResponse,
   CreateDiscountDTO,
+  UpdateDiscountDTO,
   GeoCity,
   GeoRegion,
   NotificationSettings,
@@ -150,6 +151,18 @@ export const api = {
   ): Promise<ApiResponse<Discount>> {
     try {
       const discount = await http.post<Discount>("/discounts", data);
+      return ok(discount);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async updateDiscount(
+    id: string,
+    data: UpdateDiscountDTO
+  ): Promise<ApiResponse<Discount>> {
+    try {
+      const discount = await http.patch<Discount>(`/discounts/${String(id)}`, data);
       return ok(discount);
     } catch (err) {
       return handleError(err);
