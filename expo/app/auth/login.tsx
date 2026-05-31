@@ -3,8 +3,6 @@ import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -14,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { useAuth } from "@/providers/AuthProvider";
 import type { SignInError } from "@/providers/AuthProvider";
 
@@ -53,11 +52,9 @@ export default function LoginScreen() {
   return (
     <View style={styles.root}>
       <SafeAreaView edges={["top"]} style={styles.safe}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1 }}
+        <KeyboardSafeScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24 }}
         >
-          <View style={styles.content}>
             {/* Logo */}
             <View style={styles.logoWrap}>
               <Text style={styles.logo}>Скидки</Text>
@@ -125,8 +122,7 @@ export default function LoginScreen() {
                 <Text style={styles.footerLink}>Зарегистрируйся</Text>
               </Pressable>
             </View>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardSafeScrollView>
       </SafeAreaView>
     </View>
   );

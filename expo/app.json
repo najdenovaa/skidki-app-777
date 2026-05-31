@@ -18,6 +18,7 @@
       "bundleIdentifier": "app.rork.dt64dnl55bin2kp4nhvjq"
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#071A10"
@@ -36,7 +37,8 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-notifications"
+      "expo-notifications",
+      "react-native-keyboard-controller"
     ],
     "experiments": {
       "typedRoutes": true

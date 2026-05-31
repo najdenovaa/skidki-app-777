@@ -6,15 +6,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+
+import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CityPicker } from "@/components/CityPicker";
@@ -127,15 +127,9 @@ export default function EditProfileScreen() {
         </View>
       </SafeAreaView>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
+      <KeyboardSafeScrollView
+        contentContainerStyle={styles.scroll}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
           {/* Avatar */}
           <Pressable onPress={pickAvatar} style={styles.avatarWrap}>
             <Image source={{ uri: avatar }} style={styles.avatar} contentFit="cover" />
@@ -169,8 +163,7 @@ export default function EditProfileScreen() {
               </View>
             </Pressable>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardSafeScrollView>
 
       <CityPicker
         visible={cityPickerOpen}

@@ -6,9 +6,9 @@ import { Camera, Check, MapPin, Navigation, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CityPicker } from "@/components/CityPicker";
+import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import {
   Alert,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -168,15 +168,9 @@ export default function PostModalScreen() {
         </View>
       </SafeAreaView>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
+      <KeyboardSafeScrollView
+        contentContainerStyle={styles.scroll}
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
           {/* Image */}
           <Pressable style={styles.imagePicker} onPress={pickImage}>
             {image ? (
@@ -354,8 +348,7 @@ export default function PostModalScreen() {
           </Field>
 
           <View style={{ height: 40 }} />
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardSafeScrollView>
 
       <CityPicker
         visible={cityPickerOpen}

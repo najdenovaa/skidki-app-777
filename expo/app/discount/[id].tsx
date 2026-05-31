@@ -16,10 +16,8 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -28,6 +26,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ImageCarousel } from "@/components/ImageCarousel";
+import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
+import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import Colors from "@/constants/colors";
 import { resolveImageUrl } from "@/utils/image";
@@ -115,14 +115,10 @@ export default function DiscountDetailScreen() {
     <View style={styles.root}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <KeyboardSafeScrollView
         style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 30 }}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        >
           {/* ── Hero carousel ── */}
           <View style={styles.heroWrap}>
             <ImageCarousel images={discount.images.map(resolveImageUrl)} height={300}>
@@ -368,9 +364,10 @@ export default function DiscountDetailScreen() {
               ))}
             </View>
           </View>
-        </ScrollView>
+        </KeyboardSafeScrollView>
 
-        {/* Comment input bar */}
+      {/* Comment input bar — sticky above keyboard */}
+      <KeyboardStickyFooter>
         <SafeAreaView edges={["bottom"]} style={styles.inputBar}>
           <View style={styles.inputBarInner}>
             <TextInput
@@ -392,7 +389,7 @@ export default function DiscountDetailScreen() {
             </Pressable>
           </View>
         </SafeAreaView>
-      </KeyboardAvoidingView>
+      </KeyboardStickyFooter>
     </View>
   );
 }
@@ -702,10 +699,6 @@ const styles = StyleSheet.create({
 
   // ── Comment input bar ──
   inputBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
     backgroundColor: Colors.background,
     paddingHorizontal: 16,
     paddingVertical: 10,

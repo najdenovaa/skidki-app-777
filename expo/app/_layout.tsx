@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { CityPicker } from "@/components/CityPicker";
 import Colors from "@/constants/colors";
@@ -138,18 +139,20 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <PushProvider>
-        <DiscountsProvider>
-          <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors.background }}>
-            <StatusBar style="light" />
-            <GuestCityGate />
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </DiscountsProvider>
-        </PushProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: Colors.background }}>
+      <KeyboardProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <PushProvider>
+              <DiscountsProvider>
+                <StatusBar style="light" />
+                <GuestCityGate />
+                <RootLayoutNav />
+              </DiscountsProvider>
+            </PushProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }

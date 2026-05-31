@@ -4,8 +4,6 @@ import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -16,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CityPicker } from "@/components/CityPicker";
 import Colors from "@/constants/colors";
+import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { useAuth } from "@/providers/AuthProvider";
 import type { SignUpError } from "@/providers/AuthProvider";
 import type { SelectedCity } from "@/types/api";
@@ -89,11 +88,9 @@ export default function RegisterScreen() {
         >
           <X size={22} color={Colors.textMuted} strokeWidth={2} />
         </Pressable>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={{ flex: 1 }}
+        <KeyboardSafeScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24 }}
         >
-          <View style={styles.content}>
             {/* Logo */}
             <View style={styles.logoWrap}>
               <Text style={styles.logo}>Скидки</Text>
@@ -187,8 +184,7 @@ export default function RegisterScreen() {
                 <Text style={styles.footerLink}>Войди</Text>
               </Pressable>
             </View>
-          </View>
-        </KeyboardAvoidingView>
+        </KeyboardSafeScrollView>
       </SafeAreaView>
 
       <CityPicker
