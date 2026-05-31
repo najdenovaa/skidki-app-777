@@ -42,6 +42,9 @@ export interface Discount {
   lng: number;
   cityName?: string;
   cityId?: number | string;
+  placeName?: string;
+  address?: string;
+  note?: string;
 }
 
 export interface Comment {

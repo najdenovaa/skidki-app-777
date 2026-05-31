@@ -1,6 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import { Stack, useRouter } from "expo-router";
 import { Camera, Check, MapPin, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -46,7 +47,11 @@ export default function PostModalScreen() {
   const [percentInput, setPercentInput] = useState<string>("");
   const [originalPrice, setOriginalPrice] = useState<string>("");
   const [discountedPrice, setDiscountedPrice] = useState<string>("");
+  const [placeName, setPlaceName] = useState<string>("");
   const [address, setAddress] = useState<string>("");
+  const [note, setNote] = useState<string>("");
+  const [lat, setLat] = useState<number | undefined>(undefined);
+  const [lng, setLng] = useState<number | undefined>(undefined);
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [expiry, setExpiry] = useState<"today" | "date" | "stock">("today");
@@ -102,8 +107,42 @@ export default function PostModalScreen() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const useMyLocation = useCallback(() => {
-    setAddress("ул. Тверская, 12");
+  const useMyLocation = useCallback(async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Нет доступа", "Разреши доступ к геолокации в настройках");
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const { latitude, longitude } = pos.coords;
+      setLat(latitude);
+      setLng(longitude);
+
+      let addr = "";
+
+      // Device reverse geocode
+      const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
+      if (geo.length > 0) {
+        const g = geo[0];
+        const parts = [g.street, g.city, g.region].filter(Boolean);
+        addr = parts.join(", ");
+      }
+
+      // Server fallback if device didn't give a good address
+      if (!addr) {
+        const res = await api.reverseGeocode(latitude, longitude);
+        if (res.success && res.data?.address) {
+          addr = res.data.address;
+        }
+      }
+
+      setAddress(addr || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+    } catch {
+      Alert.alert("Ошибка", "Не удалось определить местоположение");
+    }
   }, []);
 
   const onSubmit = useCallback(async () => {
@@ -133,9 +172,12 @@ export default function PostModalScreen() {
       originalPrice: !isNaN(orig) ? orig : undefined,
       discountedPrice: !isNaN(disc) ? disc : undefined,
       images: imageUrls && imageUrls.length > 0 ? imageUrls : undefined,
-      locationName: address || "Моё место",
-      lat: 55.756,
-      lng: 37.62,
+      locationName: address || placeName || "Моё место",
+      lat: lat ?? 0,
+      lng: lng ?? 0,
+      placeName: placeName.trim() || undefined,
+      address: address.trim() || undefined,
+      note: note.trim() || undefined,
       expiresAt: Date.now() + opt.hours * 60 * 60 * 1000,
       cityId,
     });
@@ -150,7 +192,7 @@ export default function PostModalScreen() {
     } else {
       Alert.alert("Ошибка", res.error ?? "Не удалось опубликовать");
     }
-  }, [title, category, images, address, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
+  }, [title, category, images, address, placeName, note, lat, lng, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
 
   return (
     <View style={styles.root}>
@@ -216,6 +258,18 @@ export default function PostModalScreen() {
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Пицца 50% на всё меню"
+                placeholderTextColor={Colors.textMuted}
+                style={styles.input}
+              />
+            </View>
+          </Field>
+
+          <Field label="Точка продаж / услуг">
+            <View style={styles.inputBox}>
+              <TextInput
+                value={placeName}
+                onChangeText={setPlaceName}
+                placeholder="Кофейня «Уют», магазин «Продукты»"
                 placeholderTextColor={Colors.textMuted}
                 style={styles.input}
               />
@@ -331,6 +385,21 @@ export default function PostModalScreen() {
               <Pressable onPress={useMyLocation} style={styles.locBtn} hitSlop={8}>
                 <Navigation size={18} color={Colors.primary} strokeWidth={2} />
               </Pressable>
+            </View>
+          </Field>
+
+          <Field label="Примечание">
+            <View style={[styles.inputBox, { minHeight: 80 }]}>
+              <TextInput
+                value={note}
+                onChangeText={setNote}
+                placeholder="До 20:00, по кодовому слову, вторая половинка бесплатно..."
+                placeholderTextColor={Colors.textMuted}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+                style={[styles.input, { minHeight: 72, paddingTop: 14 }]}
+              />
             </View>
           </Field>
 

@@ -174,6 +174,9 @@ export default function DiscountDetailScreen() {
 
             {/* Title */}
             <Text style={styles.title}>{discount.title}</Text>
+            {discount.placeName ? (
+              <Text style={styles.placeName}>{discount.placeName}</Text>
+            ) : null}
 
             {/* Author row */}
             <View style={styles.authorRow}>
@@ -206,7 +209,7 @@ export default function DiscountDetailScreen() {
               <View style={styles.locationChip}>
                 <MapPin size={12} color={Colors.textMuted} strokeWidth={2} />
                 <Text style={styles.locationText} numberOfLines={1}>
-                  {discount.locationName}
+                  {discount.address || discount.locationName}
                 </Text>
                 <Text style={styles.locationDot}>·</Text>
                 <Text style={styles.distanceText}>
@@ -321,6 +324,16 @@ export default function DiscountDetailScreen() {
                 <Share2 size={22} color={Colors.textMuted} strokeWidth={2} />
               </Pressable>
             </View>
+
+            {/* ── Note ── */}
+            {discount.note ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Примечание</Text>
+                <View style={styles.noteBox}>
+                  <Text style={styles.noteText}>{discount.note}</Text>
+                </View>
+              </View>
+            ) : null}
 
             {/* ── Map ── */}
             <View style={styles.section}>
@@ -473,6 +486,12 @@ const styles = StyleSheet.create({
     color: Colors.text,
     lineHeight: 30,
     letterSpacing: -0.5,
+    marginBottom: 4,
+  },
+  placeName: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    letterSpacing: -0.2,
     marginBottom: 16,
   },
 
@@ -634,6 +653,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
     fontVariant: ["tabular-nums"] as const,
+  },
+
+  // ── Note ──
+  noteBox: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 14,
+  },
+  noteText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    letterSpacing: -0.2,
   },
 
   // ── Section (Map / Comments) ──

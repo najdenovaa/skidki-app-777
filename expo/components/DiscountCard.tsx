@@ -94,15 +94,20 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
             <Text style={styles.photoTitle} numberOfLines={2}>
               {discount.title}
             </Text>
-            {discount.cityName ? <Text style={styles.photoCity}>{discount.cityName}</Text> : null}
+            {discount.placeName ? (
+              <Text style={styles.photoPlaceName} numberOfLines={1}>
+                {discount.placeName}
+              </Text>
+            ) : null}
             <View style={styles.photoLocation}>
               <MapPin size={11} color="rgba(255,255,255,0.75)" strokeWidth={2.5} />
               <Text style={styles.photoLocationText} numberOfLines={1}>
-                {discount.locationName}
+                {discount.address || discount.locationName}
               </Text>
               <Text style={styles.photoLocationDot}>·</Text>
               <Text style={styles.photoDistance}>{formatDistance(discount.distanceKm)}</Text>
             </View>
+            {discount.cityName ? <Text style={styles.photoCity}>{discount.cityName}</Text> : null}
           </View>
         </ImageCarousel>
 
@@ -297,12 +302,23 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
+  photoPlaceName: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: "rgba(255,255,255,0.85)",
+    letterSpacing: -0.2,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    marginBottom: 2,
+  },
   photoCity: {
     fontSize: 12,
     color: "rgba(255,255,255,0.7)",
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    marginTop: 2,
   },
   photoLocation: { flexDirection: "row", alignItems: "center", gap: 4 },
   photoLocationText: {

@@ -1,4 +1,5 @@
 import createContextHook from "@nkzw/create-context-hook";
+import * as Location from "expo-location";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/providers/AuthProvider";
@@ -11,6 +12,26 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
   const [filter, setFilter] = useState<Category | "all">("all");
   const [hydrated, setHydrated] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [gpsLat, setGpsLat] = useState<number | undefined>(undefined);
+  const [gpsLng, setGpsLng] = useState<number | undefined>(undefined);
+
+  // Try to get device GPS once for distance calculation
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === "granted") {
+          const pos = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          setGpsLat(pos.coords.latitude);
+          setGpsLng(pos.coords.longitude);
+        }
+      } catch {
+        // GPS unavailable — server returns distance without it
+      }
+    })();
+  }, []);
 
   const cityId = user?.cityId ? String(user.cityId) : guestCity?.cityId;
   const hasCity = !!cityId;
@@ -20,9 +41,11 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
     const res = await api.getDiscounts({
       category: filter === "all" ? undefined : filter,
       city: cityId,
+      lat: gpsLat,
+      lng: gpsLng,
     });
     if (res.success && res.data) setDiscounts(res.data);
-  }, [filter, cityId]);
+  }, [filter, cityId, gpsLat, gpsLng]);
 
   useEffect(() => {
     if (hasCity) {

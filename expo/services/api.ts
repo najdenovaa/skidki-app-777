@@ -115,6 +115,8 @@ export const api = {
     limit?: number;
     search?: string;
     city?: string;
+    lat?: number;
+    lng?: number;
   }): Promise<ApiResponse<Discount[]>> {
     try {
       const qs = new URLSearchParams();
@@ -123,6 +125,8 @@ export const api = {
       if (params?.limit) qs.set("limit", String(params.limit));
       if (params?.search) qs.set("search", params.search);
       if (params?.city) qs.set("city", params.city);
+      if (params?.lat !== undefined) qs.set("lat", String(params.lat));
+      if (params?.lng !== undefined) qs.set("lng", String(params.lng));
 
       const path = `/discounts${qs.toString() ? "?" + qs.toString() : ""}`;
       const data = await http.get<Discount[]>(path);
@@ -231,6 +235,20 @@ export const api = {
   },
 
   // ═══ Geo ═════════════════════════════════════════════════════════════
+
+  async reverseGeocode(
+    lat: number,
+    lng: number
+  ): Promise<ApiResponse<{ address: string; city?: string }>> {
+    try {
+      const data = await http.get<{ address: string; city?: string }>(
+        `/geo/reverse?lat=${lat}&lng=${lng}`
+      );
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
 
   async getRegions(): Promise<ApiResponse<GeoRegion[]>> {
     try {

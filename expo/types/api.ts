@@ -10,6 +10,9 @@ export interface CreateDiscountDTO {
   locationName: string;
   lat: number;
   lng: number;
+  placeName?: string;
+  address?: string;
+  note?: string;
   expiresAt: number;
   cityId?: string;
 }
