@@ -1,10 +1,15 @@
 export type Category =
   | "food"
   | "beauty"
-  | "pharmacy"
-  | "market"
   | "auto"
-  | "services";
+  | "services"
+  | "sport"
+  | "animals"
+  | "construction"
+  | "realestate"
+  | "health"
+  | "production"
+  | "other";
 
 export interface CategoryInfo {
   id: Category;

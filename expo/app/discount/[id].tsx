@@ -27,7 +27,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
-import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
 import { shareDiscount } from "@/utils/share";
@@ -252,30 +251,6 @@ export default function DiscountDetailScreen() {
               </View>
             )}
 
-            {/* Stats row */}
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Eye size={14} color={Colors.textMuted} strokeWidth={2} />
-                <Text style={styles.statText}>
-                  {formatViews(discount.views)}
-                </Text>
-              </View>
-              <Text style={styles.statSeparator}>·</Text>
-              <View style={styles.statItem}>
-                <Heart size={14} color={Colors.textMuted} strokeWidth={2} />
-                <Text style={styles.statText}>{discount.likes}</Text>
-              </View>
-              <Text style={styles.statSeparator}>·</Text>
-              <View style={styles.statItem}>
-                <MessageCircle
-                  size={14}
-                  color={Colors.textMuted}
-                  strokeWidth={2}
-                />
-                <Text style={styles.statText}>{discount.comments}</Text>
-              </View>
-            </View>
-
             {/* CTA — "Я иду" */}
             <Pressable
               onPress={() => {
@@ -299,8 +274,14 @@ export default function DiscountDetailScreen() {
               </Text>
             </Pressable>
 
-            {/* Action row: Like / Comment / Share */}
+            {/* Action row: Views / Like / Comment / Share */}
             <View style={styles.actionRow}>
+              <View style={styles.actionBtn}>
+                <Eye size={22} color={Colors.textMuted} strokeWidth={2} />
+                <Text style={styles.actionLabel}>
+                  {formatViews(discount.views)}
+                </Text>
+              </View>
               <Pressable
                 onPress={() => {
                   impact();
@@ -383,33 +364,31 @@ export default function DiscountDetailScreen() {
                 </View>
               ))}
             </View>
+
+            {/* Comment input — inline, not sticky */}
+            <SafeAreaView edges={["bottom"]} style={styles.inputBar}>
+              <View style={styles.inputBarInner}>
+                <TextInput
+                  value={comment}
+                  onChangeText={setComment}
+                  placeholder="Написать комментарий"
+                  placeholderTextColor={Colors.textMuted}
+                  style={styles.commentInput}
+                />
+                <Pressable
+                  onPress={onSendComment}
+                  disabled={!comment.trim()}
+                  style={[
+                    styles.sendBtn,
+                    !comment.trim() && { opacity: 0.4 },
+                  ]}
+                >
+                  <Send size={18} color={Colors.primary} strokeWidth={2} />
+                </Pressable>
+              </View>
+            </SafeAreaView>
           </View>
         </KeyboardSafeScrollView>
-
-      {/* Comment input bar — sticky above keyboard */}
-      <KeyboardStickyFooter>
-        <SafeAreaView edges={["bottom"]} style={styles.inputBar}>
-          <View style={styles.inputBarInner}>
-            <TextInput
-              value={comment}
-              onChangeText={setComment}
-              placeholder="Написать комментарий"
-              placeholderTextColor={Colors.textMuted}
-              style={styles.commentInput}
-            />
-            <Pressable
-              onPress={onSendComment}
-              disabled={!comment.trim()}
-              style={[
-                styles.sendBtn,
-                !comment.trim() && { opacity: 0.4 },
-              ]}
-            >
-              <Send size={18} color={Colors.primary} strokeWidth={2} />
-            </Pressable>
-          </View>
-        </SafeAreaView>
-      </KeyboardStickyFooter>
     </View>
   );
 }
@@ -605,28 +584,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
 
-  // Stats
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 20,
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  statText: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    fontVariant: ["tabular-nums"] as const,
-  },
-  statSeparator: {
-    color: Colors.textMuted,
-    fontSize: 14,
-  },
-
   // CTA
   cta: {
     height: 52,
@@ -648,7 +605,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 32,
-    marginBottom: 28,
+    marginBottom: 10,
     paddingVertical: 4,
   },
   actionBtn: {
@@ -676,7 +633,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Section (Map / Comments) ──
-  section: { marginTop: 28, gap: 12 },
+  section: { marginTop: 12, gap: 12 },
   sectionHeader: { marginBottom: 4 },
   sectionTitle: {
     fontSize: 11,
@@ -728,9 +685,8 @@ const styles = StyleSheet.create({
   inputBar: {
     backgroundColor: Colors.background,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
+    paddingTop: 14,
+    paddingBottom: 10,
   },
   inputBarInner: {
     flexDirection: "row",

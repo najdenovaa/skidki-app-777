@@ -169,20 +169,19 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
         {/* ── Expandable body ── */}
         {expanded && (
           <View style={styles.expandedBody}>
-            {/* Category + time */}
+            {/* Category + city + time */}
             <View style={styles.metaRow}>
-              <View style={styles.categoryChip}>
-                <Icon size={13} color={cat.color} strokeWidth={2} />
-                <Text style={[styles.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
+              <View style={styles.metaRowLeft}>
+                <View style={styles.categoryChip}>
+                  <Icon size={13} color={cat.color} strokeWidth={2} />
+                  <Text style={[styles.categoryLabel, { color: cat.color }]}>{cat.label}</Text>
+                </View>
+                {discount.cityName ? (
+                  <Text style={styles.cityLabel} numberOfLines={1}>{discount.cityName}</Text>
+                ) : null}
               </View>
               <Text style={styles.metaTime}>{formatTimeAgo(discount.postedAt)}</Text>
             </View>
-            {discount.cityName ? (
-              <View style={styles.cityRow}>
-                <MapPin size={12} color={Colors.textMuted} strokeWidth={2} />
-                <Text style={styles.cityText}>{discount.cityName}</Text>
-              </View>
-            ) : null}
 
             {/* Prices */}
             {discount.discountedPrice !== undefined && (
@@ -417,6 +416,7 @@ const styles = StyleSheet.create({
   // ── Expandable body ──
   expandedBody: {
     paddingHorizontal: 14,
+    paddingTop: 6,
     paddingBottom: 14,
     gap: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -428,6 +428,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  metaRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 1,
+  },
   categoryChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -438,6 +444,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   categoryLabel: { fontSize: 12, letterSpacing: 0.2 },
+  cityLabel: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    letterSpacing: 0.1,
+    flexShrink: 1,
+  },
   metaTime: { fontSize: 12, color: Colors.textMuted },
 
   // ── Price row ──

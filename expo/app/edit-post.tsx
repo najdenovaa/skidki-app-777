@@ -30,11 +30,33 @@ import { api } from "@/services/api";
 import type { SelectedCity } from "@/types/api";
 import type { Category } from "@/types/discount";
 
-const EXPIRY_OPTIONS: { id: "today" | "date" | "stock"; label: string; hours: number }[] = [
-  { id: "today", label: "Только сегодня", hours: 8 },
-  { id: "date", label: "До завтра", hours: 24 },
-  { id: "stock", label: "Пока в наличии", hours: 72 },
+const EXPIRY_OPTIONS: { id: "today" | "date" | "stock"; label: string }[] = [
+  { id: "today", label: "Только сегодня" },
+  { id: "date", label: "До завтра" },
+  { id: "stock", label: "Пока в наличии" },
 ];
+
+function getExpiresAt(expiry: "today" | "date" | "stock"): number {
+  const now = new Date();
+  switch (expiry) {
+    case "today": {
+      const eod = new Date(now);
+      eod.setHours(23, 59, 59, 999);
+      return eod.getTime();
+    }
+    case "date": {
+      const eod = new Date(now);
+      eod.setDate(eod.getDate() + 1);
+      eod.setHours(23, 59, 59, 999);
+      return eod.getTime();
+    }
+    case "stock": {
+      const far = new Date(now);
+      far.setFullYear(far.getFullYear() + 100);
+      return far.getTime();
+    }
+  }
+}
 
 const PERCENT_PRESETS: number[] = [10, 20, 30, 50, 70];
 
@@ -176,7 +198,6 @@ export default function EditPostScreen() {
       Alert.alert("Заполни название", "Расскажи, что за скидка");
       return;
     }
-    const opt = EXPIRY_OPTIONS.find((e) => e.id === expiry) ?? EXPIRY_OPTIONS[0];
     const orig = parseFloat(originalPrice);
     const disc = parseFloat(discountedPrice);
 
@@ -219,7 +240,7 @@ export default function EditPostScreen() {
       placeName: placeName.trim() || undefined,
       address: address.trim() || undefined,
       note: note.trim() || undefined,
-      expiresAt: Date.now() + opt.hours * 60 * 60 * 1000,
+      expiresAt: getExpiresAt(expiry),
       cityId: selectedCity?.cityId ?? (user?.cityId ? String(user.cityId) : guestCity?.cityId),
     });
 
@@ -514,7 +535,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const fieldStyles = StyleSheet.create({
-  field: { marginTop: 20 },
+  field: { marginTop: 14 },
   label: {
     fontSize: 11,
     color: Colors.textMuted,
@@ -570,7 +591,7 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 20, paddingBottom: 60 },
 
-  imagesSection: { marginBottom: 4 },
+  imagesSection: { marginBottom: 0 },
   imagesRow: { gap: 10, paddingVertical: 4 },
   thumbnailWrap: {
     width: 80,
@@ -699,6 +720,7 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: Colors.card,
     borderRadius: 14,
+    paddingLeft: 14,
     paddingRight: 14,
     borderWidth: 1,
     borderColor: Colors.border,
