@@ -1,7 +1,7 @@
 export type Category =
-  | "food"
+  | "groceries"
   | "beauty"
-  | "auto"
+  | "catering"
   | "services"
   | "sport"
   | "animals"
@@ -9,6 +9,10 @@ export type Category =
   | "realestate"
   | "health"
   | "production"
+  | "travel"
+  | "household"
+  | "renovation"
+  | "automoto"
   | "other";
 
 export interface CategoryInfo {

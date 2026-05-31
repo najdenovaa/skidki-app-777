@@ -66,7 +66,7 @@ export default function PostModalScreen() {
 
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState<string>("");
-  const [category, setCategory] = useState<Category>("food");
+  const [category, setCategory] = useState<Category>("other");
   const [percentInput, setPercentInput] = useState<string>("");
   const [originalPrice, setOriginalPrice] = useState<string>("");
   const [discountedPrice, setDiscountedPrice] = useState<string>("");
