@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   // ── Photo overlay: title + location on the gradient at bottom ──
   photoOverlay: {
     position: "absolute",
-    bottom: 26,
+    bottom: 12,
     left: 14,
     right: 14,
     gap: 4,
