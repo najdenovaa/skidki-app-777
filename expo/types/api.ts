@@ -20,6 +20,7 @@ export interface SignUpDTO {
   password: string;
   cityId?: string;
   regionId?: string;
+  city?: string;
 }
 
 export interface SignInDTO {
@@ -30,6 +31,8 @@ export interface SignInDTO {
 export interface UpdateProfileDTO {
   name?: string;
   cityId?: string;
+  city?: string;
+  regionId?: string;
   avatar?: string;
 }
 

@@ -40,6 +40,8 @@ export interface Discount {
   isGoing: boolean;
   lat: number;
   lng: number;
+  cityName?: string;
+  cityId?: number | string;
 }
 
 export interface Comment {

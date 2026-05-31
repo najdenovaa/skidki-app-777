@@ -57,6 +57,7 @@ export default function RegisterScreen() {
       password,
       cityId: city?.cityId,
       regionId: city?.regionId,
+      city: city?.cityName,
     });
     setLoading(false);
     if (err === "emailTaken") {

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { Bell, MapPin, Plus, Search, Tag } from "lucide-react-native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -20,7 +20,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CategoryChips } from "@/components/CategoryChips";
 import { CityPicker } from "@/components/CityPicker";
@@ -68,7 +68,7 @@ function FabButton() {
 
 function FeedHeader() {
   const router = useRouter();
-  const { isGuest, guestCity, saveGuestCity, user } = useAuth();
+  const { isGuest, guestCity, saveGuestCity, user, updateProfile } = useAuth();
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
 
   const cityLabel = isGuest
@@ -122,6 +122,8 @@ function FeedHeader() {
         onSelect={(c) => {
           if (isGuest) {
             saveGuestCity(c);
+          } else {
+            updateProfile({ cityId: c.cityId, city: c.cityName, regionId: c.regionId });
           }
           setCityPickerOpen(false);
         }}
@@ -134,6 +136,11 @@ function FeedHeader() {
 export default function FeedScreen() {
   const { filtered, filter, setFilter, hydrated, refreshing, onRefresh } = useDiscounts();
   const tabBarVisible = useTabBarVisible();
+  const { user, guestCity } = useAuth();
+  const insets = useSafeAreaInsets();
+  const hasCity = !!(user?.cityId || guestCity?.cityId);
+
+  const HEADER_HEIGHT = useMemo(() => insets.top + 72 + CHIPS_HEIGHT, [insets.top]);
 
   const chipsVisible = useSharedValue<number>(1);
   const lastY = useSharedValue<number>(0);
@@ -187,7 +194,7 @@ export default function FeedScreen() {
         data={filtered}
         keyExtractor={(d) => String(d.id)}
         renderItem={renderItem}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingTop: HEADER_HEIGHT }]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
@@ -195,11 +202,19 @@ export default function FeedScreen() {
         onRefresh={onRefresh}
         ListHeaderComponent={<View style={{ height: 8 }} />}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Tag size={48} color={Colors.textMuted} strokeWidth={1.5} />
-            <Text style={styles.emptyTitle}>Скидок пока нет</Text>
-            <Text style={styles.emptyText}>Загляни позже или добавь первую</Text>
-          </View>
+          !hasCity ? (
+            <View style={styles.empty}>
+              <MapPin size={48} color={Colors.textMuted} strokeWidth={1.5} />
+              <Text style={styles.emptyTitle}>Выбери город</Text>
+              <Text style={styles.emptyText}>Укажи город, чтобы видеть скидки рядом</Text>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Tag size={48} color={Colors.textMuted} strokeWidth={1.5} />
+              <Text style={styles.emptyTitle}>Скидок пока нет</Text>
+              <Text style={styles.emptyText}>Загляни позже или добавь первую</Text>
+            </View>
+          )
         }
       />
       )}
@@ -231,13 +246,15 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
 
-  list: { paddingTop: 88, paddingBottom: 110 },
+  list: { paddingBottom: 110 },
 
   headerSafe: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
+    backgroundColor: Colors.background,
+    zIndex: 10,
   },
   headerRow: {
     flexDirection: "row",

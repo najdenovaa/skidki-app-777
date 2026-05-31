@@ -92,6 +92,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
             <Text style={styles.photoTitle} numberOfLines={2}>
               {discount.title}
             </Text>
+            {discount.cityName ? <Text style={styles.photoCity}>{discount.cityName}</Text> : null}
             <View style={styles.photoLocation}>
               <MapPin size={11} color="rgba(255,255,255,0.75)" strokeWidth={2.5} />
               <Text style={styles.photoLocationText} numberOfLines={1}>
@@ -293,6 +294,13 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.6)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  photoCity: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.7)",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   photoLocation: { flexDirection: "row", alignItems: "center", gap: 4 },
   photoLocationText: {

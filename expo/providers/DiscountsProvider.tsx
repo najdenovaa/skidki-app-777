@@ -13,8 +13,10 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
   const [refreshing, setRefreshing] = useState(false);
 
   const cityId = user?.cityId ? String(user.cityId) : guestCity?.cityId;
+  const hasCity = !!cityId;
 
   const loadFeed = useCallback(async () => {
+    if (!cityId) return;
     const res = await api.getDiscounts({
       category: filter === "all" ? undefined : filter,
       city: cityId,
@@ -23,8 +25,13 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
   }, [filter, cityId]);
 
   useEffect(() => {
-    loadFeed().finally(() => setHydrated(true));
-  }, [loadFeed]);
+    if (hasCity) {
+      loadFeed().finally(() => setHydrated(true));
+    } else {
+      setHydrated(true);
+      setDiscounts([]);
+    }
+  }, [loadFeed, hasCity]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

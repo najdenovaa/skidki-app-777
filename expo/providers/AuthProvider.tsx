@@ -124,7 +124,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, [user]);
 
   const updateProfile = useCallback(
-    async (patch: { name?: string; cityId?: string; avatar?: string }) => {
+    async (patch: { name?: string; cityId?: string; city?: string; regionId?: string; avatar?: string }) => {
       if (!user) return;
       const res = await api.updateProfile(patch);
       if (res.success && res.data) setUser(res.data);

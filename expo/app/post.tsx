@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
 import { Camera, Check, MapPin, Navigation, X } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CityPicker } from "@/components/CityPicker";
 import {
@@ -50,6 +50,20 @@ export default function PostModalScreen() {
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [expiry, setExpiry] = useState<"today" | "date" | "stock">("today");
+
+  // Init city from profile / guest on mount
+  useEffect(() => {
+    if (user?.cityId) {
+      setSelectedCity({
+        cityId: String(user.cityId),
+        cityName: user.city,
+        regionId: String(user.regionId ?? ""),
+        regionName: "",
+      });
+    } else if (guestCity) {
+      setSelectedCity(guestCity);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-fill city from user profile
   const displayCity = selectedCity?.cityName || user?.city;
@@ -102,7 +116,7 @@ export default function PostModalScreen() {
       }
     }
 
-    const cityId = user?.cityId ? String(user.cityId) : guestCity?.cityId;
+    const cityId = selectedCity?.cityId ?? (user?.cityId ? String(user.cityId) : guestCity?.cityId);
 
     const res = await api.createDiscount({
       title: title.trim(),
@@ -128,7 +142,7 @@ export default function PostModalScreen() {
     } else {
       Alert.alert("Ошибка", res.error ?? "Не удалось опубликовать");
     }
-  }, [title, category, image, address, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router]);
+  }, [title, category, image, address, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
 
   return (
     <View style={styles.root}>
