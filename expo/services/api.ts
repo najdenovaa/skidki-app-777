@@ -162,7 +162,7 @@ export const api = {
 
   // ═══ Actions ════════════════════════════════════════════════════════════
 
-  async toggleLike(id: string): Promise<ApiResponse<{ liked: boolean }>> {
+  async toggleLike(id: string): Promise<ApiResponse<{ liked: boolean; likes: number }>> {
     try {
       const data = await http.post<{ liked: boolean }>(`/discounts/${String(id)}/like`);
       return ok(data);

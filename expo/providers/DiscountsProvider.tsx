@@ -59,7 +59,7 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
     async (id: string) => {
       const res = await api.toggleLike(id);
       if (res.success && res.data) {
-        patchDiscount(id, { liked: res.data.liked });
+        patchDiscount(id, { liked: res.data.liked, likes: res.data.likes });
       }
     },
     [patchDiscount]
