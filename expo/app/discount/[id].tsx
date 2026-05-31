@@ -671,7 +671,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Section (Map / Comments) ──
-  section: { marginTop: 0, gap: 12 },
+  section: { marginTop: 28, gap: 12 },
   sectionHeader: { marginBottom: 4 },
   sectionTitle: {
     fontSize: 11,
