@@ -37,7 +37,7 @@ const PERCENT_PRESETS: number[] = [10, 20, 30, 50, 70];
 
 export default function PostModalScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, guestCity } = useAuth();
   const { addPost } = useDiscounts();
 
   const [image, setImage] = useState<string | undefined>(undefined);
@@ -102,6 +102,8 @@ export default function PostModalScreen() {
       }
     }
 
+    const cityId = user?.cityId ? String(user.cityId) : guestCity?.cityId;
+
     const res = await api.createDiscount({
       title: title.trim(),
       category,
@@ -113,6 +115,7 @@ export default function PostModalScreen() {
       lat: 55.756,
       lng: 37.62,
       expiresAt: Date.now() + opt.hours * 60 * 60 * 1000,
+      cityId,
     });
 
     if (res.success) {

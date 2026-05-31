@@ -318,8 +318,10 @@ export const api = {
         name: "photo.jpg",
       } as unknown as Blob);
 
-      const data = await http.upload<{ url: string }>("/media/upload", formData);
-      return ok(data);
+      const data = await http.upload<{ url?: string; urls?: string[] }>("/media/upload", formData);
+      const uploaded = data.url ?? data.urls?.[0];
+      if (!uploaded) return fail("Сервер не вернул URL изображения");
+      return ok({ url: uploaded });
     } catch (err) {
       return handleError(err);
     }

@@ -59,9 +59,9 @@ export function ImageCarousel({
 
   if (images.length === 0) {
     return (
-      <View style={[styles.placeholder, { height }]} onLayout={onLayout}>
+      <Pressable onPress={onPress} style={[styles.placeholder, { height }]} onLayout={onLayout}>
         {children}
-      </View>
+      </Pressable>
     );
   }
 

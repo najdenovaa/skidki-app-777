@@ -11,6 +11,7 @@ export interface CreateDiscountDTO {
   lat: number;
   lng: number;
   expiresAt: number;
+  cityId?: string;
 }
 
 export interface SignUpDTO {
