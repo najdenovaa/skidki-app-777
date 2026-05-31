@@ -117,7 +117,6 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
                 </Pressable>
               ) : null}
             </View>
-            {discount.cityName ? <Text style={styles.photoCity}>{discount.cityName}</Text> : null}
           </View>
         </ImageCarousel>
 
@@ -327,14 +326,6 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
     marginBottom: 2,
-  },
-  photoCity: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.7)",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-    marginTop: 2,
   },
   photoLocation: { flexDirection: "row", alignItems: "center", gap: 4 },
   photoLocationText: {

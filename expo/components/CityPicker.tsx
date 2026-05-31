@@ -1,7 +1,6 @@
 import { Check, ChevronLeft, MapPin, Search, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Modal,
   Platform,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { PercentSpinnerCentered } from "@/components/PercentSpinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
@@ -141,7 +141,7 @@ export function CityPicker({ visible, onSelect, onClose, title, subtitle, showSk
           {isStepRegions ? (
             loadingRegions ? (
               <View style={styles.centered}>
-                <ActivityIndicator color={Colors.primary} size="large" />
+                <PercentSpinnerCentered />
               </View>
             ) : (
               <FlatList
@@ -191,7 +191,7 @@ export function CityPicker({ visible, onSelect, onClose, title, subtitle, showSk
 
               {loadingCities ? (
                 <View style={styles.centered}>
-                  <ActivityIndicator color={Colors.primary} size="large" />
+                  <PercentSpinnerCentered />
                 </View>
               ) : (
                 <FlatList

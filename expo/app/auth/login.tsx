@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { PercentSpinner } from "@/components/PercentSpinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
@@ -101,7 +101,7 @@ export default function LoginScreen() {
               style={[styles.btn, loading && styles.btnDisabled]}
             >
               {loading ? (
-                <ActivityIndicator color={Colors.text} size="small" />
+                <PercentSpinner size={20} color={Colors.text} />
               ) : (
                 <Text style={styles.btnText}>Войти</Text>
               )}

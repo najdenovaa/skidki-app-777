@@ -9,7 +9,6 @@ import {
 } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Dimensions,
   Pressable,
@@ -21,6 +20,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { PercentSpinnerCentered } from "@/components/PercentSpinner";
 import { api } from "@/services/api";
 import { useAuth } from "@/providers/AuthProvider";
 import type { AdminDiscount, AdminStats, AdminUser } from "@/types/api";
@@ -195,7 +195,7 @@ export default function AdminScreen() {
       >
         {loading ? (
           <View style={styles.loader}>
-            <ActivityIndicator size="large" color={Colors.primary} />
+          <PercentSpinnerCentered />
           </View>
         ) : (
           <>

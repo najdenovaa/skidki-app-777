@@ -2,13 +2,13 @@ import { useRouter } from "expo-router";
 import { AlertTriangle, Image, MessageCircle, ShieldCheck, UserX } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { PercentSpinner } from "@/components/PercentSpinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
@@ -84,7 +84,7 @@ export default function DeleteAccountScreen() {
             style={[styles.deleteBtn, loading && styles.btnDisabled]}
           >
             {loading ? (
-              <ActivityIndicator color={Colors.text} size="small" />
+              <PercentSpinner size={20} color={Colors.text} />
             ) : (
               <Text style={styles.deleteBtnText}>Удалить аккаунт</Text>
             )}

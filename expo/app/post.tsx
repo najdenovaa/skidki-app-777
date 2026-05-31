@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { Stack, useRouter } from "expo-router";
-import { Check, MapPin, Navigation, Plus, X } from "lucide-react-native";
+import { Check, MapPin, MessageSquareText, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CityPicker } from "@/components/CityPicker";
@@ -136,12 +136,13 @@ export default function PostModalScreen() {
         const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
         if (geo.length > 0) {
           const g = geo[0];
-          const parts = [g.streetNumber, g.street, g.city, g.region].filter(Boolean);
+          const streetWithNumber = [g.street, g.streetNumber].filter(Boolean).join(", д. ");
+          const parts = [streetWithNumber, g.city, g.region].filter(Boolean);
           addr = parts.join(", ");
         }
       }
 
-      setAddress(addr || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+      setAddress(addr || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
       setAddressFromGps(true);
     } catch {
       Alert.alert("Ошибка", "Не удалось определить местоположение");
@@ -385,19 +386,17 @@ export default function PostModalScreen() {
           </View>
 
           <Field label="Адрес">
-            <View style={styles.addressRow}>
-              <View style={[styles.inputBox, { flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }]}>
-                <MapPin size={16} color={Colors.textMuted} strokeWidth={2} />
-                <TextInput
-                  value={address}
-                  onChangeText={(v) => { setAddress(v); setAddressFromGps(false); }}
-                  placeholder="Введи адрес"
-                  placeholderTextColor={Colors.textMuted}
-                  style={[styles.input, { flex: 1, paddingVertical: 0 }]}
-                />
-              </View>
-              <Pressable onPress={useMyLocation} style={styles.locBtn} hitSlop={8}>
-                <Navigation size={18} color={Colors.primary} strokeWidth={2} />
+            <View style={styles.addressInputWrap}>
+              <MapPin size={18} color={Colors.primary} strokeWidth={2} style={{ marginLeft: 2 }} />
+              <TextInput
+                value={address}
+                onChangeText={(v) => { setAddress(v); setAddressFromGps(false); }}
+                placeholder="Улица, дом"
+                placeholderTextColor={Colors.textMuted}
+                style={styles.addressField}
+              />
+              <Pressable onPress={useMyLocation} style={styles.locBtnInline} hitSlop={8}>
+                <Navigation size={20} color={Colors.primary} strokeWidth={2} />
               </Pressable>
             </View>
           </Field>
@@ -407,16 +406,17 @@ export default function PostModalScreen() {
           ) : null}
 
           <Field label="Примечание">
-            <View style={[styles.inputBox, { minHeight: 80 }]}>
+            <View style={styles.noteBox}>
+              <MessageSquareText size={16} color={Colors.primary} strokeWidth={2} style={{ marginTop: 16 }} />
               <TextInput
                 value={note}
                 onChangeText={setNote}
-                placeholder="До 20:00, по кодовому слову, вторая половинка бесплатно..."
+                placeholder="Условия акции, кодовое слово, время действия..."
                 placeholderTextColor={Colors.textMuted}
                 multiline
-                numberOfLines={3}
+                numberOfLines={4}
                 textAlignVertical="top"
-                style={[styles.input, { minHeight: 72, paddingTop: 14 }]}
+                style={styles.noteInput}
               />
             </View>
           </Field>
@@ -636,13 +636,51 @@ const styles = StyleSheet.create({
   priceArrow: { paddingBottom: 18 },
   priceArrowText: { fontSize: 20, color: Colors.textMuted },
 
-  addressRow: { flexDirection: "row", gap: 10, alignItems: "stretch" },
-  locBtn: {
-    width: 50,
+  addressInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     backgroundColor: Colors.card,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  addressField: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.text,
+    paddingVertical: 14,
+    letterSpacing: -0.2,
+  },
+  locBtnInline: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
+    backgroundColor: Colors.backgroundSecondary,
     alignItems: "center",
     justifyContent: "center",
+  },
+
+  noteBox: {
+    flexDirection: "row",
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    paddingRight: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minHeight: 110,
+  },
+  noteInput: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.text,
+    paddingVertical: 14,
+    letterSpacing: -0.2,
+    lineHeight: 22,
+    minHeight: 100,
   },
 
   expiryRow: { gap: 10 },

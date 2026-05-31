@@ -2,7 +2,6 @@ import { useRouter } from "expo-router";
 import { MapPin, X } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { PercentSpinner } from "@/components/PercentSpinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CityPicker } from "@/components/CityPicker";
@@ -163,7 +163,7 @@ export default function RegisterScreen() {
               style={[styles.btn, loading && styles.btnDisabled]}
             >
               {loading ? (
-                <ActivityIndicator color={Colors.text} size="small" />
+                <PercentSpinner size={20} color={Colors.text} />
               ) : (
                 <Text style={styles.btnText}>Создать аккаунт</Text>
               )}

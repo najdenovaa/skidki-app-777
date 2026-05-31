@@ -4,7 +4,6 @@ import { Stack, useRouter } from "expo-router";
 import { Camera, ChevronLeft, MapPin } from "lucide-react-native";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Platform,
   Pressable,
@@ -13,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { PercentSpinner } from "@/components/PercentSpinner";
 
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -121,7 +121,7 @@ export default function EditProfileScreen() {
             style={[styles.saveBtn, saving && { opacity: 0.6 }]}
           >
             {saving ? (
-              <ActivityIndicator color={Colors.text} size="small" />
+              <PercentSpinner size={20} color={Colors.text} />
             ) : (
               <Text style={styles.saveBtnText}>Сохранить</Text>
             )}
