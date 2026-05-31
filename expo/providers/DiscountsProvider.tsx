@@ -87,20 +87,27 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
 
   const toggleLike = useCallback(
     async (id: string) => {
-      // Optimistic update — works for guests too
+      let prevLiked = false;
+      let prevLikes = 0;
+      // Optimistic update
       setDiscounts((prev) =>
         prev.map((d) => {
           if (d.id !== id) return d;
+          prevLiked = d.liked;
+          prevLikes = d.likes;
           const nextLiked = !d.liked;
           return { ...d, liked: nextLiked, likes: d.likes + (nextLiked ? 1 : -1) };
         })
       );
-      // Fire server request; if it succeeds, use authoritative values
-      const res = await api.toggleLike(id);
-      if (res.success && res.data) {
-        patchDiscount(id, { liked: res.data.liked, likes: res.data.likes });
+      try {
+        const res = await api.toggleLike(id);
+        if (res.success && res.data) {
+          patchDiscount(id, { liked: res.data.liked, likes: res.data.likes });
+        }
+      } catch {
+        // Revert optimistic on network error
+        patchDiscount(id, { liked: prevLiked, likes: prevLikes });
       }
-      // On failure (guest), keep optimistic state
     },
     [patchDiscount]
   );

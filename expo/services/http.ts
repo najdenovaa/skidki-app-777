@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ENV } from "@/config/env";
+import { getDeviceFingerprint } from "@/utils/fingerprint";
 
 const TOKEN_KEY = "skidki.token";
 const TIMEOUT_MS = 10_000;
@@ -42,9 +43,11 @@ async function request<T>(
   customHeaders?: Record<string, string>
 ): Promise<T> {
   const token = await getToken();
+  const fingerprint = await getDeviceFingerprint();
 
   const headers: Record<string, string> = {
     ...customHeaders,
+    "X-Fingerprint": fingerprint,
   };
 
   if (token) {
