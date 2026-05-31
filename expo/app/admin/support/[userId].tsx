@@ -152,7 +152,7 @@ export default function AdminSupportChatScreen() {
           <FlatList
             ref={flatRef}
             data={messages}
-            keyExtractor={(m) => m.id}
+            keyExtractor={(m) => String(m.id)}
             renderItem={renderItem}
             contentContainerStyle={styles.list}
             showsVerticalScrollIndicator={false}

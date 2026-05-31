@@ -136,6 +136,6 @@ export interface AdminSupportThread {
 }
 
 export interface AdminUserDetail {
-  user: AdminUser & { displayId: number; city?: string; cityId?: number; username?: string };
+  user: AdminUser;
   posts: { id: string; title: string; percent: number; views: number; likes: number; createdAt: number }[];
 }
