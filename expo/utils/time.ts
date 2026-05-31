@@ -53,6 +53,29 @@ export function formatTimeSince(postedAt: number): string {
   return `${s}с`;
 }
 
+/** Таймер, тикающий вниз до истечения срока скидки. */
+export function formatTimeUntil(expiresAt: number): string {
+  const diff = expiresAt - Date.now();
+  if (diff <= 0) return "истекла";
+  const totalSec = Math.floor(diff / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h >= 24) {
+    const d = Math.floor(h / 24);
+    return `⏳ ${d}д ${h % 24}ч`;
+  }
+  if (h >= 1) return `⏳ ${h}ч ${pad(m)}м`;
+  if (m >= 1) return `⏳ ${m}м ${pad(s)}с`;
+  return `⏳ ${s}с`;
+}
+
+/** True if the discount was set to "Пока в наличии" (no real expiry). */
+export function isIndefinite(expiresAt: number): boolean {
+  // "stock" sets expiresAt 100 years into the future
+  return expiresAt > Date.now() + 365 * 24 * 60 * 60 * 1000;
+}
+
 export function formatDistance(km: number): string {
   if (km < 1) return `${Math.round(km * 1000)} м`;
   return `${km.toFixed(1)} км`;

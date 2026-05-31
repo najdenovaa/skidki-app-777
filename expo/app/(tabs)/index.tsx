@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Bell, MapPin, Search, Tag } from "lucide-react-native";
+import { Bell, MapPin, Tag } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
@@ -75,9 +75,6 @@ function FeedHeader() {
           </Pressable>
         </View>
         <View style={styles.headerActions}>
-          <Pressable hitSlop={10} style={styles.iconBtn}>
-            <Search size={24} color={Colors.text} strokeWidth={2} />
-          </Pressable>
           <Pressable hitSlop={10} style={styles.iconBtn} onPress={onBellPress}>
             <Bell size={24} color={Colors.text} strokeWidth={2} />
             <View style={styles.notifyDot} />

@@ -17,7 +17,7 @@ import { CATEGORY_MAP } from "@/constants/categories";
 import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Discount } from "@/types/discount";
 import { useTick } from "@/hooks/useTick";
-import { formatTimeSince, formatDistance, formatTimeAgo, formatViews } from "@/utils/time";
+import { formatTimeSince, formatDistance, formatTimeAgo, formatViews, formatTimeUntil, isIndefinite } from "@/utils/time";
 
 interface Props {
   discount: Discount;
@@ -36,6 +36,8 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
   const cat = CATEGORY_MAP[discount.category];
   const Icon = cat.icon;
   const elapsed = formatTimeSince(discount.postedAt);
+  const expiresIn = formatTimeUntil(discount.expiresAt);
+  const indefinite = isIndefinite(discount.expiresAt);
 
   const onOpen = useCallback(() => {
     router.push(`/discount/${discount.id}`);
@@ -73,11 +75,19 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
             <Text style={styles.discountNumber}>−{discount.percent}%</Text>
           </View>
 
-          {/* Elapsed time — no background, just shadowed text */}
-          <View style={styles.timerBadge} pointerEvents="box-none">
-            <Text style={styles.timerText}>
+          {/* Timers — dark translucent pill with both publication + expiry */}
+          <View style={styles.timersPill} pointerEvents="box-none">
+            <Text style={styles.timerElapsed}>
               {elapsed}
             </Text>
+            {!indefinite && (
+              <>
+                <View style={styles.timerDivider} />
+                <Text style={styles.timerExpiry}>
+                  {expiresIn}
+                </Text>
+              </>
+            )}
           </View>
 
           {/* Bookmark */}
@@ -275,19 +285,40 @@ const styles = StyleSheet.create({
   },
   discountNumber: { color: Colors.text, fontSize: 18, letterSpacing: -0.5, fontWeight: "700" as const },
 
-  timerBadge: {
+  // ── Timers pill (dark translucent backdrop) ──
+  timersPill: {
     position: "absolute",
-    top: 14,
-    right: 46,
+    top: 12,
+    right: 48,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    gap: 4,
+    alignItems: "center",
+    shadowColor: "rgba(0,0,0,0.5)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  timerText: {
-    fontSize: 13,
+  timerElapsed: {
+    fontSize: 12,
+    fontVariant: ["tabular-nums"],
+    letterSpacing: 0.2,
+    color: "rgba(255,255,255,0.9)",
+  },
+  timerDivider: {
+    width: 14,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    marginVertical: 1,
+  },
+  timerExpiry: {
+    fontSize: 11,
     fontVariant: ["tabular-nums"],
     letterSpacing: 0.1,
-    color: Colors.text,
-    textShadowColor: "rgba(0,0,0,0.65)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    color: Colors.accent,
   },
 
   bookmarkBtn: {

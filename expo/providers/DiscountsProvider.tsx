@@ -186,6 +186,8 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       savedList,
       myPosts,
       hydrated,
+      gpsLat,
+      gpsLng,
     }),
     [
       discounts,
@@ -203,6 +205,8 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       savedList,
       myPosts,
       hydrated,
+      gpsLat,
+      gpsLng,
     ]
   );
 });

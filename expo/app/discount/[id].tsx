@@ -44,6 +44,8 @@ import {
   formatFullDate,
   formatTimeAgo,
   formatViews,
+  formatTimeUntil,
+  isIndefinite,
 } from "@/utils/time";
 
 function impact(style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) {
@@ -113,6 +115,8 @@ export default function DiscountDetailScreen() {
   const cat = CATEGORY_MAP[discount.category];
   const Icon = cat.icon;
   const elapsed = formatTimeSince(discount.postedAt);
+  const expiresIn = formatTimeUntil(discount.expiresAt);
+  const indefinite = isIndefinite(discount.expiresAt);
 
   return (
     <View style={styles.root}>
@@ -162,11 +166,17 @@ export default function DiscountDetailScreen() {
                 <View style={styles.discountBadge}>
                   <Text style={styles.discountNumber}>−{discount.percent}%</Text>
                 </View>
-                <View style={styles.timerBadge} pointerEvents="box-none">
-                  <Clock size={12} color={Colors.text} strokeWidth={2} />
-                  <Text style={styles.timerText}>
-                    {elapsed}
-                  </Text>
+                <View style={styles.timersPill} pointerEvents="box-none">
+                  <View style={styles.timerRow}>
+                    <Clock size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
+                    <Text style={styles.timerText}>{elapsed}</Text>
+                  </View>
+                  {!indefinite && (
+                    <>
+                      <View style={styles.timerDividerLine} />
+                      <Text style={styles.timerTextExpiry}>{expiresIn}</Text>
+                    </>
+                  )}
                 </View>
               </View>
             </ImageCarousel>
@@ -433,7 +443,7 @@ const styles = StyleSheet.create({
     bottom: 14,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-end",
   },
   discountBadge: {
     backgroundColor: Colors.primary,
@@ -447,19 +457,42 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     letterSpacing: -0.7,
   },
-  timerBadge: {
+  // ── Timers pill (dark translucent backdrop) ──
+  timersPill: {
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    gap: 4,
+    alignItems: "center",
+    shadowColor: "rgba(0,0,0,0.5)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  timerRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
   },
   timerText: {
-    fontSize: 13,
+    fontSize: 12,
+    fontVariant: ["tabular-nums"] as const,
+    letterSpacing: 0.2,
+    color: "rgba(255,255,255,0.9)",
+  },
+  timerDividerLine: {
+    width: 14,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    marginVertical: 1,
+  },
+  timerTextExpiry: {
+    fontSize: 11,
     fontVariant: ["tabular-nums"] as const,
     letterSpacing: 0.1,
-    color: Colors.text,
-    textShadowColor: "rgba(0,0,0,0.65)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    color: Colors.accent,
   },
 
   // ── Content ──

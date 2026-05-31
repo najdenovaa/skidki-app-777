@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Map as MapIcon, Search } from "lucide-react-native";
+import { Map as MapIcon, Search, Target } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -25,7 +25,17 @@ import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Category } from "@/types/discount";
 import { formatDistance } from "@/utils/time";
 import { isValidCoords } from "@/utils/maps";
+import { formatDistance, isIndefinite } from "@/utils/time";
 import type { Discount } from "@/types/discount";
+
+const RADIUS_PRESETS: { label: string; value: number }[] = [
+  { label: "1 км", value: 1000 },
+  { label: "3 км", value: 3000 },
+  { label: "5 км", value: 5000 },
+  { label: "10 км", value: 10000 },
+  { label: "30 км", value: 30000 },
+  { label: "Везде", value: 0 },
+];
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -34,6 +44,7 @@ export default function SearchScreen() {
   const [query, setQuery] = useState<string>("");
   const [mapMode, setMapMode] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [radius, setRadius] = useState<number>(0);
   const lastY = useRef<number>(0);
 
   const onScroll = useCallback(
@@ -63,8 +74,14 @@ export default function SearchScreen() {
           d.locationName.toLowerCase().includes(q)
       );
     }
+    // Radius filter — only if radius > 0 and discount has valid coords
+    if (radius > 0) {
+      list = list.filter(
+        (d) => isValidCoords(d.lat, d.lng) && d.distanceKm * 1000 <= radius
+      );
+    }
     return list;
-  }, [discounts, filter, query]);
+  }, [discounts, filter, query, radius]);
 
   const renderItem = ({ item }: { item: Discount }) => {
     const cat = CATEGORY_MAP[item.category];
@@ -161,6 +178,29 @@ export default function SearchScreen() {
                 />
               </View>
             </View>
+            {/* Radius chips */}
+            <View style={styles.radiusRow}>
+              <Target size={13} color={Colors.textMuted} strokeWidth={2} />
+              {RADIUS_PRESETS.map((p) => (
+                <Pressable
+                  key={p.value}
+                  onPress={() => setRadius(p.value)}
+                  style={[
+                    styles.radiusChip,
+                    radius === p.value && styles.radiusChipActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.radiusChipText,
+                      radius === p.value && styles.radiusChipTextActive,
+                    ]}
+                  >
+                    {p.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
             <CategoryChips value={filter} onChange={setFilter} />
           </SafeAreaView>
 
@@ -220,6 +260,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   searchInput: { flex: 1, fontSize: 15, color: Colors.text, padding: 0 },
+
+  // ── Radius chips ──
+  radiusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  radiusChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: Colors.cardSecondary,
+  },
+  radiusChipActive: {
+    backgroundColor: Colors.primary,
+  },
+  radiusChipText: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    letterSpacing: 0.1,
+  },
+  radiusChipTextActive: {
+    color: Colors.text,
+  },
 
   list: { paddingBottom: 100 },
   listHeader: {
