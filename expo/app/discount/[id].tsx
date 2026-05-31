@@ -678,19 +678,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden" as const,
   },
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: Colors.card,
-  },
-  directionsText: {
-    color: Colors.text,
-    fontSize: 14,
-    letterSpacing: -0.2,
-  },
 
   // ── Comments ──
   commentRow: {
