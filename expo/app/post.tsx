@@ -3,12 +3,12 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { Stack, useRouter } from "expo-router";
-import { Camera, Check, MapPin, Navigation, Plus, X } from "lucide-react-native";
+import { Check, MapPin, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CityPicker } from "@/components/CityPicker";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
-import { StaticMapPreview } from "@/components/StaticMapPreview";
+import { Open2GisLink } from "@/components/Open2GisLink";
 import {
   Alert,
   Platform,
@@ -53,6 +53,7 @@ export default function PostModalScreen() {
   const [note, setNote] = useState<string>("");
   const [lat, setLat] = useState<number | undefined>(undefined);
   const [lng, setLng] = useState<number | undefined>(undefined);
+  const [addressFromGps, setAddressFromGps] = useState<boolean>(false);
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [expiry, setExpiry] = useState<"today" | "date" | "stock">("today");
@@ -124,23 +125,24 @@ export default function PostModalScreen() {
 
       let addr = "";
 
-      // Device reverse geocode
-      const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
-      if (geo.length > 0) {
-        const g = geo[0];
-        const parts = [g.street, g.city, g.region].filter(Boolean);
-        addr = parts.join(", ");
+      // Server reverse geocode first (better address with house number)
+      const serverRes = await api.reverseGeocode(latitude, longitude);
+      if (serverRes.success && serverRes.data?.address) {
+        addr = serverRes.data.address;
       }
 
-      // Server fallback if device didn't give a good address
+      // Device fallback — streetNumber + street
       if (!addr) {
-        const res = await api.reverseGeocode(latitude, longitude);
-        if (res.success && res.data?.address) {
-          addr = res.data.address;
+        const geo = await Location.reverseGeocodeAsync({ latitude, longitude });
+        if (geo.length > 0) {
+          const g = geo[0];
+          const parts = [g.streetNumber, g.street, g.city, g.region].filter(Boolean);
+          addr = parts.join(", ");
         }
       }
 
       setAddress(addr || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+      setAddressFromGps(true);
     } catch {
       Alert.alert("Ошибка", "Не удалось определить местоположение");
     }
@@ -164,6 +166,17 @@ export default function PostModalScreen() {
       }
     }
 
+    // Geocode address if user typed it manually
+    let finalLat = lat;
+    let finalLng = lng;
+    if (address.trim() && !addressFromGps) {
+      const geoRes = await api.geocodeAddress(address.trim(), displayCity);
+      if (geoRes.success && geoRes.data) {
+        finalLat = geoRes.data.lat;
+        finalLng = geoRes.data.lng;
+      }
+    }
+
     const cityId = selectedCity?.cityId ?? (user?.cityId ? String(user.cityId) : guestCity?.cityId);
 
     const res = await api.createDiscount({
@@ -174,8 +187,8 @@ export default function PostModalScreen() {
       discountedPrice: !isNaN(disc) ? disc : undefined,
       images: imageUrls && imageUrls.length > 0 ? imageUrls : undefined,
       locationName: address || placeName || "Моё место",
-      lat: lat ?? 0,
-      lng: lng ?? 0,
+      lat: finalLat ?? 0,
+      lng: finalLng ?? 0,
       placeName: placeName.trim() || undefined,
       address: address.trim() || undefined,
       note: note.trim() || undefined,
@@ -193,7 +206,7 @@ export default function PostModalScreen() {
     } else {
       Alert.alert("Ошибка", res.error ?? "Не удалось опубликовать");
     }
-  }, [title, category, images, address, placeName, note, lat, lng, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
+  }, [title, category, images, address, placeName, note, lat, lng, addressFromGps, displayCity, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
 
   return (
     <View style={styles.root}>
@@ -377,7 +390,7 @@ export default function PostModalScreen() {
                 <MapPin size={16} color={Colors.textMuted} strokeWidth={2} />
                 <TextInput
                   value={address}
-                  onChangeText={setAddress}
+                  onChangeText={(v) => { setAddress(v); setAddressFromGps(false); }}
                   placeholder="Введи адрес"
                   placeholderTextColor={Colors.textMuted}
                   style={[styles.input, { flex: 1, paddingVertical: 0 }]}
@@ -390,7 +403,7 @@ export default function PostModalScreen() {
           </Field>
 
           {lat != null && lng != null ? (
-            <StaticMapPreview lat={lat} lng={lng} height={160} label={placeName || title} />
+            <Open2GisLink lat={lat} lng={lng} label={placeName || title} address={address || undefined} />
           ) : null}
 
           <Field label="Примечание">

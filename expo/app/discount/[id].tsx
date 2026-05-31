@@ -28,7 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
-import { StaticMapPreview } from "@/components/StaticMapPreview";
+import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
 import { resolveImageUrl } from "@/utils/image";
 import { CATEGORY_MAP } from "@/constants/categories";
@@ -335,16 +335,18 @@ export default function DiscountDetailScreen() {
               </View>
             ) : null}
 
-            {/* ── Map ── */}
+            {/* ── Where to find ── */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Где найти</Text>
-              <View style={styles.mapBox}>
-                <StaticMapPreview
-                  lat={discount.lat}
-                  lng={discount.lng}
-                  label={discount.placeName || discount.title}
-                />
-              </View>
+              <Text style={styles.addressText}>
+                {discount.address || discount.locationName}
+              </Text>
+              <Open2GisLink
+                lat={discount.lat}
+                lng={discount.lng}
+                label={discount.placeName || discount.title}
+                address={discount.address}
+              />
             </View>
 
             {/* ── Comments ── */}
@@ -674,9 +676,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: "uppercase" as const,
   },
-  mapBox: {
-    borderRadius: 16,
-    overflow: "hidden" as const,
+  addressText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    letterSpacing: -0.2,
+    lineHeight: 22,
+    marginBottom: 4,
   },
 
   // ── Comments ──

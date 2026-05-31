@@ -250,6 +250,23 @@ export const api = {
     }
   },
 
+  async geocodeAddress(
+    address: string,
+    city?: string
+  ): Promise<ApiResponse<{ lat: number; lng: number; address: string }>> {
+    try {
+      const qs = new URLSearchParams();
+      qs.set("q", address);
+      if (city) qs.set("city", city);
+      const data = await http.get<{ lat: number; lng: number; address: string }>(
+        `/geo/forward?${qs.toString()}`
+      );
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
   async getRegions(): Promise<ApiResponse<GeoRegion[]>> {
     try {
       const data = await http.get<GeoRegion[]>("/geo/regions");

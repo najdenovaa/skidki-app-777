@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { withTiming } from "react-native-reanimated";
 
 import { CategoryChips } from "@/components/CategoryChips";
-import { StaticMapPreview } from "@/components/StaticMapPreview";
+import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
 import { CATEGORY_MAP } from "@/constants/categories";
 import { resolveImageUrl } from "@/utils/image";
@@ -97,11 +97,14 @@ export default function SearchScreen() {
             if (!d) return null;
             return (
               <View style={styles.mapPreviewWrap}>
-                <StaticMapPreview
+                <Text style={styles.mapAddressText}>
+                  {d.address || d.locationName}
+                </Text>
+                <Open2GisLink
                   lat={d.lat}
                   lng={d.lng}
-                  height={240}
                   label={d.placeName || d.title}
+                  address={d.address}
                 />
               </View>
             );
@@ -255,7 +258,13 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 14, color: Colors.textMuted, marginTop: 4, textAlign: "center" as const },
 
   // ── Map mode ──
-  mapPreviewWrap: { flex: 1, marginHorizontal: 20, marginTop: 100, marginBottom: 80 },
+  mapPreviewWrap: { flex: 1, marginHorizontal: 20, marginTop: 100, marginBottom: 80, gap: 12 },
+  mapAddressText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    letterSpacing: -0.2,
+    lineHeight: 22,
+  },
   mapOverlay: { position: "absolute", top: 0, left: 0, right: 0 },
   mapTopRow: {
     flexDirection: "row",

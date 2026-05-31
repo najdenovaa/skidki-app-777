@@ -109,7 +109,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
               <Text style={styles.photoDistance}>{formatDistance(discount.distanceKm)}</Text>
               {isValidCoords(discount.lat, discount.lng) ? (
                 <Pressable
-                  onPress={(e) => { e.stopPropagation(); openIn2Gis(discount.lat, discount.lng, discount.placeName || discount.title); }}
+                  onPress={(e) => { e.stopPropagation(); openIn2Gis({ lat: discount.lat, lng: discount.lng, label: discount.placeName || discount.title, address: discount.address }); }}
                   hitSlop={8}
                   style={styles.mapPinBtn}
                 >
