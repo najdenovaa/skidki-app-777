@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { Bell, MapPin, Shield, User as UserIcon } from "lucide-react-native";
+import { Bell, MapPin, Shield, Trash2, User as UserIcon } from "lucide-react-native";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Alert,
@@ -33,7 +33,7 @@ const TILE = (width - 20 * 2 - 12) / 2;
 function AuthenticatedProfile() {
   const router = useRouter();
   const { user, signOut, deleteAccount, updateProfile } = useAuth();
-  const { myPosts, savedList } = useDiscounts();
+  const { myPosts, savedList, deletePost } = useDiscounts();
   const tabBarVisible = useTabBarVisible();
   const [tab, setTab] = useState<"posts" | "saved">("posts");
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
@@ -86,6 +86,23 @@ function AuthenticatedProfile() {
   const handleEditProfile = useCallback(() => {
     router.push("/edit-profile");
   }, [router]);
+
+  const handleDeletePost = useCallback(
+    (d: Discount) => {
+      Alert.alert("Удалить скидку?", `«${d.title}» будет удалена`, [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            const ok = await deletePost(d.id);
+            if (!ok) Alert.alert("Ошибка", "Не удалось удалить");
+          },
+        },
+      ]);
+    },
+    [deletePost]
+  );
 
   if (!user) return null;
 
@@ -196,6 +213,7 @@ function AuthenticatedProfile() {
                 key={d.id}
                 discount={d}
                 onPress={() => router.push(`/discount/${d.id}`)}
+                onDelete={tab === "posts" ? () => handleDeletePost(d) : undefined}
               />
             ))}
           </View>
@@ -277,9 +295,11 @@ function plural(n: number, one: string, few: string, many: string): string {
 function Tile({
   discount,
   onPress,
+  onDelete,
 }: {
   discount: Discount;
   onPress: () => void;
+  onDelete?: () => void;
 }) {
   return (
     <Pressable onPress={onPress} style={styles.tile}>
@@ -291,6 +311,15 @@ function Tile({
       <View style={styles.tilePercent}>
         <Text style={styles.tilePercentText}>−{discount.percent}%</Text>
       </View>
+      {onDelete ? (
+        <Pressable
+          onPress={onDelete}
+          style={styles.tileDeleteBtn}
+          hitSlop={8}
+        >
+          <Trash2 size={14} color="#fff" strokeWidth={2} />
+        </Pressable>
+      ) : null}
       <View style={styles.tileBody}>
         <Text style={styles.tileTitle} numberOfLines={2}>
           {discount.title}
@@ -488,6 +517,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700" as const,
     letterSpacing: -0.3,
+  },
+  tileDeleteBtn: {
+    position: "absolute" as const,
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   tileBody: {
     position: "absolute" as const,
