@@ -1,9 +1,10 @@
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Bookmark, ChevronDown, Eye, Heart, MapPin, MessageCircle, Share2, Users } from "lucide-react-native";
 import React, { memo, useCallback, useState } from "react";
-import { LayoutAnimation, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, LayoutAnimation, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 const isIos = Platform.OS === "ios";
@@ -14,6 +15,7 @@ import Colors from "@/constants/colors";
 import { isValidCoords, openIn2Gis } from "@/utils/maps";
 import { resolveImageUrl } from "@/utils/image";
 import { CATEGORY_MAP } from "@/constants/categories";
+import { useAuth } from "@/providers/AuthProvider";
 import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Discount } from "@/types/discount";
 import { useTick } from "@/hooks/useTick";
@@ -31,6 +33,7 @@ function impact(style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle
 function DiscountCardBase({ discount, index = 0 }: Props) {
   useTick(1000);
   const router = useRouter();
+  const { isGuest } = useAuth();
   const { toggleGoing, toggleLike, toggleSave } = useDiscounts();
   const [expanded, setExpanded] = useState(false);
   const cat = CATEGORY_MAP[discount.category];
@@ -48,10 +51,18 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
     setExpanded((v) => !v);
   }, []);
 
+  const promptAuth = useCallback(() => {
+    Alert.alert("Вход", "Войди в аккаунт, чтобы использовать эту функцию", [
+      { text: "Отмена", style: "cancel" },
+      { text: "Войти", onPress: () => router.push("/auth/login") },
+    ]);
+  }, [router]);
+
   const onGoing = useCallback(() => {
+    if (isGuest) { promptAuth(); return; }
     impact(Haptics.ImpactFeedbackStyle.Medium);
     toggleGoing(discount.id);
-  }, [toggleGoing, discount.id]);
+  }, [isGuest, toggleGoing, discount.id, promptAuth]);
 
   const onLike = useCallback(() => {
     impact();
@@ -59,8 +70,9 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
   }, [toggleLike, discount.id]);
 
   const onSave = useCallback(() => {
+    if (isGuest) { promptAuth(); return; }
     toggleSave(discount.id);
-  }, [toggleSave, discount.id]);
+  }, [isGuest, toggleSave, discount.id, promptAuth]);
 
   return (
     <Animated.View
@@ -75,8 +87,14 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
             <Text style={styles.discountNumber}>−{discount.percent}%</Text>
           </View>
 
-          {/* Timers — dark translucent pill with both publication + expiry */}
-          <View style={styles.timersPill} pointerEvents="box-none">
+          {/* Timers — smooth gradient darkening */}
+          <LinearGradient
+            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.timersPill}
+            pointerEvents="box-none"
+          >
             <Text style={styles.timerElapsed}>
               {elapsed}
             </Text>
@@ -88,7 +106,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
                 </Text>
               </>
             )}
-          </View>
+          </LinearGradient>
 
           {/* Bookmark */}
           <Pressable onPress={onSave} hitSlop={10} style={styles.bookmarkBtn}>
@@ -285,22 +303,16 @@ const styles = StyleSheet.create({
   },
   discountNumber: { color: Colors.text, fontSize: 18, letterSpacing: -0.5, fontWeight: "700" as const },
 
-  // ── Timers pill (dark translucent backdrop) ──
+  // ── Timers pill (smooth gradient darkening, no sharp edges) ──
   timersPill: {
     position: "absolute",
     top: 12,
     right: 48,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 12,
-    paddingHorizontal: 10,
+    borderRadius: 10,
+    paddingHorizontal: 16,
     paddingVertical: 7,
     gap: 4,
     alignItems: "center",
-    shadowColor: "rgba(0,0,0,0.5)",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   timerElapsed: {
     fontSize: 12,

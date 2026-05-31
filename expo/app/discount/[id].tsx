@@ -1,4 +1,5 @@
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import {
@@ -58,7 +59,7 @@ export default function DiscountDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const discount = useDiscount(id ?? "");
   const { toggleLike, toggleSave, toggleGoing, incrementViews } = useDiscounts();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [comment, setComment] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
 
@@ -78,7 +79,15 @@ export default function DiscountDetailScreen() {
     }
   }, [id, incrementViews]);
 
+  const promptAuth = useCallback(() => {
+    Alert.alert("Вход", "Войди в аккаунт, чтобы использовать эту функцию", [
+      { text: "Отмена", style: "cancel" },
+      { text: "Войти", onPress: () => router.push("/auth/login") },
+    ]);
+  }, [router]);
+
   const onSendComment = useCallback(async () => {
+    if (isGuest) { promptAuth(); return; }
     const txt = comment.trim();
     if (!txt || !id) return;
     const res = await api.addComment(id, txt);
@@ -101,7 +110,7 @@ export default function DiscountDetailScreen() {
     }
     setComment("");
     impact();
-  }, [comment, id]);
+  }, [comment, id, isGuest, promptAuth]);
 
   if (!discount) {
     return (
@@ -142,6 +151,7 @@ export default function DiscountDetailScreen() {
                   <View style={styles.heroActions}>
                     <Pressable
                       onPress={() => {
+                        if (isGuest) { promptAuth(); return; }
                         toggleSave(discount.id);
                       }}
                       style={styles.headerBtn}
@@ -166,7 +176,13 @@ export default function DiscountDetailScreen() {
                 <View style={styles.discountBadge}>
                   <Text style={styles.discountNumber}>−{discount.percent}%</Text>
                 </View>
-                <View style={styles.timersPill} pointerEvents="box-none">
+                <LinearGradient
+                  colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0)"]}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={styles.timersPill}
+                  pointerEvents="box-none"
+                >
                   <View style={styles.timerRow}>
                     <Clock size={11} color="rgba(255,255,255,0.85)" strokeWidth={2} />
                     <Text style={styles.timerText}>{elapsed}</Text>
@@ -177,7 +193,7 @@ export default function DiscountDetailScreen() {
                       <Text style={styles.timerTextExpiry}>{expiresIn}</Text>
                     </>
                   )}
-                </View>
+                </LinearGradient>
               </View>
             </ImageCarousel>
           </View>
@@ -264,6 +280,7 @@ export default function DiscountDetailScreen() {
             {/* CTA — "Я иду" */}
             <Pressable
               onPress={() => {
+                if (isGuest) { promptAuth(); return; }
                 impact(Haptics.ImpactFeedbackStyle.Medium);
                 toggleGoing(discount.id);
               }}
@@ -381,9 +398,11 @@ export default function DiscountDetailScreen() {
                 <TextInput
                   value={comment}
                   onChangeText={setComment}
-                  placeholder="Написать комментарий"
+                  placeholder={isGuest ? "Войди, чтобы комментировать" : "Написать комментарий"}
                   placeholderTextColor={Colors.textMuted}
                   style={styles.commentInput}
+                  editable={!isGuest}
+                  onPressIn={() => { if (isGuest) promptAuth(); }}
                 />
                 <Pressable
                   onPress={onSendComment}
@@ -457,19 +476,13 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     letterSpacing: -0.7,
   },
-  // ── Timers pill (dark translucent backdrop) ──
+  // ── Timers pill (smooth gradient darkening, no sharp edges) ──
   timersPill: {
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: 12,
-    paddingHorizontal: 10,
+    borderRadius: 10,
+    paddingHorizontal: 16,
     paddingVertical: 7,
     gap: 4,
     alignItems: "center",
-    shadowColor: "rgba(0,0,0,0.5)",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   timerRow: {
     flexDirection: "row",

@@ -87,10 +87,20 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
 
   const toggleLike = useCallback(
     async (id: string) => {
+      // Optimistic update — works for guests too
+      setDiscounts((prev) =>
+        prev.map((d) => {
+          if (d.id !== id) return d;
+          const nextLiked = !d.liked;
+          return { ...d, liked: nextLiked, likes: d.likes + (nextLiked ? 1 : -1) };
+        })
+      );
+      // Fire server request; if it succeeds, use authoritative values
       const res = await api.toggleLike(id);
       if (res.success && res.data) {
         patchDiscount(id, { liked: res.data.liked, likes: res.data.likes });
       }
+      // On failure (guest), keep optimistic state
     },
     [patchDiscount]
   );
@@ -139,6 +149,10 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
 
   const incrementViews = useCallback(
     async (id: string) => {
+      // Optimistic increment — works for guests
+      setDiscounts((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, views: d.views + 1 } : d))
+      );
       const res = await api.incrementView(id);
       if (res.success && res.data) {
         patchDiscount(id, { views: res.data.views });
