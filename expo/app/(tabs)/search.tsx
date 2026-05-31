@@ -23,9 +23,8 @@ import { resolveImageUrl } from "@/utils/image";
 import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
 import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Category } from "@/types/discount";
-import { formatDistance } from "@/utils/time";
-import { isValidCoords } from "@/utils/maps";
 import { formatDistance, isIndefinite } from "@/utils/time";
+import { isValidCoords } from "@/utils/maps";
 import type { Discount } from "@/types/discount";
 
 const RADIUS_PRESETS: { label: string; value: number }[] = [
