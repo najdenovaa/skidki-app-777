@@ -81,6 +81,10 @@ export function formatDistance(km: number): string {
   return `${km.toFixed(1)} км`;
 }
 
+export function formatDateTime(ms: number): string {
+  return formatFullDate(ms);
+}
+
 export function formatPrice(p: number): string {
   return `${p.toLocaleString("ru-RU")} ₽`;
 }

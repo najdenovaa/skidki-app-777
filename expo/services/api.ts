@@ -428,8 +428,8 @@ export const api = {
 
   async getSupport(): Promise<ApiResponse<SupportMessage[]>> {
     try {
-      const data = await http.get<SupportMessage[]>("/support");
-      return ok(data);
+      const data = await http.get<{ messages: SupportMessage[] }>("/support");
+      return ok(data.messages ?? []);
     } catch (err) {
       return handleError(err);
     }
@@ -446,8 +446,8 @@ export const api = {
 
   async getSupportUnread(): Promise<ApiResponse<{ count: number }>> {
     try {
-      const data = await http.get<{ count: number }>("/support/unread");
-      return ok(data);
+      const data = await http.get<{ unread: number }>("/support/unread");
+      return ok({ count: data.unread ?? 0 });
     } catch (err) {
       return handleError(err);
     }
@@ -558,8 +558,10 @@ export const api = {
 
   async getAdminSupportChat(userId: string): Promise<ApiResponse<SupportMessage[]>> {
     try {
-      const data = await http.get<SupportMessage[]>(`/admin/support/${String(userId)}`);
-      return ok(data);
+      const data = await http.get<{ messages: SupportMessage[]; userName?: string; displayId?: number; userEmail?: string }>(
+        `/admin/support/${String(userId)}`
+      );
+      return ok(data.messages ?? []);
     } catch (err) {
       return handleError(err);
     }
@@ -568,6 +570,28 @@ export const api = {
   async sendAdminSupportReply(userId: string, body: string): Promise<ApiResponse<SupportMessage>> {
     try {
       const data = await http.post<SupportMessage>(`/admin/support/${String(userId)}/messages`, { body });
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  /** Get all discounts by current user, including expired ones. */
+  async getMyDiscounts(): Promise<ApiResponse<Discount[]>> {
+    try {
+      const data = await http.get<Discount[]>("/discounts/mine");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  /** Delete a single image from an admin-managed discount. */
+  async deleteAdminDiscountImage(discountId: string, url: string): Promise<ApiResponse<{ images: string[] }>> {
+    try {
+      const data = await http.del<{ images: string[] }>(
+        `/admin/discounts/${String(discountId)}/images?url=${encodeURIComponent(url)}`
+      );
       return ok(data);
     } catch (err) {
       return handleError(err);

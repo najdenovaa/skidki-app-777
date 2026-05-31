@@ -37,23 +37,24 @@ export default function AdminSupportChatScreen() {
   const fetchChat = useCallback(async () => {
     if (!userId) return;
     const res = await api.getAdminSupportChat(userId);
-    if (res.success && res.data) {
+    if (res.success && Array.isArray(res.data)) {
       setMessages(res.data);
-      // Try to get thread info from messages or fetch user
-      if (res.data.length > 0 && !userInfo.userName) {
-        // Try fetching user detail for header info
-        api.getAdminUser(userId).then((uRes) => {
-          if (uRes.success && uRes.data) {
-            setUserInfo({
-              userName: uRes.data.user.name,
-              userEmail: uRes.data.user.email,
-              displayId: uRes.data.user.displayId,
-            });
-          }
-        }).catch(() => {});
-      }
     }
-  }, [userId, userInfo.userName]);
+  }, [userId]);
+
+  // Fetch user info once on mount for the header
+  useEffect(() => {
+    if (!userId) return;
+    api.getAdminUser(userId).then((uRes) => {
+      if (uRes.success && uRes.data) {
+        setUserInfo({
+          userName: uRes.data.user.name,
+          userEmail: uRes.data.user.email,
+          displayId: uRes.data.user.displayId,
+        });
+      }
+    }).catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     fetchChat();

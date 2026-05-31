@@ -104,6 +104,7 @@ export default function AdminDiscountEditScreen() {
       locationName: locationName.trim() || undefined,
       placeName: placeName.trim() || undefined,
       note: note.trim() || undefined,
+      images,
     };
 
     if (expiresIn) {
@@ -330,13 +331,37 @@ export default function AdminDiscountEditScreen() {
               textAlignVertical="top"
             />
 
-            {/* Images (read-only display) */}
+            {/* Images with delete buttons */}
             {images.length > 0 && (
               <>
                 <Text style={styles.label}>Фото ({images.length})</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoRow}>
                   {images.map((uri, i) => (
-                    <RNImage key={i} source={{ uri }} style={styles.photo} />
+                    <View key={uri} style={styles.photoWrap}>
+                      <RNImage source={{ uri }} style={styles.photo} />
+                      <Pressable
+                        style={styles.photoRemove}
+                        onPress={() => {
+                          Alert.alert("Удалить фото?", "", [
+                            { text: "Отмена", style: "cancel" },
+                            {
+                              text: "Удалить",
+                              style: "destructive",
+                              onPress: async () => {
+                                const res = await api.deleteAdminDiscountImage(id!, uri);
+                                if (res.success && res.data) {
+                                  setImages(res.data.images);
+                                } else {
+                                  setImages((prev) => prev.filter((u) => u !== uri));
+                                }
+                              },
+                            },
+                          ]);
+                        }}
+                      >
+                        <X size={14} color="#fff" />
+                      </Pressable>
+                    </View>
                   ))}
                 </ScrollView>
               </>
@@ -481,12 +506,26 @@ const styles = StyleSheet.create({
   },
 
   photoRow: { marginTop: 4, marginBottom: 8 },
+  photoWrap: {
+    position: "relative" as const,
+    marginRight: 8,
+  },
   photo: {
     width: 80,
     height: 80,
     borderRadius: 10,
-    marginRight: 8,
     backgroundColor: Colors.cardSecondary,
+  },
+  photoRemove: {
+    position: "absolute" as const,
+    top: -6,
+    right: -6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
 
   saveBtn: {

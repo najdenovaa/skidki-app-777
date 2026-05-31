@@ -309,6 +309,7 @@ function Tile({
   onDelete?: () => void;
   onEdit?: () => void;
 }) {
+  const isExpired = discount.expired === true || (discount.expiresAt > 0 && discount.expiresAt <= Date.now());
   return (
     <Pressable onPress={onPress} style={styles.tile}>
       <Image
@@ -316,6 +317,12 @@ function Tile({
         style={styles.tileImg}
         contentFit="cover"
       />
+      {isExpired && <View style={styles.tileExpiredOverlay} />}
+      {isExpired && (
+        <View style={styles.tileExpiredBadge}>
+          <Text style={styles.tileExpiredText}>Истекла</Text>
+        </View>
+      )}
       <View style={styles.tilePercent}>
         <Text style={styles.tilePercentText}>−{discount.percent}%</Text>
       </View>
@@ -540,6 +547,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700" as const,
     letterSpacing: -0.3,
+  },
+  tileExpiredOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    borderRadius: 16,
+  },
+  tileExpiredBadge: {
+    position: "absolute" as const,
+    top: "50%" as const,
+    left: 0,
+    right: 0,
+    alignItems: "center" as const,
+    transform: [{ translateY: -12 }],
+  },
+  tileExpiredText: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    color: "#fff",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    overflow: "hidden" as const,
+    letterSpacing: -0.2,
   },
   tileDeleteBtn: {
     position: "absolute" as const,

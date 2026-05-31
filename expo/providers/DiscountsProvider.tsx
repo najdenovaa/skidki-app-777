@@ -12,8 +12,20 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
   const [filter, setFilter] = useState<Category | "all">("all");
   const [hydrated, setHydrated] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [myPostsList, setMyPostsList] = useState<Discount[]>([]);
   const [gpsLat, setGpsLat] = useState<number | undefined>(undefined);
   const [gpsLng, setGpsLng] = useState<number | undefined>(undefined);
+
+  // Fetch user's own posts (including expired) on login
+  useEffect(() => {
+    if (user) {
+      api.getMyDiscounts().then((res) => {
+        if (res.success && res.data) setMyPostsList(res.data);
+      });
+    } else {
+      setMyPostsList([]);
+    }
+  }, [user]);
 
   // Try to get device GPS once for distance calculation
   useEffect(() => {
@@ -139,6 +151,10 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
     async (d: Discount) => {
       // Prepend the new discount returned by server
       setDiscounts((prev) => [d, ...prev]);
+      // Refresh myPosts after adding
+      api.getMyDiscounts().then((res) => {
+        if (res.success && res.data) setMyPostsList(res.data);
+      });
     },
     []
   );
@@ -148,6 +164,10 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       const res = await api.updateDiscount(id, data as Parameters<typeof api.updateDiscount>[1]);
       if (res.success && res.data) {
         patchDiscount(id, res.data);
+        // Refresh myPosts after update
+        api.getMyDiscounts().then((r) => {
+          if (r.success && r.data) setMyPostsList(r.data);
+        });
       }
       return res.success;
     },
@@ -173,6 +193,7 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       const res = await api.deleteDiscount(id);
       if (res.success) {
         setDiscounts((prev) => prev.filter((d) => d.id !== id));
+        setMyPostsList((prev) => prev.filter((d) => d.id !== id));
       }
       return res.success;
     },
@@ -185,8 +206,8 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
   );
 
   const myPosts = useMemo<Discount[]>(
-    () => (user ? discounts.filter((d) => d.author.id === user.id) : []),
-    [discounts, user]
+    () => myPostsList,
+    [myPostsList]
   );
 
   return useMemo(
@@ -228,6 +249,7 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       hydrated,
       gpsLat,
       gpsLng,
+      myPostsList,
     ]
   );
 });

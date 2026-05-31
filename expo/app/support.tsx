@@ -44,7 +44,7 @@ export default function SupportScreen() {
 
   const fetchMessages = useCallback(async () => {
     const res = await api.getSupport();
-    if (res.success && res.data) {
+    if (res.success && Array.isArray(res.data)) {
       setMessages(res.data);
     }
     setLoaded(true);
@@ -57,7 +57,7 @@ export default function SupportScreen() {
 
     pollRef.current = setInterval(() => {
       api.getSupport().then((res) => {
-        if (res.success && res.data) setMessages(res.data);
+        if (res.success && Array.isArray(res.data)) setMessages(res.data);
       });
     }, POLL_INTERVAL);
 

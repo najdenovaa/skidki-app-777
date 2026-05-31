@@ -54,6 +54,7 @@ export interface Discount {
   placeName?: string;
   address?: string;
   note?: string;
+  expired?: boolean;
 }
 
 export interface Comment {
