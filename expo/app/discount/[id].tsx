@@ -31,6 +31,7 @@ import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
 import { shareDiscount } from "@/utils/share";
+import { isValidCoords } from "@/utils/maps";
 import { useAuth } from "@/providers/AuthProvider";
 import { resolveImageUrl } from "@/utils/image";
 import { CATEGORY_MAP } from "@/constants/categories";
@@ -214,10 +215,14 @@ export default function DiscountDetailScreen() {
                 <Text style={styles.locationText} numberOfLines={1}>
                   {discount.address || discount.locationName}
                 </Text>
-                <Text style={styles.locationDot}>·</Text>
-                <Text style={styles.distanceText}>
-                  {formatDistance(discount.distanceKm)}
-                </Text>
+                {isValidCoords(discount.lat, discount.lng) ? (
+                  <>
+                    <Text style={styles.locationDot}>·</Text>
+                    <Text style={styles.distanceText}>
+                      {formatDistance(discount.distanceKm)}
+                    </Text>
+                  </>
+                ) : null}
               </View>
             </View>
 

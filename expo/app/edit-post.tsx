@@ -192,6 +192,7 @@ export default function EditPostScreen() {
       }
     }
 
+    // Geocode address if user typed it manually (no GPS coords)
     let finalLat = lat;
     let finalLng = lng;
     if (address.trim() && !addressFromGps) {
@@ -199,6 +200,9 @@ export default function EditPostScreen() {
       if (geoRes.success && geoRes.data) {
         finalLat = geoRes.data.lat;
         finalLng = geoRes.data.lng;
+      } else {
+        Alert.alert("Адрес не найден", "Проверь адрес или нажми на стрелку GPS для автоопределения");
+        return;
       }
     }
 
@@ -417,7 +421,7 @@ export default function EditPostScreen() {
               <MapPin size={18} color={Colors.primary} strokeWidth={2} style={{ marginLeft: 2 }} />
               <TextInput
                 value={address}
-                onChangeText={(v) => { setAddress(v); setAddressFromGps(false); }}
+                onChangeText={(v) => { setAddress(v); setAddressFromGps(false); setLat(undefined); setLng(undefined); }}
                 placeholder="Улица, дом"
                 placeholderTextColor={Colors.textMuted}
                 style={styles.addressField}

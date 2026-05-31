@@ -105,16 +105,18 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
               <Text style={styles.photoLocationText} numberOfLines={1}>
                 {discount.address || discount.locationName}
               </Text>
-              <Text style={styles.photoLocationDot}>·</Text>
-              <Text style={styles.photoDistance}>{formatDistance(discount.distanceKm)}</Text>
               {isValidCoords(discount.lat, discount.lng) ? (
-                <Pressable
-                  onPress={(e) => { e.stopPropagation(); openIn2Gis({ lat: discount.lat, lng: discount.lng, label: discount.placeName || discount.title, address: discount.address }); }}
-                  hitSlop={8}
-                  style={styles.mapPinBtn}
-                >
-                  <MapPin size={14} color={Colors.primary} strokeWidth={2.5} fill={Colors.primary} />
-                </Pressable>
+                <>
+                  <Text style={styles.photoLocationDot}>·</Text>
+                  <Text style={styles.photoDistance}>{formatDistance(discount.distanceKm)}</Text>
+                  <Pressable
+                    onPress={(e) => { e.stopPropagation(); openIn2Gis({ lat: discount.lat, lng: discount.lng, address: discount.address }); }}
+                    hitSlop={8}
+                    style={styles.mapPinBtn}
+                  >
+                    <MapPin size={14} color={Colors.primary} strokeWidth={2.5} fill={Colors.primary} />
+                  </Pressable>
+                </>
               ) : null}
             </View>
           </View>

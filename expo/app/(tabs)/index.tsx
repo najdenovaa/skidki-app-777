@@ -25,6 +25,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { CategoryChips } from "@/components/CategoryChips";
 import { CityPicker } from "@/components/CityPicker";
 import { DiscountCard } from "@/components/DiscountCard";
+import { PercentSpinner } from "@/components/PercentSpinner";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import Colors from "@/constants/colors";
 import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
@@ -204,6 +205,7 @@ export default function FeedScreen() {
         initialNumToRender={3}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        progressViewOffset={HEADER_HEIGHT}
         ListHeaderComponent={<View style={{ height: 8 }} />}
         ListEmptyComponent={
           !hasCity ? (
@@ -221,6 +223,13 @@ export default function FeedScreen() {
           )
         }
       />
+      )}
+
+      {/* Spinner overlay on pull-to-refresh */}
+      {refreshing && (
+        <View style={styles.refreshOverlay} pointerEvents="none">
+          <PercentSpinner size={72} />
+        </View>
       )}
 
       {/* FAB */}
@@ -334,4 +343,12 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 17, color: Colors.text, letterSpacing: -0.3 },
   emptyText: { fontSize: 14, color: Colors.textMuted, marginTop: 4, textAlign: "center" as const },
   loadingWrap: { paddingTop: 100, gap: 8 },
+  refreshOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    zIndex: 5,
+    paddingTop: 0,
+  },
 });

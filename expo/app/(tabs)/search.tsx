@@ -24,6 +24,7 @@ import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
 import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Category } from "@/types/discount";
 import { formatDistance } from "@/utils/time";
+import { isValidCoords } from "@/utils/maps";
 import type { Discount } from "@/types/discount";
 
 export default function SearchScreen() {
@@ -77,8 +78,12 @@ export default function SearchScreen() {
           <Text style={styles.resultTitle} numberOfLines={2}>{item.title}</Text>
           <View style={styles.resultMeta}>
             <Text style={styles.resultBusiness} numberOfLines={1}>{item.author.name}</Text>
-            <Text style={styles.resultDot}>·</Text>
-            <Text style={styles.resultDistance}>{formatDistance(item.distanceKm)}</Text>
+            {isValidCoords(item.lat, item.lng) ? (
+              <>
+                <Text style={styles.resultDot}>·</Text>
+                <Text style={styles.resultDistance}>{formatDistance(item.distanceKm)}</Text>
+              </>
+            ) : null}
           </View>
         </View>
         <View style={[styles.resultBadge, { backgroundColor: cat.color + "20" }]}>
