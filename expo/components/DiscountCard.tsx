@@ -20,6 +20,7 @@ import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Discount } from "@/types/discount";
 import { useTick } from "@/hooks/useTick";
 import { formatTimeSince, formatDistance, formatTimeAgo, formatViews, formatTimeUntil, isIndefinite } from "@/utils/time";
+import { shareDiscount } from "@/utils/share";
 
 interface Props {
   discount: Discount;
@@ -266,7 +267,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
 
             {/* Bottom action row */}
             <View style={styles.actionRow}>
-              <Pressable hitSlop={8} style={styles.actionBtn}>
+              <Pressable hitSlop={8} style={styles.actionBtn} onPress={() => shareDiscount(discount)}>
                 <Share2 size={18} color={Colors.textMuted} strokeWidth={2} />
                 <Text style={styles.actionLabel}>Поделиться</Text>
               </Pressable>

@@ -164,7 +164,7 @@ export default function DiscountDetailScreen() {
                         fill={discount.saved ? Colors.primary : "transparent"}
                       />
                     </Pressable>
-                    <Pressable style={styles.headerBtn} hitSlop={12} onPress={() => shareDiscount({ title: discount.title, address: discount.address, placeName: discount.placeName, originalPrice: discount.originalPrice, discountedPrice: discount.discountedPrice, note: discount.note })}>
+                    <Pressable style={styles.headerBtn} hitSlop={12} onPress={() => shareDiscount(discount)}>
                       <Share2 size={20} color={Colors.text} strokeWidth={2} />
                     </Pressable>
                   </View>
@@ -344,7 +344,7 @@ export default function DiscountDetailScreen() {
                 <MessageCircle size={22} color={Colors.textMuted} strokeWidth={2} />
                 <Text style={styles.actionLabel}>{discount.comments}</Text>
               </Pressable>
-              <Pressable style={styles.actionBtn} hitSlop={8} onPress={() => shareDiscount({ title: discount.title, address: discount.address, placeName: discount.placeName, originalPrice: discount.originalPrice, discountedPrice: discount.discountedPrice, note: discount.note })}>
+              <Pressable style={styles.actionBtn} hitSlop={8} onPress={() => shareDiscount(discount)}>
                 <Share2 size={22} color={Colors.textMuted} strokeWidth={2} />
               </Pressable>
             </View>

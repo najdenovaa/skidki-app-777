@@ -1,31 +1,73 @@
 import { Share } from "react-native";
+import { CATEGORY_MAP } from "@/constants/categories";
+import { formatFullDate, formatTimeUntil, isIndefinite, formatDistance } from "@/utils/time";
+import type { Discount } from "@/types/discount";
 
-export function shareDiscount(opts: {
-  title: string;
-  address?: string;
-  placeName?: string;
-  originalPrice?: number;
-  discountedPrice?: number;
-  note?: string;
-}) {
-  const { title, address, placeName, originalPrice, discountedPrice, note } = opts;
+function buildShareText(discount: Discount): string {
+  const cat = CATEGORY_MAP[discount.category];
+  const lines: string[] = [];
 
-  const lines: string[] = [title];
+  // Title + percent
+  lines.push(`🔥 ${discount.title} — скидка ${discount.percent}%`);
 
-  if (placeName) lines.push(placeName);
-  if (address) lines.push(address);
+  // Place
+  const location = discount.address || discount.placeName || discount.locationName;
+  if (location) {
+    lines.push(`📍 ${location}${discount.cityName ? `, ${discount.cityName}` : ""}`);
+  }
 
-  if (discountedPrice !== undefined) {
-    if (originalPrice !== undefined) {
-      lines.push(`${discountedPrice.toLocaleString("ru-RU")} ₽ вместо ${originalPrice.toLocaleString("ru-RU")} ₽`);
+  // Category
+  if (cat) {
+    lines.push(`🏷 ${cat.label}`);
+  }
+
+  // Prices
+  if (discount.discountedPrice !== undefined) {
+    if (discount.originalPrice !== undefined) {
+      const saved = discount.originalPrice - discount.discountedPrice;
+      lines.push(`💰 ${discount.discountedPrice.toLocaleString("ru-RU")} ₽ вместо ${discount.originalPrice.toLocaleString("ru-RU")} ₽ (экономия ${saved.toLocaleString("ru-RU")} ₽)`);
     } else {
-      lines.push(`${discountedPrice.toLocaleString("ru-RU")} ₽`);
+      lines.push(`💰 ${discount.discountedPrice.toLocaleString("ru-RU")} ₽`);
     }
   }
 
-  if (note) lines.push(note);
+  // Distance
+  if (discount.distanceKm !== undefined && discount.distanceKm > 0) {
+    lines.push(`📏 ${formatDistance(discount.distanceKm)} от вас`);
+  }
 
-  const message = lines.join("\n");
+  // Posted
+  lines.push(`⏰ Опубликовано: ${formatFullDate(discount.postedAt)}`);
 
-  Share.share({ message, title });
+  // Expiry
+  if (!isIndefinite(discount.expiresAt)) {
+    const remaining = formatTimeUntil(discount.expiresAt);
+    lines.push(`⏳ До конца: ${remaining}`);
+  } else {
+    lines.push("⏳ Пока в наличии");
+  }
+
+  // Note
+  if (discount.note) {
+    lines.push(`📝 ${discount.note}`);
+  }
+
+  // Stats
+  const stats: string[] = [];
+  if (discount.views > 0) stats.push(`👀 ${discount.views}`);
+  if (discount.likes > 0) stats.push(`❤️ ${discount.likes}`);
+  if (discount.comments > 0) stats.push(`💬 ${discount.comments}`);
+  if (discount.going > 0) stats.push(`🚶 ${discount.going} идут`);
+  if (stats.length > 0) lines.push(stats.join(" · "));
+
+  // Link
+  lines.push("");
+  lines.push(`🔗 Открыть карточку: https://rork.com/discount/${discount.id}`);
+
+  return lines.join("\n");
+}
+
+export function shareDiscount(discount: Discount): void {
+  const message = buildShareText(discount);
+  Share.share({ message, title: discount.title });
 }
