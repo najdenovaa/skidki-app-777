@@ -1,4 +1,5 @@
 import { http, setToken } from "./http";
+import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import type {
   AdminDiscount,
   AdminStats,
@@ -327,9 +328,10 @@ export const api = {
 
   async uploadImage(uri: string): Promise<ApiResponse<{ url: string }>> {
     try {
+      const preparedUri = await prepareImageForUpload(uri);
       const formData = new FormData();
       formData.append("images", {
-        uri,
+        uri: preparedUri,
         type: "image/jpeg",
         name: "photo.jpg",
       } as unknown as Blob);
@@ -338,6 +340,24 @@ export const api = {
       const uploaded = data.url ?? data.urls?.[0];
       if (!uploaded) return fail("Сервер не вернул URL изображения");
       return ok({ url: uploaded });
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  /** Upload multiple images one by one (not all in one FormData to avoid memory issues). */
+  async uploadImages(uris: string[]): Promise<ApiResponse<{ urls: string[] }>> {
+    try {
+      const urls: string[] = [];
+      for (const uri of uris) {
+        const res = await api.uploadImage(uri);
+        if (res.success && res.data) {
+          urls.push(res.data.url);
+        } else {
+          return fail(res.error ?? "Не удалось загрузить изображение");
+        }
+      }
+      return ok({ urls });
     } catch (err) {
       return handleError(err);
     }

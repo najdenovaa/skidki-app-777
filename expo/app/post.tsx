@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
-import { Camera, Check, MapPin, Navigation, X } from "lucide-react-native";
+import { Camera, Check, MapPin, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CityPicker } from "@/components/CityPicker";
@@ -40,7 +40,7 @@ export default function PostModalScreen() {
   const { user, guestCity } = useAuth();
   const { addPost } = useDiscounts();
 
-  const [image, setImage] = useState<string | undefined>(undefined);
+  const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState<string>("");
   const [category, setCategory] = useState<Category>("food");
   const [percentInput, setPercentInput] = useState<string>("");
@@ -82,16 +82,24 @@ export default function PostModalScreen() {
     return 0;
   }, [originalPrice, discountedPrice, percentInput]);
 
-  const pickImage = useCallback(async () => {
+  const pickImages = useCallback(async () => {
+    const remaining = 5 - images.length;
+    if (remaining <= 0) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-      allowsEditing: true,
-      aspect: [4, 3],
+      quality: 0.7,
+      allowsEditing: false,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+      exif: false,
     });
-    if (!result.canceled && result.assets[0]) {
-      setImage(result.assets[0].uri);
+    if (!result.canceled && result.assets.length > 0) {
+      setImages((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
     }
+  }, [images.length]);
+
+  const removeImage = useCallback((index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const useMyLocation = useCallback(() => {
@@ -107,12 +115,12 @@ export default function PostModalScreen() {
     const orig = parseFloat(originalPrice);
     const disc = parseFloat(discountedPrice);
 
-    // Upload image first
-    let imageUrl: string | undefined;
-    if (image) {
-      const uploadRes = await api.uploadImage(image);
+    // Upload images first
+    let imageUrls: string[] | undefined;
+    if (images.length > 0) {
+      const uploadRes = await api.uploadImages(images);
       if (uploadRes.success && uploadRes.data) {
-        imageUrl = uploadRes.data.url;
+        imageUrls = uploadRes.data.urls;
       }
     }
 
@@ -124,7 +132,7 @@ export default function PostModalScreen() {
       percent: effectivePercent || 10,
       originalPrice: !isNaN(orig) ? orig : undefined,
       discountedPrice: !isNaN(disc) ? disc : undefined,
-      images: imageUrl ? [imageUrl] : undefined,
+      images: imageUrls && imageUrls.length > 0 ? imageUrls : undefined,
       locationName: address || "Моё место",
       lat: 55.756,
       lng: 37.62,
@@ -142,7 +150,7 @@ export default function PostModalScreen() {
     } else {
       Alert.alert("Ошибка", res.error ?? "Не удалось опубликовать");
     }
-  }, [title, category, image, address, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
+  }, [title, category, images, address, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
 
   return (
     <View style={styles.root}>
@@ -171,20 +179,36 @@ export default function PostModalScreen() {
       <KeyboardSafeScrollView
         contentContainerStyle={styles.scroll}
       >
-          {/* Image */}
-          <Pressable style={styles.imagePicker} onPress={pickImage}>
-            {image ? (
-              <Image source={{ uri: image }} style={styles.pickedImage} contentFit="cover" />
-            ) : (
-              <View style={styles.placeholder}>
-                <View style={styles.placeholderIcon}>
-                  <Camera size={28} color={Colors.primary} strokeWidth={2} />
+          {/* Images — horizontal preview strip */}
+          <View style={styles.imagesSection}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imagesRow}>
+              {images.map((uri, i) => (
+                <View key={i} style={styles.thumbnailWrap}>
+                  <Image source={{ uri }} style={styles.thumbnail} contentFit="cover" />
+                  <Pressable
+                    onPress={() => removeImage(i)}
+                    style={styles.thumbnailRemove}
+                    hitSlop={6}
+                  >
+                    <X size={10} color={Colors.text} strokeWidth={2.5} />
+                  </Pressable>
                 </View>
-                <Text style={styles.placeholderTitle}>Добавить фото</Text>
-                <Text style={styles.placeholderHint}>Покажи, что предлагаешь</Text>
-              </View>
+              ))}
+              {images.length < 5 && (
+                <Pressable onPress={pickImages} style={styles.addPhotoBtn}>
+                  <View style={styles.addPhotoIcon}>
+                    <Plus size={20} color={Colors.primary} strokeWidth={2} />
+                  </View>
+                  <Text style={styles.addPhotoLabel}>
+                    {images.length === 0 ? "Фото" : "Ещё"}
+                  </Text>
+                </Pressable>
+              )}
+            </ScrollView>
+            {images.length === 0 && (
+              <Text style={styles.imagesHint}>Добавь до 5 фото</Text>
             )}
-          </Pressable>
+          </View>
 
           <Field label="Название">
             <View style={styles.inputBox}>
@@ -428,26 +452,48 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 20, paddingBottom: 60 },
 
-  imagePicker: {
-    height: 200,
-    borderRadius: 16,
-    backgroundColor: Colors.card,
+  imagesSection: { marginBottom: 4 },
+  imagesRow: { gap: 10, paddingVertical: 4 },
+  thumbnailWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+  },
+  thumbnail: { width: 80, height: 80 },
+  thumbnailRemove: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "rgba(0,0,0,0.6)",
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
   },
-  pickedImage: { width: "100%", height: "100%" },
-  placeholder: { alignItems: "center", gap: 10 },
-  placeholderIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+  addPhotoBtn: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.borderLight,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+  addPhotoIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     backgroundColor: Colors.backgroundSecondary,
     alignItems: "center",
     justifyContent: "center",
   },
-  placeholderTitle: { fontSize: 16, color: Colors.text, letterSpacing: -0.3 },
-  placeholderHint: { fontSize: 12, color: Colors.textMuted },
+  addPhotoLabel: { fontSize: 11, color: Colors.textMuted },
+  imagesHint: { fontSize: 12, color: Colors.textMuted, marginTop: 4, marginBottom: 16 },
 
   inputBox: {
     backgroundColor: Colors.backgroundSecondary,

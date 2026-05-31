@@ -150,6 +150,10 @@ export default function SearchScreen() {
             showsVerticalScrollIndicator={false}
             onScroll={onScroll}
             scrollEventThrottle={16}
+            removeClippedSubviews
+            windowSize={7}
+            maxToRenderPerBatch={4}
+            initialNumToRender={3}
             ListHeaderComponent={
               <View style={styles.listHeader}>
                 <Text style={styles.listCount}>

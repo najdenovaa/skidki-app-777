@@ -6,6 +6,8 @@ import React, { memo, useCallback, useState } from "react";
 import { LayoutAnimation, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
+const isIos = Platform.OS === "ios";
+
 import { ImageCarousel } from "@/components/ImageCarousel";
 
 import Colors from "@/constants/colors";
@@ -39,7 +41,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
   }, [router, discount.id]);
 
   const onToggleExpand = useCallback(() => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (isIos) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded((v) => !v);
   }, []);
 
@@ -59,7 +61,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
 
   return (
     <Animated.View
-      entering={FadeIn.delay(index * 80).duration(200)}
+      entering={isIos ? FadeIn.delay(index * 80).duration(200) : undefined}
       style={styles.outer}
     >
       <View style={styles.card}>

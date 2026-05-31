@@ -5,6 +5,7 @@ import {
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -83,7 +84,9 @@ export function ImageCarousel({
               source={{ uri }}
               style={{ width: "100%", height: "100%" }}
               contentFit="cover"
-              transition={200}
+              cachePolicy="memory-disk"
+              recyclingKey={uri}
+              transition={Platform.OS === "android" ? 0 : 200}
             />
             {gradient && (
               <LinearGradient

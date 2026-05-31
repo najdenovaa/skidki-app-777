@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CityPicker } from "@/components/CityPicker";
 import Colors from "@/constants/colors";
+import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
 import { resolveImageUrl } from "@/utils/image";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
@@ -69,7 +70,8 @@ export default function EditProfileScreen() {
 
     let avatarUrl: string | undefined;
     if (avatarFile) {
-      const uploadRes = await api.uploadAvatar(avatarFile);
+      const preparedUri = await prepareImageForUpload(avatarFile);
+      const uploadRes = await api.uploadAvatar(preparedUri);
       if (uploadRes.success && uploadRes.data) {
         avatarUrl = uploadRes.data.url;
       } else {

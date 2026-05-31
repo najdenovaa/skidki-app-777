@@ -198,6 +198,10 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
+        removeClippedSubviews
+        windowSize={7}
+        maxToRenderPerBatch={4}
+        initialNumToRender={3}
         refreshing={refreshing}
         onRefresh={onRefresh}
         ListHeaderComponent={<View style={{ height: 8 }} />}
