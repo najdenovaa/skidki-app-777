@@ -1,10 +1,9 @@
 import { useRouter } from "expo-router";
-import { Bell, MapPin, Plus, Search, Tag } from "lucide-react-native";
+import { Bell, MapPin, Search, Tag } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -12,7 +11,6 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import * as Haptics from "expo-haptics";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -25,6 +23,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { CategoryChips } from "@/components/CategoryChips";
 import { CityPicker } from "@/components/CityPicker";
 import { DiscountCard } from "@/components/DiscountCard";
+import { DraggableFab } from "@/components/DraggableFab";
 import { PercentSpinner } from "@/components/PercentSpinner";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import Colors from "@/constants/colors";
@@ -34,38 +33,6 @@ import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Discount } from "@/types/discount";
 
 const CHIPS_HEIGHT = 60;
-
-function FabButton() {
-  const router = useRouter();
-  const { isGuest } = useAuth();
-
-  const onPress = useCallback(() => {
-    if (isGuest) {
-      Alert.alert(
-        "Требуется авторизация",
-        "Чтобы публиковать скидки, войди или зарегистрируйся",
-        [
-          {
-            text: "Войти",
-            onPress: () => router.push("/auth/login"),
-          },
-          { text: "Позже", style: "cancel" as const },
-        ]
-      );
-      return;
-    }
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    }
-    router.push("/post");
-  }, [isGuest, router]);
-
-  return (
-    <Pressable onPress={onPress} style={styles.fab}>
-      <Plus size={24} color={Colors.text} strokeWidth={2.5} />
-    </Pressable>
-  );
-}
 
 function FeedHeader() {
   const router = useRouter();
@@ -135,11 +102,27 @@ function FeedHeader() {
 }
 
 export default function FeedScreen() {
+  const router = useRouter();
   const { filtered, filter, setFilter, hydrated, refreshing, onRefresh } = useDiscounts();
   const tabBarVisible = useTabBarVisible();
-  const { user, guestCity } = useAuth();
+  const { user, guestCity, isGuest } = useAuth();
   const insets = useSafeAreaInsets();
   const hasCity = !!(user?.cityId || guestCity?.cityId);
+
+  const handleFabPress = useCallback(() => {
+    if (isGuest) {
+      Alert.alert(
+        "Требуется авторизация",
+        "Чтобы публиковать скидки, войди или зарегистрируйся",
+        [
+          { text: "Войти", onPress: () => router.push("/auth/login") },
+          { text: "Позже", style: "cancel" as const },
+        ]
+      );
+      return;
+    }
+    router.push("/post");
+  }, [isGuest, router]);
 
   const HEADER_HEIGHT = useMemo(() => insets.top + 72 + CHIPS_HEIGHT, [insets.top]);
 
@@ -232,8 +215,7 @@ export default function FeedScreen() {
         </View>
       )}
 
-      {/* FAB */}
-      <FabButton />
+      <DraggableFab onPress={handleFabPress} />
 
       {/* Transparent header */}
       <SafeAreaView
@@ -319,24 +301,6 @@ const styles = StyleSheet.create({
 
   chipsWrapper: {
     overflow: "hidden",
-  },
-
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 94,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "rgba(0,0,0,0.3)",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-    zIndex: 10,
   },
 
   empty: { padding: 60, alignItems: "center" as const, gap: 12 },
