@@ -28,7 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
-import { MapPlaceholder } from "@/components/MapPlaceholder";
+import { StaticMapPreview } from "@/components/StaticMapPreview";
 import Colors from "@/constants/colors";
 import { resolveImageUrl } from "@/utils/image";
 import { CATEGORY_MAP } from "@/constants/categories";
@@ -339,15 +339,12 @@ export default function DiscountDetailScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Где найти</Text>
               <View style={styles.mapBox}>
-                <MapPlaceholder
-                  discounts={[discount]}
-                  selectedId={discount.id}
+                <StaticMapPreview
+                  lat={discount.lat}
+                  lng={discount.lng}
+                  label={discount.placeName || discount.title}
                 />
               </View>
-              <Pressable style={styles.directionsBtn}>
-                <Navigation size={16} color={Colors.primary} strokeWidth={2} />
-                <Text style={styles.directionsText}>Построить маршрут</Text>
-              </Pressable>
             </View>
 
             {/* ── Comments ── */}
@@ -678,11 +675,9 @@ const styles = StyleSheet.create({
     textTransform: "uppercase" as const,
   },
   mapBox: {
-    height: 180,
     borderRadius: 16,
     overflow: "hidden" as const,
   },
-  directionsBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

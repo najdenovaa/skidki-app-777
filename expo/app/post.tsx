@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CityPicker } from "@/components/CityPicker";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
+import { StaticMapPreview } from "@/components/StaticMapPreview";
 import {
   Alert,
   Platform,
@@ -387,6 +388,10 @@ export default function PostModalScreen() {
               </Pressable>
             </View>
           </Field>
+
+          {lat != null && lng != null ? (
+            <StaticMapPreview lat={lat} lng={lng} height={160} label={placeName || title} />
+          ) : null}
 
           <Field label="Примечание">
             <View style={[styles.inputBox, { minHeight: 80 }]}>

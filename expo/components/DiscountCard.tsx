@@ -11,6 +11,7 @@ const isIos = Platform.OS === "ios";
 import { ImageCarousel } from "@/components/ImageCarousel";
 
 import Colors from "@/constants/colors";
+import { isValidCoords, openIn2Gis } from "@/utils/maps";
 import { resolveImageUrl } from "@/utils/image";
 import { CATEGORY_MAP } from "@/constants/categories";
 import { useDiscounts } from "@/providers/DiscountsProvider";
@@ -106,6 +107,15 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
               </Text>
               <Text style={styles.photoLocationDot}>·</Text>
               <Text style={styles.photoDistance}>{formatDistance(discount.distanceKm)}</Text>
+              {isValidCoords(discount.lat, discount.lng) ? (
+                <Pressable
+                  onPress={(e) => { e.stopPropagation(); openIn2Gis(discount.lat, discount.lng, discount.placeName || discount.title); }}
+                  hitSlop={8}
+                  style={styles.mapPinBtn}
+                >
+                  <MapPin size={14} color={Colors.primary} strokeWidth={2.5} fill={Colors.primary} />
+                </Pressable>
+              ) : null}
             </View>
             {discount.cityName ? <Text style={styles.photoCity}>{discount.cityName}</Text> : null}
           </View>
@@ -328,6 +338,15 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  mapPinBtn: {
+    marginLeft: 2,
+    width: 24,
+    height: 24,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    borderRadius: 12,
   },
   photoLocationDot: { color: "rgba(255,255,255,0.45)", fontSize: 12 },
   photoDistance: {

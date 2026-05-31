@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { withTiming } from "react-native-reanimated";
 
 import { CategoryChips } from "@/components/CategoryChips";
-import { MapPlaceholder } from "@/components/MapPlaceholder";
+import { StaticMapPreview } from "@/components/StaticMapPreview";
 import Colors from "@/constants/colors";
 import { CATEGORY_MAP } from "@/constants/categories";
 import { resolveImageUrl } from "@/utils/image";
@@ -92,11 +92,26 @@ export default function SearchScreen() {
     <View style={styles.root}>
       {mapMode ? (
         <>
-          <MapPlaceholder
-            discounts={results}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
+          {selectedId && (() => {
+            const d = results.find((r) => r.id === selectedId);
+            if (!d) return null;
+            return (
+              <View style={styles.mapPreviewWrap}>
+                <StaticMapPreview
+                  lat={d.lat}
+                  lng={d.lng}
+                  height={240}
+                  label={d.placeName || d.title}
+                />
+              </View>
+            );
+          })()}
+          {!selectedId && (
+            <View style={[styles.mapPreviewWrap, { alignItems: "center", justifyContent: "center", backgroundColor: Colors.cardSecondary, borderRadius: 16 }]}>
+              <MapIcon size={48} color={Colors.textMuted} strokeWidth={1.5} />
+              <Text style={{ color: Colors.textMuted, fontSize: 14, marginTop: 12 }}>Выбери скидку из списка</Text>
+            </View>
+          )}
           <SafeAreaView edges={["top"]} style={styles.mapOverlay} pointerEvents="box-none">
             <View style={styles.mapTopRow}>
               <Pressable onPress={() => setMapMode(false)} style={styles.mapBackBtn}>
@@ -240,6 +255,7 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 14, color: Colors.textMuted, marginTop: 4, textAlign: "center" as const },
 
   // ── Map mode ──
+  mapPreviewWrap: { flex: 1, marginHorizontal: 20, marginTop: 100, marginBottom: 80 },
   mapOverlay: { position: "absolute", top: 0, left: 0, right: 0 },
   mapTopRow: {
     flexDirection: "row",
