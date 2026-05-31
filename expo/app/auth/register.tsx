@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { MapPin, X } from "lucide-react-native";
+import { Check, MapPin, X } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import {
   Alert,
@@ -31,6 +31,7 @@ export default function RegisterScreen() {
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<SignUpError>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 
   const emailRef = React.useRef<TextInput>(null);
   const passwordRef = React.useRef<TextInput>(null);
@@ -49,6 +50,13 @@ export default function RegisterScreen() {
       setError("weakPassword");
       return;
     }
+    if (!acceptedTerms) {
+      Alert.alert(
+        "Согласие обязательно",
+        "Примите политику конфиденциальности и пользовательское соглашение"
+      );
+      return;
+    }
     setLoading(true);
     const err = await signUp({
       name,
@@ -57,6 +65,7 @@ export default function RegisterScreen() {
       cityId: city?.cityId,
       regionId: city?.regionId,
       city: city?.cityName,
+      acceptedTerms: true,
     });
     setLoading(false);
     if (err === "emailTaken") {
@@ -68,7 +77,7 @@ export default function RegisterScreen() {
       return;
     }
     router.back();
-  }, [name, email, password, city, signUp, router]);
+  }, [name, email, password, city, acceptedTerms, signUp, router]);
 
   const errorText =
     error === "emailTaken"
@@ -91,99 +100,133 @@ export default function RegisterScreen() {
         <KeyboardSafeScrollView
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingHorizontal: 24 }}
         >
-            {/* Logo */}
-            <View style={styles.logoWrap}>
-              <Text style={styles.logo}>Скидки</Text>
-              <Text style={styles.subtitle}>Создай аккаунт</Text>
+          {/* Logo */}
+          <View style={styles.logoWrap}>
+            <Text style={styles.logo}>Скидки</Text>
+            <Text style={styles.subtitle}>Создай аккаунт</Text>
+          </View>
+
+          {/* Error */}
+          {errorText && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{errorText}</Text>
             </View>
+          )}
 
-            {/* Error */}
-            {errorText && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{errorText}</Text>
-              </View>
-            )}
-
-            {/* Fields */}
-            <View style={styles.fields}>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="Имя"
-                placeholderTextColor={Colors.textMuted}
-                autoCapitalize="words"
-                returnKeyType="next"
-                onSubmitEditing={() => emailRef.current?.focus()}
-                style={styles.input}
-              />
-              <TextInput
-                ref={emailRef}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Email"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordRef.current?.focus()}
-                style={styles.input}
-              />
-              <TextInput
-                ref={passwordRef}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Пароль"
-                placeholderTextColor={Colors.textMuted}
-                secureTextEntry
-                returnKeyType="next"
-                style={styles.input}
-              />
-              <Pressable
-                onPress={() => setCityPickerOpen(true)}
-                style={[styles.input, { justifyContent: "center" }]}
-              >
-                {city ? (
-                  <View style={styles.cityChip}>
-                    <MapPin size={14} color={Colors.primary} strokeWidth={2} />
-                    <Text style={styles.cityText}>
-                      {city.cityName}, {city.regionName}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.placeholder}>Город (необязательно)</Text>
-                )}
-              </Pressable>
-            </View>
-
-            {/* Submit */}
+          {/* Fields */}
+          <View style={styles.fields}>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Имя"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="words"
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
+              style={styles.input}
+            />
+            <TextInput
+              ref={emailRef}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Email"
+              placeholderTextColor={Colors.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              style={styles.input}
+            />
+            <TextInput
+              ref={passwordRef}
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Пароль"
+              placeholderTextColor={Colors.textMuted}
+              secureTextEntry
+              returnKeyType="next"
+              style={styles.input}
+            />
             <Pressable
-              onPress={onSubmit}
-              disabled={loading}
-              style={[styles.btn, loading && styles.btnDisabled]}
+              onPress={() => setCityPickerOpen(true)}
+              style={[styles.input, { justifyContent: "center" }]}
             >
-              {loading ? (
-                <PercentSpinner size={20} color={Colors.text} />
+              {city ? (
+                <View style={styles.cityChip}>
+                  <MapPin size={14} color={Colors.primary} strokeWidth={2} />
+                  <Text style={styles.cityText}>
+                    {city.cityName}, {city.regionName}
+                  </Text>
+                </View>
               ) : (
-                <Text style={styles.btnText}>Создать аккаунт</Text>
+                <Text style={styles.placeholder}>Город (необязательно)</Text>
               )}
             </Pressable>
+          </View>
 
-            {/* Privacy */}
-            <Text style={styles.privacyNote}>
-              Регистрируясь, вы принимаете{" "}
-              <Text style={styles.privacyNoteLink} onPress={() => router.push("/privacy")}>
+          {/* Terms checkbox */}
+          <Pressable
+            style={styles.termsRow}
+            onPress={() => setAcceptedTerms((v) => !v)}
+          >
+            <View
+              style={[
+                styles.checkbox,
+                acceptedTerms && styles.checkboxChecked,
+              ]}
+            >
+              {acceptedTerms ? (
+                <Check size={14} color={Colors.text} strokeWidth={2.5} />
+              ) : null}
+            </View>
+            <Text style={styles.termsText}>
+              Я принимаю{" "}
+              <Text
+                style={styles.termsLink}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  router.push("/privacy");
+                }}
+              >
                 Политику конфиденциальности
+              </Text>{" "}
+              и{" "}
+              <Text
+                style={styles.termsLink}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  router.push("/terms");
+                }}
+              >
+                Пользовательское соглашение
               </Text>
             </Text>
+          </Pressable>
 
-            {/* Footer link */}
-            <View style={styles.footer}>
-              <Text style={styles.footerLabel}>Уже есть аккаунт?</Text>
-              <Pressable onPress={() => router.replace("/auth/login")} hitSlop={10}>
-                <Text style={styles.footerLink}>Войди</Text>
-              </Pressable>
-            </View>
+          {/* Submit */}
+          <Pressable
+            onPress={onSubmit}
+            disabled={loading || !acceptedTerms}
+            style={[
+              styles.btn,
+              (loading || !acceptedTerms) && styles.btnDisabled,
+            ]}
+          >
+            {loading ? (
+              <PercentSpinner size={20} color={Colors.text} />
+            ) : (
+              <Text style={styles.btnText}>Создать аккаунт</Text>
+            )}
+          </Pressable>
+
+          {/* Footer link */}
+          <View style={styles.footer}>
+            <Text style={styles.footerLabel}>Уже есть аккаунт?</Text>
+            <Pressable onPress={() => router.replace("/auth/login")} hitSlop={10}>
+              <Text style={styles.footerLink}>Войди</Text>
+            </Pressable>
+          </View>
         </KeyboardSafeScrollView>
       </SafeAreaView>
 
@@ -260,15 +303,49 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: Colors.textMuted,
   },
+  termsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    marginTop: 20,
+    marginBottom: 4,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  checkboxChecked: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.textMuted,
+    lineHeight: 19,
+    letterSpacing: -0.1,
+  },
+  termsLink: {
+    fontSize: 13,
+    color: Colors.primary,
+    fontWeight: "500" as const,
+  },
   btn: {
     height: 52,
     backgroundColor: Colors.primary,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 24,
+    marginTop: 20,
   },
-  btnDisabled: { opacity: 0.6 },
+  btnDisabled: { opacity: 0.5 },
   btnText: {
     fontSize: 17,
     fontWeight: "600",
@@ -279,19 +356,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 6,
-    marginTop: 32,
-  },
-  privacyNote: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    textAlign: "center" as const,
-    marginTop: 16,
-    lineHeight: 17,
-  },
-  privacyNoteLink: {
-    fontSize: 12,
-    color: Colors.primary,
-    fontWeight: "500" as const,
+    marginTop: 28,
   },
   footerLabel: { fontSize: 14, color: Colors.textMuted },
   footerLink: {

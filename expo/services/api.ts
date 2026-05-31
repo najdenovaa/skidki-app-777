@@ -7,6 +7,7 @@ import type {
   AdminUser,
   AdminUserDetail,
   ApiResponse,
+  ChangePasswordDTO,
   CreateDiscountDTO,
   UpdateDiscountDTO,
   GeoCity,
@@ -106,6 +107,15 @@ export const api = {
     try {
       const user = await http.patch<User>("/auth/profile", data);
       return ok(user);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async changePassword(data: ChangePasswordDTO): Promise<ApiResponse<null>> {
+    try {
+      await http.patch("/auth/password", data);
+      return ok(null);
     } catch (err) {
       return handleError(err);
     }

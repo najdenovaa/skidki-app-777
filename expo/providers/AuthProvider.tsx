@@ -16,6 +16,7 @@ type SignUpInput = {
   password: string;
   cityId?: string;
   regionId?: string;
+  acceptedTerms?: boolean;
 };
 
 type SignInError = "wrongEmail" | "wrongPassword" | "notFound" | null;
@@ -73,6 +74,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         password: input.password,
         cityId: input.cityId,
         regionId: input.regionId,
+        acceptedTerms: input.acceptedTerms,
       });
 
       if (!res.success) {
@@ -124,7 +126,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, [user]);
 
   const updateProfile = useCallback(
-    async (patch: { name?: string; cityId?: string; city?: string; regionId?: string; avatar?: string }) => {
+    async (patch: { name?: string; email?: string; cityId?: string; city?: string; regionId?: string; avatar?: string }) => {
       if (!user) return;
       const res = await api.updateProfile(patch);
       if (res.success && res.data) setUser(res.data);

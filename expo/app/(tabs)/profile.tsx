@@ -133,6 +133,11 @@ function AuthenticatedProfile() {
             <Text style={styles.handle}>
               {user.username}
             </Text>
+            {user.email ? (
+              <Text style={styles.email}>
+                {user.email}
+              </Text>
+            ) : null}
             <Pressable
               onPress={() => setCityPickerOpen(true)}
               style={styles.cityRow}
@@ -170,7 +175,7 @@ function AuthenticatedProfile() {
 
           {/* Edit profile button */}
           <Pressable onPress={handleEditProfile} style={styles.editBtn}>
-            <Text style={styles.editBtnText}>Редактировать профиль</Text>
+            <Text style={styles.editBtnText}>Учётная запись</Text>
           </Pressable>
         </SafeAreaView>
 
@@ -386,6 +391,12 @@ const styles = StyleSheet.create({
   },
 
   // stats line
+  email: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginTop: 4,
+    letterSpacing: -0.2,
+  },
   statsLine: {
     fontSize: 14,
     color: Colors.textSecondary,

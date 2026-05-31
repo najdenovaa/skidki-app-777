@@ -26,6 +26,7 @@ export interface SignUpDTO {
   cityId?: string;
   regionId?: string;
   city?: string;
+  acceptedTerms?: boolean;
 }
 
 export interface SignInDTO {
@@ -35,10 +36,16 @@ export interface SignInDTO {
 
 export interface UpdateProfileDTO {
   name?: string;
+  email?: string;
   cityId?: string;
   city?: string;
   regionId?: string;
   avatar?: string;
+}
+
+export interface ChangePasswordDTO {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export interface GeoRegion {

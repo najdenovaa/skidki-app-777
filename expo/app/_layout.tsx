@@ -114,6 +114,14 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="terms"
+        options={{
+          title: "Пользовательское соглашение",
+          presentation: "modal",
+          animation: "slide_from_bottom",
+        }}
+      />
+      <Stack.Screen
         name="delete-account"
         options={{
           title: "Удаление аккаунта",
