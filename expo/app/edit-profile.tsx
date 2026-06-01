@@ -15,6 +15,7 @@ import {
 import { PercentSpinner } from "@/components/PercentSpinner";
 
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
+import PasswordInput from "@/components/PasswordInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CityPicker } from "@/components/CityPicker";
@@ -225,37 +226,28 @@ export default function EditProfileScreen() {
 
         <View style={styles.field}>
           <Text style={styles.label}>Текущий пароль</Text>
-          <TextInput
+          <PasswordInput
             value={currentPw}
             onChangeText={setCurrentPw}
             placeholder="••••••••"
-            placeholderTextColor={Colors.textMuted}
-            secureTextEntry
-            style={styles.input}
           />
         </View>
 
         <View style={styles.field}>
           <Text style={styles.label}>Новый пароль</Text>
-          <TextInput
+          <PasswordInput
             value={newPw}
             onChangeText={setNewPw}
             placeholder="Минимум 6 символов"
-            placeholderTextColor={Colors.textMuted}
-            secureTextEntry
-            style={styles.input}
           />
         </View>
 
         <View style={styles.field}>
           <Text style={styles.label}>Повтор нового пароля</Text>
-          <TextInput
+          <PasswordInput
             value={confirmPw}
             onChangeText={setConfirmPw}
             placeholder="Повтори пароль"
-            placeholderTextColor={Colors.textMuted}
-            secureTextEntry
-            style={styles.input}
           />
         </View>
 

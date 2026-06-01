@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { PercentSpinner } from "@/components/PercentSpinner";
+import PasswordInput from "@/components/PasswordInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { CityPicker } from "@/components/CityPicker";
@@ -18,14 +19,19 @@ import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { useAuth } from "@/providers/AuthProvider";
 import type { SignUpError } from "@/providers/AuthProvider";
 import type { SelectedCity } from "@/types/api";
-import { validateEmail } from "@/types/user";
+import {
+  isPhoneInput,
+  normalisePhone,
+  validateEmail,
+  validatePhone,
+} from "@/types/user";
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { signUp } = useAuth();
 
   const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [city, setCity] = useState<SelectedCity | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
@@ -33,7 +39,7 @@ export default function RegisterScreen() {
   const [error, setError] = useState<SignUpError>(null);
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 
-  const emailRef = React.useRef<TextInput>(null);
+  const loginRef = React.useRef<TextInput>(null);
   const passwordRef = React.useRef<TextInput>(null);
 
   const onSubmit = useCallback(async () => {
@@ -42,10 +48,30 @@ export default function RegisterScreen() {
       Alert.alert("Укажи имя", "Как тебя называть?");
       return;
     }
-    if (!validateEmail(email.trim())) {
-      setError("weakPassword");
-      return;
+
+    const trimmed = login.trim();
+    const phone = isPhoneInput(trimmed);
+
+    // Validate email or phone
+    if (phone) {
+      const normalised = normalisePhone(trimmed);
+      if (!validatePhone(normalised)) {
+        Alert.alert(
+          "Неверный номер",
+          "Введи номер в формате +7XXXXXXXXXX"
+        );
+        return;
+      }
+    } else {
+      if (!validateEmail(trimmed)) {
+        Alert.alert(
+          "Неверный email",
+          "Проверь адрес или введи номер телефона"
+        );
+        return;
+      }
     }
+
     if (password.length < 6) {
       setError("weakPassword");
       return;
@@ -58,9 +84,10 @@ export default function RegisterScreen() {
       return;
     }
     setLoading(true);
+    const identifier = phone ? normalisePhone(trimmed) : trimmed;
     const err = await signUp({
       name,
-      email,
+      email: identifier,
       password,
       cityId: city?.cityId,
       regionId: city?.regionId,
@@ -77,14 +104,16 @@ export default function RegisterScreen() {
       return;
     }
     router.back();
-  }, [name, email, password, city, acceptedTerms, signUp, router]);
+  }, [name, login, password, city, acceptedTerms, signUp, router]);
 
   const errorText =
     error === "emailTaken"
-      ? "Этот email уже занят. Попробуй войти."
+      ? "Этот email или телефон уже занят. Попробуй войти."
       : error === "weakPassword"
       ? "Пароль должен быть минимум 6 символов."
       : null;
+
+  const isPhone = isPhoneInput(login);
 
   return (
     <View style={styles.root}>
@@ -122,31 +151,28 @@ export default function RegisterScreen() {
               placeholderTextColor={Colors.textMuted}
               autoCapitalize="words"
               returnKeyType="next"
-              onSubmitEditing={() => emailRef.current?.focus()}
+              onSubmitEditing={() => loginRef.current?.focus()}
               style={styles.input}
             />
             <TextInput
-              ref={emailRef}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email"
+              ref={loginRef}
+              value={login}
+              onChangeText={setLogin}
+              placeholder="Email или телефон"
               placeholderTextColor={Colors.textMuted}
-              keyboardType="email-address"
+              keyboardType={isPhone ? "phone-pad" : "email-address"}
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()}
               style={styles.input}
             />
-            <TextInput
+            <PasswordInput
               ref={passwordRef}
               value={password}
               onChangeText={setPassword}
               placeholder="Пароль"
-              placeholderTextColor={Colors.textMuted}
-              secureTextEntry
               returnKeyType="next"
-              style={styles.input}
             />
             <Pressable
               onPress={() => setCityPickerOpen(true)}

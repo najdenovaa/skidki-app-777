@@ -281,15 +281,12 @@ export default function AdminUserScreen() {
           <Text style={styles.sectionLabel}>Пароль</Text>
           <View style={styles.group}>
             <View style={styles.field}>
-              <TextInput
-                style={styles.fieldInput}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                placeholder="Новый пароль"
-                placeholderTextColor={Colors.textMuted}
-                secureTextEntry
-                autoCapitalize="none"
-              />
+                <PasswordInput
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="Новый пароль"
+                  autoCapitalize="none"
+                />
             </View>
           </View>
           <Pressable

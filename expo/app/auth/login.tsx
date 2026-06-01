@@ -9,18 +9,20 @@ import {
   View,
 } from "react-native";
 import { PercentSpinner } from "@/components/PercentSpinner";
+import PasswordInput from "@/components/PasswordInput";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { useAuth } from "@/providers/AuthProvider";
 import type { SignInError } from "@/providers/AuthProvider";
+import { isPhoneInput, normalisePhone } from "@/types/user";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
 
-  const [email, setEmail] = useState<string>("");
+  const [login, setLogin] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<SignInError>(null);
@@ -29,25 +31,32 @@ export default function LoginScreen() {
 
   const onSubmit = useCallback(async () => {
     setError(null);
-    if (!email.trim() || !password) {
+    const trimmed = login.trim();
+    if (!trimmed || !password) {
       setError("notFound");
       return;
     }
     setLoading(true);
-    const err = await signIn(email.trim(), password);
+    // Send phone normalised, or email as-is
+    const identifier = isPhoneInput(trimmed)
+      ? normalisePhone(trimmed)
+      : trimmed;
+    const err = await signIn(identifier, password);
     setLoading(false);
     if (err) {
       setError(err);
       return;
     }
     router.back();
-  }, [email, password, signIn, router]);
+  }, [login, password, signIn, router]);
 
   const errorText = error === "notFound"
-    ? "Пользователь не найден. Проверь email или зарегистрируйся."
+    ? "Пользователь не найден. Проверь данные или зарегистрируйся."
     : error === "wrongPassword"
     ? "Неверный пароль. Минимум 6 символов."
     : null;
+
+  const isPhone = isPhoneInput(login);
 
   return (
     <View style={styles.root}>
@@ -70,27 +79,24 @@ export default function LoginScreen() {
             {/* Fields */}
             <View style={styles.fields}>
               <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Email"
+                value={login}
+                onChangeText={setLogin}
+                placeholder="Email или телефон"
                 placeholderTextColor={Colors.textMuted}
-                keyboardType="email-address"
+                keyboardType={isPhone ? "phone-pad" : "email-address"}
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="next"
                 onSubmitEditing={() => passwordRef.current?.focus()}
                 style={styles.input}
               />
-              <TextInput
+              <PasswordInput
                 ref={passwordRef}
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Пароль"
-                placeholderTextColor={Colors.textMuted}
-                secureTextEntry
                 returnKeyType="done"
                 onSubmitEditing={onSubmit}
-                style={styles.input}
               />
             </View>
 
