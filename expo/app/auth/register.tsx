@@ -102,7 +102,7 @@ export default function RegisterScreen() {
         >
           {/* Logo */}
           <View style={styles.logoWrap}>
-            <Text style={styles.logo}>Скидки</Text>
+            <Text style={styles.logo}>Скидос</Text>
             <Text style={styles.subtitle}>Создай аккаунт</Text>
           </View>
 

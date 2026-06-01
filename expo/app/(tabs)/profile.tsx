@@ -239,7 +239,7 @@ function AuthenticatedProfile() {
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>Скидки v1.0.0</Text>
+        <Text style={styles.version}>Скидос v1.0.0</Text>
       </ScrollView>
     </View>
   );

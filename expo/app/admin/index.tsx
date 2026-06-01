@@ -220,7 +220,7 @@ export default function AdminScreen() {
               {/* ── Tabs ──────────────────────────────────────────────── */}
               <View style={styles.tabRow}>
                 {([
-                  ["discounts", "Скидки", FileText],
+                  ["discounts", "Скидос", FileText],
                   ["users", "Пользователи", Users],
                   ["support", "Поддержка", MessageCircle],
                 ] as [Tab, string, React.ComponentType<any>][]).map(([key, label, Icon]) => (

@@ -57,7 +57,7 @@ export default function LoginScreen() {
         >
             {/* Logo */}
             <View style={styles.logoWrap}>
-              <Text style={styles.logo}>Скидки</Text>
+              <Text style={styles.logo}>Скидос</Text>
             </View>
 
             {/* Error */}
