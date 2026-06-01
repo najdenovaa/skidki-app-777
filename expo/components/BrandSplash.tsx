@@ -321,7 +321,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Colors.textSecondary,
-    letterSpacing: 4,
+    letterSpacing: 1.5,
     textTransform: "uppercase",
+    maxWidth: width * 0.78,
+    textAlign: "center",
   },
 });
