@@ -24,6 +24,7 @@ type BrandSplashProps = {
 
 export default function BrandSplash({ onFinish }: BrandSplashProps) {
  const fly = useSharedValue(0);
+ const subtitleFade = useSharedValue(0);
  const leave = useSharedValue(0);
 
  useEffect(() => {
@@ -33,8 +34,13 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
  fireHaptic();
  }, 1000);
 
+ subtitleFade.value = withDelay(
+ 1300,
+ withTiming(1, { duration: 500 }),
+ );
+
  leave.value = withDelay(
- 2000,
+ 3000,
  withTiming(1, { duration: 1400 }, (finished) => {
  if (finished) {
  runOnJS(onFinish)();
@@ -43,7 +49,7 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
  );
 
  return () => clearTimeout(hapticId);
- }, [fly, leave, onFinish]);
+ }, [fly, subtitleFade, leave, onFinish]);
 
  const brandStyle = useAnimatedStyle(() => {
  const t = fly.value;
@@ -56,16 +62,25 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
  };
  });
 
+ const subtitleStyle = useAnimatedStyle(() => ({
+ opacity: subtitleFade.value,
+ }));
+
  const shellStyle = useAnimatedStyle(() => ({
  opacity: 1 - leave.value,
  }));
 
  return (
  <Animated.View style={[styles.root, shellStyle]} pointerEvents="auto">
+ <View style={styles.content}>
  <Animated.View style={[styles.row, brandStyle]}>
  <Text style={styles.letter}>С</Text>
  <Text style={styles.suffix}>кидос</Text>
  </Animated.View>
+ <Animated.View style={subtitleStyle}>
+ <Text style={styles.subtitle}>Твой выгодный помощник</Text>
+ </Animated.View>
+ </View>
  </Animated.View>
  );
 }
@@ -78,6 +93,9 @@ const styles = StyleSheet.create({
  alignItems: "center",
  justifyContent: "center",
  },
+ content: {
+ alignItems: "center",
+ },
  row: {
  flexDirection: "row",
  alignItems: "center",
@@ -86,15 +104,25 @@ const styles = StyleSheet.create({
  fontSize: 58,
  fontWeight: "800",
  color: "#50D848",
- letterSpacing: -2,
+ letterSpacing: 4,
  includeFontPadding: false,
  },
  suffix: {
  fontSize: 34,
  fontWeight: "800",
  color: "#FFFFFF",
- letterSpacing: -1,
- marginLeft: -2,
+ letterSpacing: 2,
+ marginLeft: 6,
  includeFontPadding: false,
+ },
+ subtitle: {
+ fontSize: 16,
+ fontWeight: "600",
+ color: "#FFFFFF",
+ marginTop: 16,
+ letterSpacing: 0.5,
+ textShadowColor: "#50D848",
+ textShadowOffset: { width: 0, height: 0 },
+ textShadowRadius: 16,
  },
 });
