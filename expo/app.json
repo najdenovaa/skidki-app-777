@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "rork-app",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -38,7 +38,14 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Скидос использует камеру, чтобы ты мог сфотографировать скидку и поделиться ей"
+          "cameraPermission": "Скидос использует камеру, чтобы ты мог сфотографировать скидку и поделиться ей",
+          "photosPermission": "Скидос использует фото, чтобы прикрепить картинку к скидке"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Скидос использует геолокацию, чтобы показать скидки рядом с тобой"
         }
       ],
       "expo-font",
