@@ -35,6 +35,12 @@
           "origin": "https://rork.com/"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Скидос использует камеру, чтобы ты мог сфотографировать скидку и поделиться ей"
+        }
+      ],
       "expo-font",
       "expo-web-browser",
       "expo-notifications"

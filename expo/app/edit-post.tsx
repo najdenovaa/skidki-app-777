@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { Check, MapPin, MessageSquareText, Navigation, Plus, X } from "lucide-react-native";
+import { Camera, Check, ImageIcon, MapPin, MessageSquareText, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PercentSpinnerCentered } from "@/components/PercentSpinner";
@@ -11,6 +11,7 @@ import { CityPicker } from "@/components/CityPicker";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { Open2GisLink } from "@/components/Open2GisLink";
 import {
+  ActionSheetIOS,
   Alert,
   Platform,
   Pressable,
@@ -67,6 +68,7 @@ export default function EditPostScreen() {
   const { discounts, updatePost } = useDiscounts();
 
   const [images, setImages] = useState<string[]>([]);
+  const [cameraFacing, setCameraFacing] = useState<ImagePicker.CameraType>(ImagePicker.CameraType.back);
   const [title, setTitle] = useState<string>("");
   const [category, setCategory] = useState<Category>("other");
   const [percentInput, setPercentInput] = useState<string>("");
@@ -137,6 +139,28 @@ export default function EditPostScreen() {
     return 0;
   }, [originalPrice, discountedPrice, percentInput]);
 
+  const takePhoto = useCallback(async () => {
+    const remaining = 5 - images.length;
+    if (remaining <= 0) return;
+
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert("Нет доступа", "Разреши доступ к камере в настройках телефона");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: false,
+      exif: false,
+      cameraType: cameraFacing,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setImages((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
+    }
+  }, [images.length, cameraFacing]);
+
   const pickImages = useCallback(async () => {
     const remaining = 5 - images.length;
     if (remaining <= 0) return;
@@ -152,6 +176,31 @@ export default function EditPostScreen() {
       setImages((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
     }
   }, [images.length]);
+
+  /** Show native action sheet: camera or gallery */
+  const showImageSource = useCallback(() => {
+    const remaining = 5 - images.length;
+    if (remaining <= 0) return;
+
+    const options = ["Снять фото", "Выбрать из галереи", "Отмена"];
+    const cancelIdx = 2;
+
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: cancelIdx, tintColor: Colors.primary },
+        (idx) => {
+          if (idx === 0) takePhoto();
+          else if (idx === 1) pickImages();
+        },
+      );
+    } else {
+      Alert.alert("Добавить фото", undefined, [
+        { text: "Снять фото", onPress: takePhoto },
+        { text: "Выбрать из галереи", onPress: pickImages },
+        { text: "Отмена", style: "cancel" },
+      ]);
+    }
+  }, [takePhoto, pickImages]);
 
   const removeImage = useCallback((index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
@@ -208,9 +257,11 @@ export default function EditPostScreen() {
 
     if (newUris.length > 0) {
       const uploadRes = await api.uploadImages(newUris);
-      if (uploadRes.success && uploadRes.data) {
-        imageUrls = [...existingUrls, ...uploadRes.data.urls];
+      if (!uploadRes.success || !uploadRes.data) {
+        Alert.alert("Ошибка", uploadRes.error ?? "Не удалось загрузить изображения");
+        return;
       }
+      imageUrls = [...existingUrls, ...uploadRes.data.urls];
     }
 
     // Geocode address if user typed it manually (no GPS coords)
@@ -304,7 +355,7 @@ export default function EditPostScreen() {
                 </View>
               ))}
               {images.length < 5 && (
-                <Pressable onPress={pickImages} style={styles.addPhotoBtn}>
+                <Pressable onPress={showImageSource} style={styles.addPhotoBtn}>
                   <View style={styles.addPhotoIcon}>
                     <Plus size={20} color={Colors.primary} strokeWidth={2} />
                   </View>
@@ -315,7 +366,7 @@ export default function EditPostScreen() {
               )}
             </ScrollView>
             {images.length === 0 && (
-              <Text style={styles.imagesHint}>Добавь до 5 фото</Text>
+              <Text style={styles.imagesHint}>Сними на камеру или выбери до 5 фото из галереи</Text>
             )}
           </View>
 
