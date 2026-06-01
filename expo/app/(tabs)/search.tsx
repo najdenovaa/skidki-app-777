@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { Map as MapIcon, Search, Target } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -16,11 +17,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { withTiming } from "react-native-reanimated";
 
 import { CategoryChips } from "@/components/CategoryChips";
+import { DraggableFab } from "@/components/DraggableFab";
 import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
 import { CATEGORY_MAP } from "@/constants/categories";
 import { resolveImageUrl } from "@/utils/image";
 import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
+import { useAuth } from "@/providers/AuthProvider";
 import { useDiscounts } from "@/providers/DiscountsProvider";
 import type { Category } from "@/types/discount";
 import { formatDistance, isIndefinite } from "@/utils/time";
@@ -40,6 +43,7 @@ export default function SearchScreen() {
   const router = useRouter();
   const { discounts, filter, setFilter } = useDiscounts();
   const tabBarVisible = useTabBarVisible();
+  const { isGuest } = useAuth();
   const [query, setQuery] = useState<string>("");
   const [mapMode, setMapMode] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
@@ -81,6 +85,21 @@ export default function SearchScreen() {
     }
     return list;
   }, [discounts, filter, query, radius]);
+
+  const handleFabPress = useCallback(() => {
+    if (isGuest) {
+      Alert.alert(
+        "Требуется авторизация",
+        "Чтобы публиковать скидки, войди или зарегистрируйся",
+        [
+          { text: "Войти", onPress: () => router.push("/auth/login") },
+          { text: "Позже", style: "cancel" as const },
+        ]
+      );
+      return;
+    }
+    router.push("/post");
+  }, [isGuest, router]);
 
   const renderItem = ({ item }: { item: Discount }) => {
     const cat = CATEGORY_MAP[item.category];
@@ -237,6 +256,7 @@ export default function SearchScreen() {
           />
         </>
       )}
+      <DraggableFab onPress={handleFabPress} />
     </View>
   );
 }

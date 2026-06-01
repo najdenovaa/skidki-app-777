@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { withTiming } from "react-native-reanimated";
 
 import { CityPicker } from "@/components/CityPicker";
+import { DraggableFab } from "@/components/DraggableFab";
 import Colors from "@/constants/colors";
 import { resolveImageUrl } from "@/utils/image";
 import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
@@ -84,6 +85,10 @@ function AuthenticatedProfile() {
       ]
     );
   }, [deleteAccount, router]);
+
+  const handleFabPress = useCallback(() => {
+    router.push("/post");
+  }, [router]);
 
   const handleEditProfile = useCallback(() => {
     router.push("/edit-profile");
@@ -250,6 +255,7 @@ function AuthenticatedProfile() {
         {/* Version */}
         <Text style={styles.version}>Скидос v1.0.0</Text>
       </ScrollView>
+      <DraggableFab onPress={handleFabPress} />
     </View>
   );
 }

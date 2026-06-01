@@ -1,21 +1,27 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Plus } from "lucide-react-native";
-import { useCallback, useEffect } from "react";
-import { Dimensions, Platform, StyleSheet } from "react-native";
+import { useCallback, useEffect, useRef } from "react";
+import { Dimensions, Platform, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
+  withSequence,
   withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
 
 const FAB_SIZE = 56;
+const GLOW_SIZE = FAB_SIZE + 24;
 const STORAGE_KEY = "skidki.fab.position";
+const DRAGGED_KEY = "skidki.fab.dragged";
 const LONG_PRESS_MS = 220;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -44,9 +50,13 @@ export function DraggableFab({ onPress }: Props) {
   const translateX = useSharedValue<number>(DEFAULT_X);
   const translateY = useSharedValue<number>(DEFAULT_Y);
   const scale = useSharedValue<number>(1);
+  const pulseScale = useSharedValue<number>(1);
+  const hintOpacity = useSharedValue<number>(1);
 
   const startX = useSharedValue<number>(0);
   const startY = useSharedValue<number>(0);
+
+  const hasDragged = useRef<boolean>(false);
 
   const clamped = useCallback(
     (x: number, y: number) => ({
@@ -56,7 +66,16 @@ export function DraggableFab({ onPress }: Props) {
     [HEADER_BOTTOM, TAB_BAR_TOP],
   );
 
+  const dismissHint = useCallback(() => {
+    if (hasDragged.current) return;
+    hasDragged.current = true;
+    cancelAnimation(hintOpacity);
+    hintOpacity.value = withTiming(0, { duration: 350 });
+    AsyncStorage.setItem(DRAGGED_KEY, "1").catch(() => {});
+  }, [hintOpacity]);
+
   useEffect(() => {
+    // Restore saved position
     AsyncStorage.getItem(STORAGE_KEY)
       .then((raw) => {
         if (raw) {
@@ -67,6 +86,26 @@ export function DraggableFab({ onPress }: Props) {
         }
       })
       .catch(() => {});
+
+    // Check if user has dragged before
+    AsyncStorage.getItem(DRAGGED_KEY)
+      .then((val) => {
+        if (val === "1") {
+          hasDragged.current = true;
+          hintOpacity.value = 0;
+        }
+      })
+      .catch(() => {});
+
+    // Pulse animation — subtle breathing
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.07, { duration: 1100 }),
+        withTiming(1, { duration: 1100 }),
+      ),
+      -1,
+      true,
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,6 +118,7 @@ export function DraggableFab({ onPress }: Props) {
       if (Platform.OS !== "web") {
         runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
       }
+      runOnJS(dismissHint)();
     })
     .onUpdate((e) => {
       translateX.value = Math.min(
@@ -111,12 +151,43 @@ export function DraggableFab({ onPress }: Props) {
     ],
   }));
 
+  const glowStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value + (FAB_SIZE - GLOW_SIZE) / 2 },
+      { translateY: translateY.value + (FAB_SIZE - GLOW_SIZE) / 2 },
+      { scale: pulseScale.value },
+    ],
+    opacity: 0.45 + (pulseScale.value - 1) * 4,
+  }));
+
+  const hintStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value - 30 },
+    ],
+    opacity: hintOpacity.value,
+  }));
+
   return (
-    <GestureDetector gesture={composed}>
-      <Animated.View style={[styles.fab, animatedStyle]}>
-        <Plus size={24} color={Colors.text} strokeWidth={2.5} />
+    <>
+      {/* Glow ring behind the FAB */}
+      <Animated.View style={[styles.glowRing, glowStyle]} />
+
+      {/* Hint: "Меня можно перемещать" */}
+      <Animated.View style={[styles.hintWrap, hintStyle]} pointerEvents="none">
+        <View style={styles.hintPill}>
+          <Text style={styles.hintText}>Меня можно перемещать</Text>
+        </View>
+        <View style={styles.hintArrow} />
       </Animated.View>
-    </GestureDetector>
+
+      {/* The FAB itself */}
+      <GestureDetector gesture={composed}>
+        <Animated.View style={[styles.fab, animatedStyle]}>
+          <Plus size={24} color={Colors.text} strokeWidth={2.5} />
+        </Animated.View>
+      </GestureDetector>
+    </>
   );
 }
 
@@ -131,11 +202,53 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    shadowColor: "rgba(0,0,0,0.3)",
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
     zIndex: 20,
+  },
+  glowRing: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
+    borderRadius: GLOW_SIZE / 2,
+    backgroundColor: "rgba(22, 163, 74, 0.14)",
+    zIndex: 19,
+  },
+  hintWrap: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    zIndex: 18,
+    alignItems: "center" as const,
+  },
+  hintPill: {
+    backgroundColor: "rgba(15, 42, 26, 0.92)",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(180, 210, 195, 0.3)",
+  },
+  hintArrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 6,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: "rgba(15, 42, 26, 0.92)",
+    marginTop: -1,
+  },
+  hintText: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.7)",
+    letterSpacing: -0.1,
+    fontWeight: "400" as const,
   },
 });

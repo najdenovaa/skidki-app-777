@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
+import { DraggableFab } from "@/components/DraggableFab";
 import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
@@ -64,6 +65,10 @@ export default function SupportScreen() {
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [isGuest, fetchMessages]);
+
+  const handleFabPress = useCallback(() => {
+    router.push("/post");
+  }, [router]);
 
   const send = useCallback(async () => {
     const trimmed = text.trim();
@@ -208,6 +213,7 @@ export default function SupportScreen() {
           </View>
         </KeyboardStickyFooter>
       </View>
+      <DraggableFab onPress={handleFabPress} />
     </View>
   );
 }
