@@ -10,7 +10,7 @@ import Colors from "@/constants/colors";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
 import type { PushMessage } from "@/types/api";
-import { fetchExpoPushToken } from "@/utils/pushToken";
+import { fetchPushToken } from "@/utils/pushToken";
 
 // ── Set global notification handler ──────────────────────────────────────
 Notifications.setNotificationHandler({
@@ -211,8 +211,8 @@ export const [PushProvider, usePush] = createContextHook(() => {
       setPermissionGranted(true);
 
       try {
-        const expoToken = await fetchExpoPushToken();
-        if (expoToken) setToken(expoToken);
+        const pushToken = await fetchPushToken();
+        if (pushToken) setToken(pushToken);
       } catch {
         // push token unavailable — ignore
       }
@@ -224,8 +224,8 @@ export const [PushProvider, usePush] = createContextHook(() => {
   // ── Re-fetch push token when user changes (login/logout) ──────────────
   useEffect(() => {
     if (isGuest || !permissionGranted) return;
-    fetchExpoPushToken().then((expoToken) => {
-      if (expoToken) setToken(expoToken);
+    fetchPushToken().then((pushToken) => {
+      if (pushToken) setToken(pushToken);
     }).catch(() => {});
   }, [user?.id, isGuest, permissionGranted]);
 
