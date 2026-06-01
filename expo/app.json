@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.rork.dt64dnl55bin2kp4nhvjq"
+      "bundleIdentifier": "store.skidos.store"
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#071A10"
       },
-      "package": "app.rork.dt64dnl55bin2kp4nhvjq"
+      "package": "store.skidos.store"
     },
     "web": {
       "favicon": "./assets/images/favicon.png",
