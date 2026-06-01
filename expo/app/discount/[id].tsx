@@ -14,9 +14,10 @@ import {
   Send,
   Share2,
 } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
+  AppState,
   Platform,
   Pressable,
   StyleSheet,
@@ -58,10 +59,11 @@ export default function DiscountDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const discount = useDiscount(id ?? "");
-  const { toggleLike, toggleSave, toggleGoing, incrementViews } = useDiscounts();
+  const { toggleLike, toggleSave, toggleGoing, incrementViews, patchDiscount, refreshOne } = useDiscounts();
   const { user, isGuest } = useAuth();
   const [comment, setComment] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
+  const appStateRef = useRef<AppState>(AppState.currentState);
 
   useEffect(() => {
     if (id) {
@@ -79,6 +81,27 @@ export default function DiscountDetailScreen() {
     }
   }, [id, incrementViews]);
 
+  // Reload on AppState active (return from background)
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (appStateRef.current.match(/background/) && nextState === "active" && id) {
+        refreshOne(id);
+        api.getComments(id).then((res) => {
+          if (res.success && res.data) {
+            setComments(
+              res.data.map((c) => ({
+                ...c,
+                postedAt: c.postedAt ?? c.createdAt ?? Date.now(),
+              }))
+            );
+          }
+        });
+      }
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
+  }, [id, refreshOne]);
+
   const promptAuth = useCallback(() => {
     Alert.alert("Вход", "Войди в аккаунт, чтобы использовать эту функцию", [
       { text: "Отмена", style: "cancel" },
@@ -89,28 +112,40 @@ export default function DiscountDetailScreen() {
   const onSendComment = useCallback(async () => {
     if (isGuest) { promptAuth(); return; }
     const txt = comment.trim();
-    if (!txt || !id) return;
-    const res = await api.addComment(id, txt);
-    if (!res.success) {
-      Alert.alert("Ошибка", res.error ?? "Не удалось отправить");
-      return;
-    }
-    if (res.data) {
-      setComments((cs) => [res.data!, ...cs]);
-    } else {
-      const reloadRes = await api.getComments(id);
-      if (reloadRes.success && reloadRes.data) {
-        setComments(
-          reloadRes.data.map((c) => ({
-            ...c,
-            postedAt: c.postedAt ?? c.createdAt ?? Date.now(),
-          }))
-        );
-      }
-    }
+    if (!txt || !id || !user) return;
+
+    // Optimistic comment
+    const optimisticId = `opt-${Date.now()}`;
+    const optimistic: Comment = {
+      id: optimisticId,
+      text: txt,
+      author: { id: user.id, name: user.name, avatar: user.avatar ?? "" },
+      postedAt: Date.now(),
+    };
+    setComments((cs) => [optimistic, ...cs]);
     setComment("");
     impact();
-  }, [comment, id, isGuest, promptAuth]);
+
+    // Increment comments count optimistically
+    if (discount) {
+      patchDiscount(discount.id, { comments: discount.comments + 1 });
+    }
+
+    const res = await api.addComment(id, txt);
+    if (res.success && res.data) {
+      // Replace optimistic with real comment
+      setComments((cs) =>
+        cs.map((c) => (c.id === optimisticId ? { ...res.data!, postedAt: res.data!.postedAt ?? Date.now() } : c))
+      );
+    } else {
+      // Rollback optimistic comment on failure
+      setComments((cs) => cs.filter((c) => c.id !== optimisticId));
+      if (discount) {
+        patchDiscount(discount.id, { comments: discount.comments });
+      }
+      Alert.alert("Ошибка", res.error ?? "Не удалось отправить");
+    }
+  }, [comment, id, isGuest, user, discount, promptAuth, patchDiscount]);
 
   if (!discount) {
     return (

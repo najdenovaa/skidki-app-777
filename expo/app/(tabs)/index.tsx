@@ -80,7 +80,7 @@ function FeedHeader() {
       <View style={styles.headerRow} pointerEvents="box-none">
         <View style={styles.headerLeft}>
           <Text style={styles.brandTitle}>
-            <Text style={{ color: "#50D848" }}>С</Text>кидос
+            <Text style={{ color: "#50D848", marginRight: 3 }}>С</Text>кидос
           </Text>
           <Pressable
             onPress={() => setCityPickerOpen(true)}

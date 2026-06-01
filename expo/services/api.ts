@@ -1,5 +1,5 @@
 import { http, setToken } from "./http";
-import { prepareImageForUpload } from "@/utils/prepareImageForUpload";
+import { prepareImageForUpload, buildUploadFile } from "@/utils/prepareImageForUpload";
 import type {
   AdminDiscount,
   AdminStats,
@@ -393,13 +393,9 @@ export const api = {
 
   async uploadImage(uri: string): Promise<ApiResponse<{ url: string }>> {
     try {
-      const preparedUri = await prepareImageForUpload(uri);
+      const file = await buildUploadFile(uri);
       const formData = new FormData();
-      formData.append("images", {
-        uri: preparedUri,
-        type: "image/jpeg",
-        name: "photo.jpg",
-      } as unknown as Blob);
+      formData.append("images", file as unknown as Blob);
 
       const data = await http.upload<{ url?: string; urls?: string[] }>("/media/upload", formData);
       const uploaded = data.url ?? data.urls?.[0];

@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { AppState, Platform, StyleSheet, Text, View } from "react-native";
@@ -53,9 +54,8 @@ export function BiometricGate({ children }: BiometricGateProps) {
   const [available, setAvailable] = useState<boolean>(false);
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [locked, setLocked] = useState<boolean>(false);
-  const [appState, setAppState] = useState<AppState>(
-    AppState.currentState
-  );
+  const wasBackgrounded = useRef<boolean>(false);
+  const authInProgress = useRef<boolean>(false);
 
   // ── Check biometric availability on mount ────────────────────────────
   useEffect(() => {
@@ -77,16 +77,20 @@ export function BiometricGate({ children }: BiometricGateProps) {
   // ── Listen for AppState changes ──────────────────────────────────────
   useEffect(() => {
     const sub = AppState.addEventListener("change", (nextState) => {
-      if (appState.match(/inactive|background/) && nextState === "active") {
-        // Coming back to foreground — lock if biometric is on and user exists
+      if (nextState === "background") {
+        wasBackgrounded.current = true;
+      }
+      // Only lock when returning from actual background, not from
+      // inactive→active transitions (e.g. Face ID dialog dismissal).
+      if (wasBackgrounded.current && nextState === "active") {
+        wasBackgrounded.current = false;
         if (enabled && user) {
           setLocked(true);
         }
       }
-      setAppState(nextState);
     });
     return () => sub.remove();
-  }, [appState, enabled, user]);
+  }, [enabled, user]);
 
   // ── Cold-start lock ──────────────────────────────────────────────────
   useEffect(() => {
@@ -99,6 +103,8 @@ export function BiometricGate({ children }: BiometricGateProps) {
 
   // ── Authenticate ─────────────────────────────────────────────────────
   const authenticate = useCallback(async () => {
+    if (authInProgress.current) return;
+    authInProgress.current = true;
     try {
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: "Подтвердите вход",
@@ -109,6 +115,8 @@ export function BiometricGate({ children }: BiometricGateProps) {
       }
     } catch {
       // user cancelled or error — stay locked
+    } finally {
+      authInProgress.current = false;
     }
   }, []);
 

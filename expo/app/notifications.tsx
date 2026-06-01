@@ -167,7 +167,7 @@ export default function NotificationsScreen() {
   );
   const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false);
 
-  const cityId = user?.city ?? "";
+  const cityId = user?.cityId != null ? String(user.cityId) : "";
 
   useEffect(() => {
     if (tab !== "settings" || settingsLoaded) return;
@@ -197,7 +197,8 @@ export default function NotificationsScreen() {
       const res = await api.updateNotificationSettings({ [key]: value });
       if (res.success && res.data) {
         setSettings(res.data);
-      } else {
+      } else if (!res.success) {
+        // Rollback only on failure; if success but no data, keep optimistic
         setSettings(settings);
       }
     },
@@ -219,6 +220,18 @@ export default function NotificationsScreen() {
         const res = await api.subscribeCategory(catId, cityId);
         if (res.success && res.data) {
           setSubs((prev) => ({ ...prev, [catId]: res.data! }));
+        } else if (res.success) {
+          // API succeeded but returned no data — reload all subscriptions
+          const reload = await api.getSubscriptions();
+          if (reload.success && reload.data) {
+            const map = { ...subs } as SubState;
+            for (const sub of reload.data) {
+              map[sub.categoryId as Category] = sub;
+            }
+            setSubs(map);
+          } else {
+            setSubs((prev) => ({ ...prev, [catId]: null }));
+          }
         } else {
           setSubs((prev) => ({ ...prev, [catId]: null }));
         }
@@ -313,7 +326,7 @@ export default function NotificationsScreen() {
                   value={biometricEnabled}
                   onValueChange={(v) => {
                     impact();
-                    void setBiometricEnabled(v);
+                    void (async () => { await setBiometricEnabled(v); })();
                   }}
                   trackColor={{ false: Colors.borderLight, true: Colors.primaryDark }}
                   thumbColor={biometricEnabled ? Colors.primary : Colors.textMuted}

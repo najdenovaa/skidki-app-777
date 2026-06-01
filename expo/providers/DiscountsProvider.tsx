@@ -1,6 +1,6 @@
 import createContextHook from "@nkzw/create-context-hook";
 import * as Location from "expo-location";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
@@ -84,6 +84,19 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
     setDiscounts((prev) =>
       prev.map((d) => (d.id === id ? { ...d, ...patch } : d))
     );
+  }, []);
+
+  /** Insert or update a discount in local state (upsert). */
+  const upsertDiscount = useCallback((discount: Discount) => {
+    setDiscounts((prev) => {
+      const idx = prev.findIndex((d) => d.id === discount.id);
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], ...discount };
+        return copy;
+      }
+      return [discount, ...prev];
+    });
   }, []);
 
   /** Fetch one discount from server and merge into local state. */
@@ -230,6 +243,9 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       hydrated,
       gpsLat,
       gpsLng,
+      upsertDiscount,
+      patchDiscount,
+      refreshOne,
     }),
     [
       discounts,
@@ -250,11 +266,29 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
       gpsLat,
       gpsLng,
       myPostsList,
+      upsertDiscount,
+      patchDiscount,
+      refreshOne,
     ]
   );
 });
 
 export function useDiscount(id: string) {
-  const { discounts } = useDiscounts();
+  const { discounts, upsertDiscount } = useDiscounts();
+  const fetchedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!id || fetchedRef.current.has(id)) return;
+    const found = discounts.find((d) => d.id === id);
+    if (!found) {
+      fetchedRef.current.add(id);
+      api.getDiscount(id).then((res) => {
+        if (res.success && res.data) {
+          upsertDiscount(res.data);
+        }
+      });
+    }
+  }, [id, discounts, upsertDiscount]);
+
   return useMemo(() => discounts.find((d) => d.id === id), [discounts, id]);
 }

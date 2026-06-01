@@ -289,6 +289,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#50D848",
     letterSpacing: -1,
+    marginRight: 4,
     includeFontPadding: false,
     backgroundColor: "transparent",
   },
