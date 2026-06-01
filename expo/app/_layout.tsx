@@ -186,6 +186,14 @@ function RootLayoutNav() {
           headerTintColor: Colors.text,
         }}
       />
+      <Stack.Screen
+        name="user/[id]"
+        options={{
+          headerShown: false,
+          presentation: "modal",
+          animation: "slide_from_bottom",
+        }}
+      />
     </Stack>
     </>
   );

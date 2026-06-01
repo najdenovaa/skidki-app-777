@@ -14,6 +14,7 @@ import type {
   GeoRegion,
   NotificationSettings,
   NotificationSubscription,
+  PublicUserProfile,
   PushMessage,
   PushSendRecord,
   SendPushDTO,
@@ -633,6 +634,17 @@ export const api = {
   async getUnreadCount(): Promise<ApiResponse<{ count: number }>> {
     try {
       const data = await http.get<{ count: number }>("/notifications/unread-count");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  // ═══ Public user profile ═══════════════════════════════════════════════
+
+  async getUserProfile(userId: string): Promise<ApiResponse<PublicUserProfile>> {
+    try {
+      const data = await http.get<PublicUserProfile>(`/users/${String(userId)}/profile`);
       return ok(data);
     } catch (err) {
       return handleError(err);

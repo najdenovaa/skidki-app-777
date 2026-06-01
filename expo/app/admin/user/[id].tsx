@@ -280,16 +280,12 @@ export default function AdminUserScreen() {
 
           {/* ── Password ───────────────────────────────────────────── */}
           <Text style={styles.sectionLabel}>Пароль</Text>
-          <View style={styles.group}>
-            <View style={styles.field}>
-                <PasswordInput
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  placeholder="Новый пароль"
-                  autoCapitalize="none"
-                />
-            </View>
-          </View>
+          <PasswordInput
+            value={newPassword}
+            onChangeText={setNewPassword}
+            placeholder="Новый пароль"
+            autoCapitalize="none"
+          />
           <Pressable
             style={[styles.saveBtn, styles.resetBtn, resetLoading && styles.btnDisabled]}
             onPress={handleResetPassword}
@@ -339,7 +335,7 @@ export default function AdminUserScreen() {
           )}
 
           {/* ── Actions ────────────────────────────────────────────── */}
-          <Text style={styles.sectionLabel}>Действия</Text>
+          <View style={styles.actionsSpacer} />
           <View style={styles.group}>
             <Pressable
               style={styles.actionRow}
@@ -510,6 +506,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   resetBtn: {
+    marginTop: 12,
     backgroundColor: Colors.card,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -553,6 +550,9 @@ const styles = StyleSheet.create({
   },
 
   // ── Actions ──────────────────────────────────────────────────────
+  actionsSpacer: {
+    height: 1,
+  },
   actionRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    marginTop: 16,
+    marginTop: 12,
     backgroundColor: Colors.dangerLight,
     borderRadius: 12,
     paddingVertical: 14,

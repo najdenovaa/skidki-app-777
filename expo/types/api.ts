@@ -172,3 +172,27 @@ export interface PushSendRecord {
   sentAt: number;
   recipientCount: number;
 }
+
+// ── Public user profile ───────────────────────────────────────────────────
+
+export interface PublicUserProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  displayId: number;
+  city?: string;
+  postCount: number;
+  posts: PublicUserPost[];
+}
+
+export interface PublicUserPost {
+  id: string;
+  title: string;
+  images: string[];
+  percent: number;
+  postedAt: number;
+  expiresAt: number;
+  expired: boolean;
+  views: number;
+  likes: number;
+}

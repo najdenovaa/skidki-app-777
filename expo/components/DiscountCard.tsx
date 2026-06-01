@@ -42,10 +42,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
   const elapsed = formatTimeSince(discount.postedAt);
   const expiresIn = formatTimeUntil(discount.expiresAt);
   const indefinite = isIndefinite(discount.expiresAt);
-
-  const onOpen = useCallback(() => {
-    router.push(`/discount/${discount.id}`);
-  }, [router, discount.id]);
+  const expired = discount.expired === true || (discount.expiresAt > 0 && discount.expiresAt <= Date.now());
 
   const onToggleExpand = useCallback(() => {
     if (isIos) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -75,10 +72,19 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
     toggleSave(discount.id);
   }, [isGuest, toggleSave, discount.id, promptAuth]);
 
+  const onAuthorPress = useCallback(() => {
+    router.push(`/user/${discount.author.id}`);
+  }, [router, discount.author.id]);
+
+  const onOpen = useCallback(() => {
+    if (expired) return;
+    router.push(`/discount/${discount.id}`);
+  }, [router, discount.id, expired]);
+
   return (
     <Animated.View
       entering={isIos ? FadeIn.delay(index * 80).duration(200) : undefined}
-      style={styles.outer}
+      style={[styles.outer, expired && styles.outerExpired]}
     >
       <View style={styles.card}>
         {/* ── Image carousel (Instagram-style) ── */}
@@ -159,14 +165,20 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
           </View>
         </ImageCarousel>
 
+        {expired && (
+          <View style={styles.expiredRibbon}>
+            <Text style={styles.expiredRibbonText}>Скидка истекла</Text>
+          </View>
+        )}
+
         {/* ── Compact info bar (always visible, tap to expand) ── */}
         <Pressable onPress={onToggleExpand} style={styles.infoBar}>
-          <View style={styles.authorMini}>
+          <Pressable onPress={onAuthorPress} style={styles.authorMini}>
             <Image source={{ uri: resolveImageUrl(discount.author.avatar) }} style={styles.avatarMini} contentFit="cover" />
             <Text style={styles.authorName} numberOfLines={1}>
               {discount.author.name}
             </Text>
-          </View>
+          </Pressable>
 
           <View style={styles.statsMini}>
             <Pressable onPress={onLike} hitSlop={8} style={styles.statItem}>
@@ -288,6 +300,7 @@ export const DiscountCard = memo(DiscountCardBase);
 
 const styles = StyleSheet.create({
   outer: { paddingHorizontal: 16, paddingTop: 12 },
+  outerExpired: { opacity: 0.65 },
   card: {
     backgroundColor: Colors.card,
     borderRadius: 16,
@@ -468,6 +481,21 @@ const styles = StyleSheet.create({
   },
   chevronRotated: {
     transform: [{ rotate: "180deg" }],
+  },
+
+  // ── Expired ribbon ──
+  expiredRibbon: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: Colors.dangerLight,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+  },
+  expiredRibbonText: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: Colors.danger,
+    letterSpacing: -0.1,
   },
 
   // ── Expandable body ──

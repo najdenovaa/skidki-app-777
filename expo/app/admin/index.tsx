@@ -570,6 +570,7 @@ const styles = StyleSheet.create({
   },
   rowInfo: {
     flex: 1,
+    minWidth: 0,
     gap: 2,
   },
   rowTitle: {
