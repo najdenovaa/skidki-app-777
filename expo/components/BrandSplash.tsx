@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useEffect } from "react";
 import { Platform, StyleSheet, Text, View } from "react-native";
@@ -12,8 +11,6 @@ import Animated, {
 } from "react-native-reanimated";
 
 import Colors from "@/constants/colors";
-
-const LOGO = require("../assets/images/splash-icon.png") as number;
 
 function fireHaptic() {
  if (Platform.OS !== "web") {
@@ -66,7 +63,7 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
  return (
  <Animated.View style={[styles.root, shellStyle]} pointerEvents="auto">
  <Animated.View style={[styles.row, brandStyle]}>
- <Image source={LOGO} style={styles.icon} contentFit="contain" tintColor="#50D848" />
+ <Text style={styles.letter}>С</Text>
  <Text style={styles.suffix}>кидос</Text>
  </Animated.View>
  </Animated.View>
@@ -85,9 +82,12 @@ const styles = StyleSheet.create({
  flexDirection: "row",
  alignItems: "center",
  },
- icon: {
- width: 64,
- height: 64,
+ letter: {
+ fontSize: 58,
+ fontWeight: "800",
+ color: "#50D848",
+ letterSpacing: -2,
+ includeFontPadding: false,
  },
  suffix: {
  fontSize: 34,
