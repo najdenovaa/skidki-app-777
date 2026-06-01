@@ -73,8 +73,15 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
   }, [isGuest, toggleSave, discount.id, promptAuth]);
 
   const onAuthorPress = useCallback(() => {
-    router.push(`/user/${discount.author.id}`);
-  }, [router, discount.author.id]);
+    if (!discount.author?.id) return;
+    router.push({
+      pathname: `/user/${discount.author.id}`,
+      params: {
+        name: discount.author.name,
+        avatar: discount.author.avatar,
+      },
+    });
+  }, [router, discount.author.id, discount.author.name, discount.author.avatar]);
 
   const onOpen = useCallback(() => {
     if (expired) return;
@@ -171,8 +178,8 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
           </View>
         )}
 
-        {/* ── Compact info bar (always visible, tap to expand) ── */}
-        <Pressable onPress={onToggleExpand} style={styles.infoBar}>
+        {/* ── Compact info bar (always visible) ── */}
+        <View style={styles.infoBar}>
           <Pressable onPress={onAuthorPress} style={styles.authorMini}>
             <Image source={{ uri: resolveImageUrl(discount.author.avatar) }} style={styles.avatarMini} contentFit="cover" />
             <Text style={styles.authorName} numberOfLines={1}>
@@ -205,15 +212,15 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
           </View>
 
           {/* ── Expand / collapse chevron ── */}
-          <View style={[styles.chevronBtn, expanded && styles.chevronBtnExpanded]}>
+          <Pressable onPress={onToggleExpand} hitSlop={6} style={[styles.chevronBtn, expanded && styles.chevronBtnExpanded]}>
             <ChevronDown
               size={16}
-              color={expanded ? Colors.text : Colors.textInverse}
+              color={expanded ? Colors.text : Colors.textMuted}
               strokeWidth={2.5}
               style={expanded && styles.chevronRotated}
             />
-          </View>
-        </Pressable>
+          </Pressable>
+        </View>
 
         {/* ── Expandable body ── */}
         {expanded && (
