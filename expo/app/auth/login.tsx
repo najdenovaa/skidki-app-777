@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Mail, Phone } from "lucide-react-native";
 import { PercentSpinner } from "@/components/PercentSpinner";
 import PasswordInput from "@/components/PasswordInput";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -26,6 +27,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<SignInError>(null);
+  const [loginMode, setLoginMode] = useState<"email" | "phone">("email");
 
   const passwordRef = useRef<TextInput>(null);
 
@@ -37,8 +39,8 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
-    // Send phone normalised, or email as-is
-    const identifier = isPhoneInput(trimmed)
+    // Identify by mode: normalise phone or use email as-is
+    const identifier = loginMode === "phone"
       ? normalisePhone(trimmed)
       : trimmed;
     const err = await signIn(identifier, password);
@@ -48,7 +50,7 @@ export default function LoginScreen() {
       return;
     }
     router.back();
-  }, [login, password, signIn, router]);
+  }, [login, password, loginMode, signIn, router]);
 
   const errorText = error === "notFound"
     ? "Пользователь не найден. Проверь данные или зарегистрируйся."
@@ -56,7 +58,7 @@ export default function LoginScreen() {
     ? "Неверный пароль. Минимум 6 символов."
     : null;
 
-  const isPhone = isPhoneInput(login);
+  const isPhone = loginMode === "phone";
 
   return (
     <View style={styles.root}>
@@ -78,6 +80,28 @@ export default function LoginScreen() {
 
             {/* Fields */}
             <View style={styles.fields}>
+              {/* Mode toggle */}
+              <View style={styles.modeToggle}>
+                <Pressable
+                  onPress={() => { setLoginMode("email"); setLogin(""); }}
+                  style={[styles.modeChip, loginMode === "email" && styles.modeChipActive]}
+                >
+                  <Mail size={15} color={loginMode === "email" ? Colors.text : Colors.textMuted} strokeWidth={2} />
+                  <Text style={[styles.modeChipText, loginMode === "email" && styles.modeChipTextActive]}>
+                    Почта
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => { setLoginMode("phone"); setLogin(""); }}
+                  style={[styles.modeChip, loginMode === "phone" && styles.modeChipActive]}
+                >
+                  <Phone size={15} color={loginMode === "phone" ? Colors.text : Colors.textMuted} strokeWidth={2} />
+                  <Text style={[styles.modeChipText, loginMode === "phone" && styles.modeChipTextActive]}>
+                    Телефон
+                  </Text>
+                </Pressable>
+              </View>
+
               <TextInput
                 value={login}
                 onChangeText={setLogin}
@@ -161,6 +185,40 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   fields: { gap: 12 },
+  modeToggle: {
+    flexDirection: "row" as const,
+    gap: 8,
+  },
+  modeChip: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundSecondary,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  modeChipActive: {
+    backgroundColor: Colors.card,
+    borderColor: "rgba(180,210,195,0.45)",
+    shadowColor: "rgba(180,220,200,0.35)",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  modeChipText: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: Colors.textMuted,
+    letterSpacing: -0.2,
+  },
+  modeChipTextActive: {
+    color: Colors.text,
+  },
   input: {
     height: 52,
     backgroundColor: Colors.backgroundSecondary,

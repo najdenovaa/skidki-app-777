@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { Stack, useRouter } from "expo-router";
-import { Camera, ChevronLeft, Lock, MapPin } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import { Camera, ChevronLeft, Lock, MapPin, Phone } from "lucide-react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Platform,
@@ -25,15 +25,19 @@ import { resolveImageUrl } from "@/utils/image";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
 import type { SelectedCity } from "@/types/api";
+import { isPhoneInput, normalisePhone, validatePhone } from "@/types/user";
 
 export default function EditProfileScreen() {
   const router = useRouter();
   const { user, updateProfile } = useAuth();
 
+  const phoneRef = useRef<TextInput>(null);
+
   const [avatar, setAvatar] = useState<string>(resolveImageUrl(user?.avatar));
   const [avatarFile, setAvatarFile] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string>(user?.name ?? "");
   const [email, setEmail] = useState<string>(user?.email ?? "");
+  const [phone, setPhone] = useState<string>(user?.phone ?? "");
   const [city, setCity] = useState<SelectedCity | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
@@ -48,6 +52,7 @@ export default function EditProfileScreen() {
     if (user) {
       setName(user.name);
       setEmail(user.email ?? "");
+      setPhone(user.phone ?? "");
       setAvatar(resolveImageUrl(user.avatar));
       if (user.cityId) {
         setCity({
@@ -90,9 +95,21 @@ export default function EditProfileScreen() {
       }
     }
 
+    const phoneTrimmed = phone.trim();
+    const normalisedPhone = phoneTrimmed && isPhoneInput(phoneTrimmed)
+      ? normalisePhone(phoneTrimmed)
+      : undefined;
+
+    if (phoneTrimmed && !normalisedPhone) {
+      Alert.alert("Неверный номер", "Введи номер в формате +7XXXXXXXXXX");
+      setSaving(false);
+      return;
+    }
+
     await updateProfile({
       name: name.trim() || undefined,
       email: email.trim() || undefined,
+      phone: normalisedPhone,
       avatar: avatarUrl,
       cityId: city?.cityId,
       city: city?.cityName,
@@ -101,7 +118,7 @@ export default function EditProfileScreen() {
 
     setSaving(false);
     router.back();
-  }, [user, name, email, avatarFile, city, updateProfile, router]);
+  }, [user, name, email, phone, avatarFile, city, updateProfile, router]);
 
   const handleChangePassword = useCallback(async () => {
     if (!currentPw || !newPw) {
@@ -201,8 +218,30 @@ export default function EditProfileScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            returnKeyType="next"
+            onSubmitEditing={() => phoneRef.current?.focus()}
             style={styles.input}
           />
+        </View>
+
+        {/* Phone */}
+        <View style={styles.field}>
+          <Text style={styles.label}>Телефон</Text>
+          <View style={styles.phoneInputRow}>
+            <Phone size={16} color={phone ? Colors.primary : Colors.textMuted} strokeWidth={2} />
+            <TextInput
+              ref={phoneRef}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="+7XXXXXXXXXX"
+              placeholderTextColor={Colors.textMuted}
+              keyboardType="phone-pad"
+              autoCapitalize="none"
+              autoCorrect={false}
+              maxLength={12}
+              style={styles.phoneInput}
+            />
+          </View>
         </View>
 
         {/* City */}
@@ -368,6 +407,21 @@ const styles = StyleSheet.create({
     color: Colors.text,
     letterSpacing: -0.2,
     flex: 1,
+  },
+  phoneInputRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  phoneInput: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: Colors.text,
+    letterSpacing: 0.5,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

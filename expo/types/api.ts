@@ -37,6 +37,7 @@ export interface SignInDTO {
 export interface UpdateProfileDTO {
   name?: string;
   email?: string;
+  phone?: string;
   cityId?: string;
   city?: string;
   regionId?: string;

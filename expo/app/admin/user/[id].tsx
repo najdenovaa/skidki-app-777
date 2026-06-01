@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
 import { CityPicker } from "@/components/CityPicker";
+import PasswordInput from "@/components/PasswordInput";
 import { PercentSpinnerCentered } from "@/components/PercentSpinner";
 import { api } from "@/services/api";
 import type { AdminUserDetail } from "@/types/api";

@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Check, MapPin, X } from "lucide-react-native";
+import { Check, Mail, MapPin, Phone, X } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import {
   Alert,
@@ -38,6 +38,7 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<SignUpError>(null);
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
+  const [loginMode, setLoginMode] = useState<"email" | "phone">("email");
 
   const loginRef = React.useRef<TextInput>(null);
   const passwordRef = React.useRef<TextInput>(null);
@@ -50,7 +51,7 @@ export default function RegisterScreen() {
     }
 
     const trimmed = login.trim();
-    const phone = isPhoneInput(trimmed);
+    const phone = loginMode === "phone";
 
     // Validate email or phone
     if (phone) {
@@ -104,7 +105,7 @@ export default function RegisterScreen() {
       return;
     }
     router.back();
-  }, [name, login, password, city, acceptedTerms, signUp, router]);
+  }, [name, login, loginMode, password, city, acceptedTerms, signUp, router]);
 
   const errorText =
     error === "emailTaken"
@@ -113,7 +114,7 @@ export default function RegisterScreen() {
       ? "Пароль должен быть минимум 6 символов."
       : null;
 
-  const isPhone = isPhoneInput(login);
+  const isPhone = loginMode === "phone";
 
   return (
     <View style={styles.root}>
@@ -144,6 +145,28 @@ export default function RegisterScreen() {
 
           {/* Fields */}
           <View style={styles.fields}>
+            {/* Mode toggle */}
+            <View style={styles.modeToggle}>
+              <Pressable
+                onPress={() => { setLoginMode("email"); setLogin(""); }}
+                style={[styles.modeChip, loginMode === "email" && styles.modeChipActive]}
+              >
+                <Mail size={15} color={loginMode === "email" ? Colors.text : Colors.textMuted} strokeWidth={2} />
+                <Text style={[styles.modeChipText, loginMode === "email" && styles.modeChipTextActive]}>
+                  Почта
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => { setLoginMode("phone"); setLogin(""); }}
+                style={[styles.modeChip, loginMode === "phone" && styles.modeChipActive]}
+              >
+                <Phone size={15} color={loginMode === "phone" ? Colors.text : Colors.textMuted} strokeWidth={2} />
+                <Text style={[styles.modeChipText, loginMode === "phone" && styles.modeChipTextActive]}>
+                  Телефон
+                </Text>
+              </Pressable>
+            </View>
+
             <TextInput
               value={name}
               onChangeText={setName}
@@ -305,6 +328,40 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   fields: { gap: 12 },
+  modeToggle: {
+    flexDirection: "row" as const,
+    gap: 8,
+  },
+  modeChip: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 6,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: Colors.backgroundSecondary,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  modeChipActive: {
+    backgroundColor: Colors.card,
+    borderColor: "rgba(180,210,195,0.45)",
+    shadowColor: "rgba(180,220,200,0.35)",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  modeChipText: {
+    fontSize: 14,
+    fontWeight: "500" as const,
+    color: Colors.textMuted,
+    letterSpacing: -0.2,
+  },
+  modeChipTextActive: {
+    color: Colors.text,
+  },
   input: {
     height: 52,
     backgroundColor: Colors.backgroundSecondary,
