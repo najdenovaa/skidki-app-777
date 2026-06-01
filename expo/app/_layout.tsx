@@ -178,6 +178,14 @@ function RootLayoutNav() {
           headerTintColor: Colors.text,
         }}
       />
+      <Stack.Screen
+        name="admin/push"
+        options={{
+          title: "Push-рассылка",
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.text,
+        }}
+      />
     </Stack>
     </>
   );

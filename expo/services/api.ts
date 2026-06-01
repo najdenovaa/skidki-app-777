@@ -14,6 +14,9 @@ import type {
   GeoRegion,
   NotificationSettings,
   NotificationSubscription,
+  PushMessage,
+  PushSendRecord,
+  SendPushDTO,
   SignInDTO,
   SignUpDTO,
   SupportMessage,
@@ -592,6 +595,64 @@ export const api = {
       const data = await http.del<{ images: string[] }>(
         `/admin/discounts/${String(discountId)}/images?url=${encodeURIComponent(url)}`
       );
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  // ═══ Push Messages (inbox) ═════════════════════════════════════════════
+
+  async getNotifications(): Promise<ApiResponse<PushMessage[]>> {
+    try {
+      const data = await http.get<PushMessage[]>("/notifications/messages");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async markNotificationRead(id: string): Promise<ApiResponse<null>> {
+    try {
+      await http.patch(`/notifications/messages/${String(id)}/read`);
+      return ok(null);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async markAllNotificationsRead(): Promise<ApiResponse<null>> {
+    try {
+      await http.patch("/notifications/messages/read-all");
+      return ok(null);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getUnreadCount(): Promise<ApiResponse<{ count: number }>> {
+    try {
+      const data = await http.get<{ count: number }>("/notifications/unread-count");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  // ═══ Admin: Push broadcast ═════════════════════════════════════════════
+
+  async sendPush(data: SendPushDTO): Promise<ApiResponse<PushSendRecord>> {
+    try {
+      const record = await http.post<PushSendRecord>("/admin/push", data);
+      return ok(record);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getPushHistory(): Promise<ApiResponse<PushSendRecord[]>> {
+    try {
+      const data = await http.get<PushSendRecord[]>("/admin/push");
       return ok(data);
     } catch (err) {
       return handleError(err);

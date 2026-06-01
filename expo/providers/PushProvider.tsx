@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import createContextHook from "@nkzw/create-context-hook";
@@ -8,12 +9,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
+import type { PushMessage } from "@/types/api";
 
-const BANNER_DURATION_MS = 3_000;
+const MESSAGES_KEY = "skidki.notifications.messages";
+const UNREAD_KEY = "skidki.notifications.unread";
+const BANNER_DURATION_MS = 3_500;
+const UNREAD_POLL_MS = 60_000;
 
 type InAppBanner = {
   title: string;
-  discountId: string;
+  body: string;
+  discountId?: string;
+  type: string;
 };
 
 export const [PushProvider, usePush] = createContextHook(() => {
@@ -21,15 +28,153 @@ export const [PushProvider, usePush] = createContextHook(() => {
   const { user, isGuest } = useAuth();
   const [token, setToken] = useState<string | null>(null);
   const [permissionGranted, setPermissionGranted] = useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [messages, setMessages] = useState<PushMessage[]>([]);
   const [banner, setBanner] = useState<InAppBanner | null>(null);
   const bannerAnim = useRef<Animated.Value>(new Animated.Value(0)).current;
   const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unreadPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const insets = useSafeAreaInsets();
+
+  // ── Load cached messages + unread count on mount ──────────────────────
+  useEffect(() => {
+    const loadCache = async () => {
+      try {
+        const [msgsRaw, unreadRaw] = await Promise.all([
+          AsyncStorage.getItem(MESSAGES_KEY),
+          AsyncStorage.getItem(UNREAD_KEY),
+        ]);
+        if (msgsRaw) {
+          const parsed = JSON.parse(msgsRaw) as PushMessage[];
+          setMessages(parsed);
+        }
+        if (unreadRaw) {
+          setUnreadCount(parseInt(unreadRaw, 10) || 0);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    loadCache();
+  }, []);
+
+  // ── Persist messages to AsyncStorage when they change ─────────────────
+  const persistMessages = useCallback(async (msgs: PushMessage[]) => {
+    try {
+      await AsyncStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs.slice(0, 200)));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const persistUnread = useCallback(async (n: number) => {
+    try {
+      await AsyncStorage.setItem(UNREAD_KEY, String(n));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // ── Sync badge count ──────────────────────────────────────────────────
+  const syncBadge = useCallback(async (n: number) => {
+    try {
+      await Notifications.setBadgeCountAsync(n);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // ── Add a local message (persisted) ───────────────────────────────────
+  const addLocalMessage = useCallback(
+    (msg: PushMessage) => {
+      setMessages((prev) => {
+        const next = [msg, ...prev];
+        persistMessages(next);
+        return next;
+      });
+      setUnreadCount((prev) => {
+        const n = prev + 1;
+        persistUnread(n);
+        syncBadge(n);
+        return n;
+      });
+    },
+    [persistMessages, persistUnread, syncBadge]
+  );
+
+  // ── Mark single message as read ───────────────────────────────────────
+  const markRead = useCallback(
+    async (id: string) => {
+      // Optimistic local update
+      let newCount = unreadCount;
+      setMessages((prev) => {
+        const next = prev.map((m) => {
+          if (m.id === id && !m.read) {
+            newCount = Math.max(0, unreadCount - 1);
+            return { ...m, read: true };
+          }
+          return m;
+        });
+        persistMessages(next);
+        return next;
+      });
+      if (newCount !== unreadCount) {
+        setUnreadCount(newCount);
+        persistUnread(newCount);
+        syncBadge(newCount);
+      }
+      // Try backend
+      api.markNotificationRead(id).catch(() => {});
+    },
+    [unreadCount, persistMessages, persistUnread, syncBadge]
+  );
+
+  // ── Mark all as read ──────────────────────────────────────────────────
+  const markAllRead = useCallback(async () => {
+    setMessages((prev) => {
+      const next = prev.map((m) => ({ ...m, read: true }));
+      persistMessages(next);
+      return next;
+    });
+    setUnreadCount(0);
+    persistUnread(0);
+    syncBadge(0);
+    api.markAllNotificationsRead().catch(() => {});
+  }, [persistMessages, persistUnread, syncBadge]);
+
+  // ── Refresh from server ───────────────────────────────────────────────
+  const refreshMessages = useCallback(async () => {
+    if (isGuest) return;
+    try {
+      const res = await api.getNotifications();
+      if (res.success && res.data) {
+        setMessages(res.data);
+        persistMessages(res.data);
+        const unread = res.data.filter((m) => !m.read).length;
+        setUnreadCount(unread);
+        persistUnread(unread);
+        syncBadge(unread);
+      }
+    } catch {
+      // server unavailable — keep local cache
+    }
+  }, [isGuest, persistMessages, persistUnread, syncBadge]);
+
+  // ── Poll unread count from server ─────────────────────────────────────
+  useEffect(() => {
+    if (isGuest || !token) return;
+    // Initial fetch
+    refreshMessages();
+    // Periodic poll
+    unreadPollRef.current = setInterval(refreshMessages, UNREAD_POLL_MS);
+    return () => {
+      if (unreadPollRef.current) clearInterval(unreadPollRef.current);
+    };
+  }, [isGuest, token, refreshMessages]);
 
   // ── Register for push ─────────────────────────────────────────────────
   useEffect(() => {
     const register = async () => {
-      // Android channel
       if (Platform.OS === "android") {
         await Notifications.setNotificationChannelAsync("default", {
           name: "Основные уведомления",
@@ -69,15 +214,12 @@ export const [PushProvider, usePush] = createContextHook(() => {
   // ── Send token to server when authenticated ───────────────────────────
   useEffect(() => {
     if (!token || isGuest) return;
-    api
-      .registerPushToken(token, Platform.OS)
-      .catch(() => {});
+    api.registerPushToken(token, Platform.OS).catch(() => {});
   }, [token, isGuest, user?.id]);
 
   // ── Show/hide in-app banner ──────────────────────────────────────────
   const showBanner = useCallback(
     (b: InAppBanner) => {
-      // Clear existing timer
       if (bannerTimer.current) clearTimeout(bannerTimer.current);
 
       setBanner(b);
@@ -101,24 +243,56 @@ export const [PushProvider, usePush] = createContextHook(() => {
 
   // ── Listen for incoming notifications ─────────────────────────────────
   useEffect(() => {
-    // Notification received while app is foregrounded — show in-app banner
+    // Notification received while app is foregrounded
     const receivedSub = Notifications.addNotificationReceivedListener((notif) => {
       const data = notif.request.content.data as Record<string, string> | undefined;
-      const type = data?.type;
+      const type = data?.type ?? "system_message";
       const title = notif.request.content.title ?? data?.title ?? "";
+      const body = notif.request.content.body ?? data?.body ?? "";
       const discountId = data?.discountId ?? "";
 
-      if (type === "new_discount" && title && discountId) {
-        showBanner({ title, discountId });
+      // Save to local inbox
+      const msg: PushMessage = {
+        id: notif.request.identifier,
+        title,
+        body,
+        type: type as PushMessage["type"],
+        data: data ?? {},
+        read: false,
+        createdAt: Date.now(),
+      };
+      addLocalMessage(msg);
+
+      // Show in-app banner for all notification types
+      if (title) {
+        showBanner({ title, body, discountId: discountId || undefined, type });
       }
     });
 
     // Notification tapped (background/terminated) — navigate
     const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data as Record<string, string> | undefined;
+      const type = data?.type;
       const discountId = data?.discountId;
-      if (discountId) {
+
+      // Save to local inbox
+      const notif = response.notification;
+      const msg: PushMessage = {
+        id: notif.request.identifier,
+        title: notif.request.content.title ?? data?.title ?? "",
+        body: notif.request.content.body ?? data?.body ?? "",
+        type: (type as PushMessage["type"]) ?? "system_message",
+        data: data ?? {},
+        read: true, // It was tapped, so mark as read
+        createdAt: Date.now(),
+      };
+      addLocalMessage(msg);
+
+      // Navigate based on type
+      if (type === "new_discount" && discountId) {
         router.push(`/discount/${discountId}`);
+      } else {
+        router.push("/notifications");
       }
     });
 
@@ -126,19 +300,22 @@ export const [PushProvider, usePush] = createContextHook(() => {
       receivedSub.remove();
       responseSub.remove();
     };
-  }, [router, showBanner]);
+  }, [router, showBanner, addLocalMessage]);
 
   // ── Banner press → navigate ──────────────────────────────────────────
   const onBannerPress = useCallback(() => {
     if (!banner) return;
-    // Clear timer & hide
     if (bannerTimer.current) clearTimeout(bannerTimer.current);
     Animated.timing(bannerAnim, {
       toValue: 0,
       duration: 200,
       useNativeDriver: true,
     }).start(() => setBanner(null));
-    router.push(`/discount/${banner.discountId}`);
+    if (banner.type === "new_discount" && banner.discountId) {
+      router.push(`/discount/${banner.discountId}`);
+    } else {
+      router.push("/notifications");
+    }
   }, [banner, bannerAnim, router]);
 
   // ── Render in-app banner ─────────────────────────────────────────────
@@ -162,16 +339,35 @@ export const [PushProvider, usePush] = createContextHook(() => {
     >
       <Pressable onPress={onBannerPress} style={styles.bannerInner}>
         <Text style={styles.bannerLabel} numberOfLines={1}>
-          Новая скидка
+          {banner.type === "new_discount"
+            ? "Новая скидка"
+            : banner.type === "like_comment"
+              ? "Активность"
+              : "Сообщение"}
         </Text>
         <Text style={styles.bannerTitle} numberOfLines={1}>
           {banner.title}
         </Text>
+        {banner.body ? (
+          <Text style={styles.bannerBody} numberOfLines={1}>
+            {banner.body}
+          </Text>
+        ) : null}
       </Pressable>
     </Animated.View>
   ) : null;
 
-  return { token, permissionGranted, bannerNode };
+  return {
+    token,
+    permissionGranted,
+    bannerNode,
+    unreadCount,
+    messages,
+    markRead,
+    markAllRead,
+    refreshMessages,
+    addLocalMessage,
+  };
 });
 
 const styles = StyleSheet.create({
@@ -206,5 +402,11 @@ const styles = StyleSheet.create({
     color: Colors.text,
     letterSpacing: -0.2,
     fontWeight: "600",
+  },
+  bannerBody: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    letterSpacing: -0.1,
+    marginTop: 2,
   },
 });

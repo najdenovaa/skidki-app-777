@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   FileText,
   MessageCircle,
+  Megaphone,
   Search,
   Tag,
   ArrowUpLeft,
@@ -35,7 +36,7 @@ const { width } = Dimensions.get("window");
 const CARD_GAP = 12;
 const CARD_W = (width - 20 * 2 - CARD_GAP) / 2;
 
-type Tab = "discounts" | "users" | "support";
+type Tab = "discounts" | "users" | "support" | "push";
 
 function plural(n: number, one: string, few: string, many: string): string {
   const m = n % 10;
@@ -223,11 +224,18 @@ export default function AdminScreen() {
                   ["discounts", "Скидос", FileText],
                   ["users", "Пользователи", Users],
                   ["support", "Поддержка", MessageCircle],
+                  ["push", "Рассылка", Megaphone],
                 ] as [Tab, string, React.ComponentType<any>][]).map(([key, label, Icon]) => (
                   <Pressable
                     key={key}
                     style={[styles.tab, tab === key && styles.tabActive]}
-                    onPress={() => setTab(key)}
+                    onPress={() => {
+                      if (key === "push") {
+                        router.push("/admin/push");
+                        return;
+                      }
+                      setTab(key);
+                    }}
                   >
                     <Icon
                       size={15}
@@ -427,6 +435,16 @@ export default function AdminScreen() {
                       ))}
                     </View>
                   )}
+                </View>
+              )}
+
+              {/* ── Tab: Push ────────────────────────────────────────── */}
+              {tab === "push" && (
+                <View style={styles.empty}>
+                  <Megaphone size={36} color={Colors.primary} strokeWidth={1.5} />
+                  <Text style={styles.emptyText}>
+                    Перейди в раздел «Рассылка» для отправки push-уведомлений
+                  </Text>
                 </View>
               )}
 

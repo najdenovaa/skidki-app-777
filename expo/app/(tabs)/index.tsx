@@ -30,6 +30,7 @@ import Colors from "@/constants/colors";
 import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
 import { useAuth } from "@/providers/AuthProvider";
 import { useDiscounts } from "@/providers/DiscountsProvider";
+import { usePush } from "@/providers/PushProvider";
 import type { Discount } from "@/types/discount";
 
 const CHIPS_HEIGHT = 60;
@@ -37,6 +38,7 @@ const CHIPS_HEIGHT = 60;
 function FeedHeader() {
   const router = useRouter();
   const { isGuest, guestCity, saveGuestCity, user, updateProfile } = useAuth();
+  const { unreadCount } = usePush();
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
 
   const cityLabel = isGuest
@@ -97,7 +99,15 @@ function FeedHeader() {
           </Pressable>
           <Pressable hitSlop={10} style={styles.iconBtn} onPress={onBellPress}>
             <Bell size={24} color={Colors.text} strokeWidth={2} />
-            <View style={styles.notifyDot} />
+            {unreadCount > 0 ? (
+              <View style={styles.notifyBadge}>
+                <Text style={styles.notifyBadgeText}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.notifyDot} />
+            )}
           </Pressable>
         </View>
       </View>
@@ -314,6 +324,23 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 3.5,
     backgroundColor: Colors.accent,
+  },
+  notifyBadge: {
+    position: "absolute",
+    top: 4,
+    right: 2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.danger,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingHorizontal: 4,
+  },
+  notifyBadgeText: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+    color: "#fff",
   },
 
   chipsWrapper: {

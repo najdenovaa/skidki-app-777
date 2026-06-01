@@ -140,3 +140,35 @@ export interface AdminUserDetail {
   user: AdminUser;
   posts: { id: string; title: string; percent: number; views: number; likes: number; createdAt: number }[];
 }
+
+// ── Push Notifications ────────────────────────────────────────────────────
+
+export interface PushMessage {
+  id: string;
+  title: string;
+  body: string;
+  type: "new_discount" | "system_message" | "like_comment";
+  data?: Record<string, string>;
+  read: boolean;
+  createdAt: number;
+}
+
+export type PushAudience = "all" | "authorized" | "specific";
+
+export interface SendPushDTO {
+  title: string;
+  body: string;
+  audience: PushAudience;
+  targetUserId?: string;
+  targetUserName?: string;
+}
+
+export interface PushSendRecord {
+  id: string;
+  title: string;
+  body: string;
+  audience: PushAudience;
+  targetUserName?: string;
+  sentAt: number;
+  recipientCount: number;
+}

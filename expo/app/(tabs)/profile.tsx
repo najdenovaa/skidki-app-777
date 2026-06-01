@@ -22,6 +22,7 @@ import { resolveImageUrl } from "@/utils/image";
 import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
 import { useAuth } from "@/providers/AuthProvider";
 import { useDiscounts } from "@/providers/DiscountsProvider";
+import { usePush } from "@/providers/PushProvider";
 import type { SelectedCity } from "@/types/api";
 import type { Discount } from "@/types/discount";
 
@@ -34,6 +35,7 @@ function AuthenticatedProfile() {
   const router = useRouter();
   const { user, signOut, deleteAccount, updateProfile } = useAuth();
   const { myPosts, savedList, deletePost } = useDiscounts();
+  const { unreadCount } = usePush();
   const tabBarVisible = useTabBarVisible();
   const [tab, setTab] = useState<"posts" | "saved">("posts");
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
@@ -171,6 +173,13 @@ function AuthenticatedProfile() {
           <Pressable onPress={() => router.push("/notifications")} style={styles.notifBtn}>
             <Bell size={18} color={Colors.primary} strokeWidth={1.5} />
             <Text style={styles.notifBtnText}>Уведомления</Text>
+            {unreadCount > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Text>
+              </View>
+            )}
           </Pressable>
 
           {/* Edit profile button */}
@@ -429,6 +438,20 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
     color: Colors.text,
     letterSpacing: -0.3,
+  },
+  notifBadge: {
+    backgroundColor: Colors.danger,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingHorizontal: 5,
+  },
+  notifBadgeText: {
+    fontSize: 10,
+    fontWeight: "700" as const,
+    color: "#fff",
   },
 
   // admin panel button
