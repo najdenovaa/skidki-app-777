@@ -126,7 +126,7 @@ export default function NotificationsScreen() {
     () => (
       <FlatList
         data={messages}
-        keyExtractor={(m) => m.id}
+        keyExtractor={(m) => String(m.id)}
         renderItem={renderMessage}
         contentContainerStyle={styles.msgList}
         showsVerticalScrollIndicator={false}
