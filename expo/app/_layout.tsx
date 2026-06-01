@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { CityPicker } from "@/components/CityPicker";
+import BrandSplash from "@/components/BrandSplash";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Colors from "@/constants/colors";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
@@ -183,6 +184,8 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [showBrandSplash, setShowBrandSplash] = useState(true);
+
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
@@ -198,6 +201,9 @@ export default function RootLayout() {
                   <StatusBar style="light" />
                   <GuestCityGate />
                   <RootLayoutNav />
+                  {showBrandSplash && (
+                    <BrandSplash onFinish={() => setShowBrandSplash(false)} />
+                  )}
                 </ErrorBoundary>
               </DiscountsProvider>
             </PushProvider>
