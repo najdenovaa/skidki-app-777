@@ -36,16 +36,17 @@ async function fireHaptic(style: "heavy" | "medium" | "light" = "heavy") {
 
 /* ═══════════════════════════════════════════
    BrandSplash
-   Timeline (total ~2.0 s + safety 6.0 s)
+   Timeline (total ~5.0 s + safety 8.0 s)
    ───────────────────────────────────────────
    0.0 s  – light haptic, Ken Burns starts
-   0.7 s  – medium haptic
-   1.1 s  – dark overlay fully in
-   1.1 s  – «Скидос» flies in (spring)
-   1.6 s  – heavy haptic, glow ring flash
-   1.6 s  – subtitle «Твой выгодный помощник» fades in
-   ~2.0 s – onFinish()
-   6.0 s  – safety timeout
+   1.0 s  – medium haptic
+   1.5 s  – dark overlay fully in
+   1.5 s  – «Скидос» flies in (spring)
+   2.4 s  – heavy haptic, glow ring flash
+   2.4 s  – subtitle «Твой выгодный помощник» fades in
+   2.8 s  – subtitle visible, pause ~2 s
+   4.8 s  – onFinish()
+   8.0 s  – safety timeout
    ═══════════════════════════════════════════ */
 type BrandSplashProps = {
   onFinish: () => void;
@@ -70,28 +71,28 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
         finishedRef.current = true;
         onFinish();
       }
-    }, 6000);
+    }, 8000);
 
     /* ── haptic sequence ── */
     void fireHaptic("light");
-    const hMid = setTimeout(() => void fireHaptic("medium"), 700);
+    const hMid = setTimeout(() => void fireHaptic("medium"), 1000);
 
     /* ═══ Phase 1: Ken Burns + dark overlay ═══ */
     Animated.sequence([
       Animated.parallel([
         Animated.timing(sceneScale, {
           toValue: 1.08,
-          duration: 1600,
+          duration: 2200,
           useNativeDriver: true,
         }),
         Animated.timing(sceneTranslateY, {
           toValue: -10,
-          duration: 1600,
+          duration: 2200,
           useNativeDriver: true,
         }),
         Animated.timing(darkenOpacity, {
           toValue: 1,
-          duration: 1100,
+          duration: 1500,
           useNativeDriver: true,
         }),
       ]),
@@ -100,7 +101,7 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
       Animated.parallel([
         Animated.timing(titleOpacity, {
           toValue: 1,
-          duration: 450,
+          duration: 500,
           useNativeDriver: true,
         }),
         Animated.spring(titleScale, {
@@ -111,7 +112,7 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
         }),
         Animated.timing(titleTranslateY, {
           toValue: 0,
-          duration: 500,
+          duration: 600,
           useNativeDriver: true,
         }),
       ]),
@@ -133,19 +134,22 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
         }),
       ]).start();
 
-      /* ── subtitle fade-in → finish ── */
+      /* ── subtitle fade-in ── */
       Animated.timing(subtitleOpacity, {
         toValue: 1,
-        duration: 350,
+        duration: 400,
         useNativeDriver: true,
-      }).start(() => {
+      }).start();
+
+      /* ── hold ~2 s after subtitle, then finish ── */
+      setTimeout(() => {
         clearTimeout(safety);
         clearTimeout(hMid);
         if (!finishedRef.current) {
           finishedRef.current = true;
           onFinish();
         }
-      });
+      }, 2400);
     });
 
     return () => {
@@ -285,10 +289,8 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#50D848",
     letterSpacing: -1,
-    textShadowColor: "rgba(80,216,72,0.6)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 25,
     includeFontPadding: false,
+    backgroundColor: "transparent",
   },
   restLetters: {
     fontSize: 58,
