@@ -30,15 +30,15 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
  const leave = useSharedValue(0);
 
  useEffect(() => {
- fly.value = withSpring(1, { damping: 14, stiffness: 130 });
+ fly.value = withSpring(1, { damping: 14, stiffness: 100 });
 
  const hapticId = setTimeout(() => {
  fireHaptic();
- }, 700);
+ }, 1000);
 
  leave.value = withDelay(
- 1300,
- withTiming(1, { duration: 1100 }, (finished) => {
+ 2000,
+ withTiming(1, { duration: 1400 }, (finished) => {
  if (finished) {
  runOnJS(onFinish)();
  }
@@ -66,7 +66,7 @@ export default function BrandSplash({ onFinish }: BrandSplashProps) {
  return (
  <Animated.View style={[styles.root, shellStyle]} pointerEvents="auto">
  <Animated.View style={[styles.row, brandStyle]}>
- <Image source={LOGO} style={styles.icon} contentFit="contain" />
+ <Image source={LOGO} style={styles.icon} contentFit="contain" tintColor="#50D848" />
  <Text style={styles.suffix}>кидос</Text>
  </Animated.View>
  </Animated.View>
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
  suffix: {
  fontSize: 34,
  fontWeight: "800",
- color: "#50D848",
+ color: "#FFFFFF",
  letterSpacing: -1,
  marginLeft: -2,
  includeFontPadding: false,
