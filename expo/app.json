@@ -26,13 +26,15 @@
       "package": "app.rork.dt64dnl55bin2kp4nhvjq"
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro",
+      "output": "static"
     },
     "plugins": [
       [
         "expo-router",
         {
-          "origin": "https://rork.com/"
+          "origin": "https://app.skidos.store/"
         }
       ],
       [
