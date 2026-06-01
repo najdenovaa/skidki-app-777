@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
+import { BiometricGate } from "@/components/BiometricGate";
 import { CityPicker } from "@/components/CityPicker";
 import BrandSplash from "@/components/BrandSplash";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -216,7 +217,9 @@ export default function RootLayout() {
                 <ErrorBoundary>
                   <StatusBar style="light" />
                   <GuestCityGate />
-                  <RootLayoutNav />
+                  <BiometricGate>
+                    <RootLayoutNav />
+                  </BiometricGate>
                   {showBrandSplash && (
                     <BrandSplash onFinish={() => setShowBrandSplash(false)} />
                   )}

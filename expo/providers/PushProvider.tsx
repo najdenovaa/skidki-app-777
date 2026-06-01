@@ -3,18 +3,28 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import createContextHook from "@nkzw/create-context-hook";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
 import { useAuth } from "@/providers/AuthProvider";
 import { api } from "@/services/api";
 import type { PushMessage } from "@/types/api";
+import { fetchExpoPushToken } from "@/utils/pushToken";
+
+// ── Set global notification handler ──────────────────────────────────────
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const MESSAGES_KEY = "skidki.notifications.messages";
 const UNREAD_KEY = "skidki.notifications.unread";
 const BANNER_DURATION_MS = 3_500;
-const UNREAD_POLL_MS = 60_000;
+const UNREAD_POLL_MS = 15_000;
 
 type InAppBanner = {
   title: string;
@@ -201,8 +211,8 @@ export const [PushProvider, usePush] = createContextHook(() => {
       setPermissionGranted(true);
 
       try {
-        const expoToken = (await Notifications.getExpoPushTokenAsync()).data;
-        setToken(expoToken);
+        const expoToken = await fetchExpoPushToken();
+        if (expoToken) setToken(expoToken);
       } catch {
         // push token unavailable — ignore
       }
@@ -211,11 +221,29 @@ export const [PushProvider, usePush] = createContextHook(() => {
     register();
   }, []);
 
+  // ── Re-fetch push token when user changes (login/logout) ──────────────
+  useEffect(() => {
+    if (isGuest || !permissionGranted) return;
+    fetchExpoPushToken().then((expoToken) => {
+      if (expoToken) setToken(expoToken);
+    }).catch(() => {});
+  }, [user?.id, isGuest, permissionGranted]);
+
   // ── Send token to server when authenticated ───────────────────────────
   useEffect(() => {
     if (!token || isGuest) return;
     api.registerPushToken(token, Platform.OS).catch(() => {});
   }, [token, isGuest, user?.id]);
+
+  // ── Refresh messages when app becomes active ──────────────────────────
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        refreshMessages();
+      }
+    });
+    return () => sub.remove();
+  }, [refreshMessages]);
 
   // ── Show/hide in-app banner ──────────────────────────────────────────
   const showBanner = useCallback(

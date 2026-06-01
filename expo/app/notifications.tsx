@@ -4,6 +4,7 @@ import {
   Bell,
   BellOff,
   CheckCheck,
+  Fingerprint,
   Heart,
   Mail,
   Megaphone,
@@ -27,6 +28,7 @@ import Colors from "@/constants/colors";
 import { CATEGORIES } from "@/constants/categories";
 import { useAuth } from "@/providers/AuthProvider";
 import { usePush } from "@/providers/PushProvider";
+import { useBiometricSetting } from "@/components/BiometricGate";
 import { api } from "@/services/api";
 import type {
   NotificationSettings,
@@ -78,6 +80,7 @@ export default function NotificationsScreen() {
   const { messages, unreadCount, markRead, markAllRead, refreshMessages } = usePush();
   const [tab, setTab] = useState<Tab>(unreadCount > 0 ? "messages" : "messages");
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const { enabled: biometricEnabled, available: biometricAvailable, setEnabled: setBiometricEnabled } = useBiometricSetting();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -290,6 +293,35 @@ export default function NotificationsScreen() {
             />
           </View>
         </View>
+
+        {/* ── Biometric security ── */}
+        {biometricAvailable ? (
+          <>
+            <Text style={styles.sectionLabel}>Безопасность</Text>
+            <View style={styles.group}>
+              <View style={styles.row}>
+                <View style={styles.rowLeft}>
+                  <Fingerprint size={20} color={Colors.primary} strokeWidth={2} />
+                  <View style={styles.rowLeftText}>
+                    <Text style={styles.rowLabel}>Вход по Face ID / Touch ID</Text>
+                    <Text style={styles.rowHint}>
+                      При возврате в приложение — подтверждение биометрией
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={(v) => {
+                    impact();
+                    void setBiometricEnabled(v);
+                  }}
+                  trackColor={{ false: Colors.borderLight, true: Colors.primaryDark }}
+                  thumbColor={biometricEnabled ? Colors.primary : Colors.textMuted}
+                />
+              </View>
+            </View>
+          </>
+        ) : null}
 
         {/* ── Category subscriptions ── */}
         <Text style={styles.sectionLabel}>
