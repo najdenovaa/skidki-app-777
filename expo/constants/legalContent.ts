@@ -1,7 +1,7 @@
 export const LEGAL_META = {
-  title: "Пользовательское соглашение",
+  title: "ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ И ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ",
   subtitle: 'Приложение «Скидос» · Последнее обновление: 02 июня 2026 г.',
-  operator: "ИП Найденов Артём Александрович",
+  operator: "ИП Найденов Антон Анатольевич",
   supportEmail: "support@skidki.app",
   privacyEmail: "privacy@skidki.app",
 };

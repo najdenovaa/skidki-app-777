@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CityPicker } from "@/components/CityPicker";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { Open2GisLink } from "@/components/Open2GisLink";
+import { PercentSpinner } from "@/components/PercentSpinner";
 import {
   ActionSheetIOS,
   Alert,
@@ -84,6 +85,7 @@ export default function PostModalScreen() {
   const [selectedCity, setSelectedCity] = useState<SelectedCity | null>(null);
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [expiry, setExpiry] = useState<"today" | "date" | "stock">("today");
+  const [publishing, setPublishing] = useState<boolean>(false);
 
   // Init city from profile / guest on mount
   useEffect(() => {
@@ -103,7 +105,7 @@ export default function PostModalScreen() {
   const displayCity = selectedCity?.cityName || user?.city;
   const displayRegion = selectedCity?.regionName;
 
-  const canPublish = title.trim().length > 0;
+  const canPublish = title.trim().length > 0 && !publishing;
 
   const effectivePercent = useMemo(() => {
     const orig = parseFloat(originalPrice);
@@ -229,10 +231,13 @@ export default function PostModalScreen() {
   }, []);
 
   const onSubmit = useCallback(async () => {
+    if (publishing) return;
     if (!title.trim()) {
       Alert.alert("Заполни название", "Расскажи, что за скидка");
       return;
     }
+    setPublishing(true);
+    try {
     const orig = parseFloat(originalPrice);
     const disc = parseFloat(discountedPrice);
 
@@ -290,7 +295,10 @@ export default function PostModalScreen() {
     } else {
       Alert.alert("Ошибка", res.error ?? "Не удалось опубликовать");
     }
-  }, [title, category, images, address, placeName, note, lat, lng, addressFromGps, displayCity, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
+    } finally {
+      setPublishing(false);
+    }
+  }, [publishing, title, category, images, address, placeName, note, lat, lng, addressFromGps, displayCity, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
 
   return (
     <View style={styles.root}>
@@ -307,17 +315,21 @@ export default function PostModalScreen() {
             onPress={onSubmit}
             disabled={!canPublish}
             hitSlop={10}
-            style={[styles.publishBtn, !canPublish && styles.publishBtnDisabled]}
+            style={[styles.publishBtn, (!canPublish || publishing) && styles.publishBtnDisabled]}
           >
-            <Text style={[styles.publishBtnText, !canPublish && styles.publishBtnTextDisabled]}>
-              Опубликовать
-            </Text>
+            {publishing ? (
+              <PercentSpinner size={22} color={Colors.primary} />
+            ) : (
+              <Text style={[styles.publishBtnText, !canPublish && styles.publishBtnTextDisabled]}>
+                Опубликовать
+              </Text>
+            )}
           </Pressable>
         </View>
       </SafeAreaView>
 
       <KeyboardSafeScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
       >
           {/* Images — horizontal preview strip */}
           <View style={styles.imagesSection}>
@@ -554,6 +566,16 @@ export default function PostModalScreen() {
         }}
         onClose={() => setCityPickerOpen(false)}
       />
+
+      {/* Publishing overlay */}
+      {publishing && (
+        <View style={styles.publishOverlay} pointerEvents="auto">
+          <View style={styles.publishOverlayInner}>
+            <PercentSpinner size={40} color={Colors.primary} />
+            <Text style={styles.publishOverlayText}>Публикуем…</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -579,6 +601,31 @@ const fieldStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.background },
+
+  // ── Publishing overlay ──
+  publishOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 100,
+  },
+  publishOverlayInner: {
+    backgroundColor: Colors.card,
+    borderRadius: 20,
+    paddingHorizontal: 40,
+    paddingVertical: 32,
+    alignItems: "center",
+    gap: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+  },
+  publishOverlayText: {
+    fontSize: 16,
+    color: Colors.text,
+    letterSpacing: -0.2,
+    fontWeight: "500" as const,
+  },
 
   headerSafe: {
     backgroundColor: Colors.background,

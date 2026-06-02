@@ -9,7 +9,8 @@ export function KeyboardSafeScrollView({
 }: ScrollViewProps) {
   return (
     <KeyboardAwareScrollView
-      bottomOffset={24}
+      bottomOffset={64}
+      extraKeyboardSpace={24}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={contentContainerStyle}

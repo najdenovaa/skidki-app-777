@@ -29,6 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
+import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
 import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
 import { shareDiscount } from "@/utils/share";
@@ -433,34 +434,39 @@ export default function DiscountDetailScreen() {
                   </View>
                 </View>
               ))}
+              {/* Bottom spacer so last comment isn't hidden behind sticky input */}
+              <View style={{ height: 60 }} />
             </View>
 
-            {/* Comment input — inline, not sticky */}
-            <SafeAreaView edges={["bottom"]} style={styles.inputBar}>
-              <View style={styles.inputBarInner}>
-                <TextInput
-                  value={comment}
-                  onChangeText={setComment}
-                  placeholder={isGuest ? "Войди, чтобы комментировать" : "Написать комментарий"}
-                  placeholderTextColor={Colors.textMuted}
-                  style={styles.commentInput}
-                  editable={!isGuest}
-                  onPressIn={() => { if (isGuest) promptAuth(); }}
-                />
-                <Pressable
-                  onPress={onSendComment}
-                  disabled={!comment.trim()}
-                  style={[
-                    styles.sendBtn,
-                    !comment.trim() && { opacity: 0.4 },
-                  ]}
-                >
-                  <Send size={18} color={Colors.primary} strokeWidth={2} />
-                </Pressable>
-              </View>
-            </SafeAreaView>
           </View>
         </KeyboardSafeScrollView>
+
+        {/* Comment input — sticky to keyboard */}
+        <KeyboardStickyFooter>
+          <SafeAreaView edges={["bottom"]} style={styles.inputBar}>
+            <View style={styles.inputBarInner}>
+              <TextInput
+                value={comment}
+                onChangeText={setComment}
+                placeholder={isGuest ? "Войди, чтобы комментировать" : "Написать комментарий"}
+                placeholderTextColor={Colors.textMuted}
+                style={styles.commentInput}
+                editable={!isGuest}
+                onPressIn={() => { if (isGuest) promptAuth(); }}
+              />
+              <Pressable
+                onPress={onSendComment}
+                disabled={!comment.trim()}
+                style={[
+                  styles.sendBtn,
+                  !comment.trim() && { opacity: 0.4 },
+                ]}
+              >
+                <Send size={18} color={Colors.primary} strokeWidth={2} />
+              </Pressable>
+            </View>
+          </SafeAreaView>
+        </KeyboardStickyFooter>
     </View>
   );
 }
@@ -775,11 +781,13 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
 
-  // ── Comment input bar ──
+  // ── Comment input bar (sticky to keyboard) ──
   inputBar: {
     backgroundColor: Colors.background,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.border,
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingTop: 12,
     paddingBottom: 10,
   },
   inputBarInner: {

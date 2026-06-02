@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import {
   Bell,
@@ -77,6 +77,7 @@ function NotificationLabel({ type }: { type: PushMessage["type"] }) {
 }
 
 export default function NotificationsScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const { messages, unreadCount, markRead, markAllRead, refreshMessages } = usePush();
   const [tab, setTab] = useState<Tab>(unreadCount > 0 ? "messages" : "messages");
@@ -96,8 +97,8 @@ export default function NotificationsScreen() {
         style={[styles.msgRow, !item.read && styles.msgUnread]}
         onPress={() => {
           if (!item.read) markRead(item.id);
-          if (item.type === "new_discount" && item.data?.discountId) {
-            // Will close modal + navigate handled by parent
+          if ((item.type === "new_discount" || item.type === "like_comment") && item.data?.discountId) {
+            router.push(`/discount/${item.data.discountId}`);
           }
         }}
       >
@@ -111,11 +112,11 @@ export default function NotificationsScreen() {
             </Text>
             <Text style={styles.msgTime}>{formatTimeAgo(item.createdAt)}</Text>
           </View>
-          <Text style={[styles.msgTitle, !item.read && styles.msgTitleUnread]} numberOfLines={2}>
+          <Text style={[styles.msgTitle, !item.read && styles.msgTitleUnread]}>
             {item.title}
           </Text>
           {item.body ? (
-            <Text style={styles.msgBody} numberOfLines={2}>
+            <Text style={styles.msgBody}>
               {item.body}
             </Text>
           ) : null}

@@ -5,6 +5,7 @@ import { getDeviceFingerprint } from "@/utils/fingerprint";
 
 const TOKEN_KEY = "skidki.token";
 const TIMEOUT_MS = 10_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
 
 /** Read the stored JWT token. */
 export async function getToken(): Promise<string | null> {
@@ -40,7 +41,8 @@ async function request<T>(
   method: string,
   path: string,
   body?: unknown,
-  customHeaders?: Record<string, string>
+  customHeaders?: Record<string, string>,
+  timeoutMs?: number,
 ): Promise<T> {
   const token = await getToken();
   const fingerprint = await getDeviceFingerprint();
@@ -59,7 +61,7 @@ async function request<T>(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs ?? TIMEOUT_MS);
 
   try {
     const res = await fetch(`${ENV.API_URL}${path}`, {
@@ -136,8 +138,8 @@ export const http = {
     return request<T>("DELETE", path);
   },
 
-  /** Upload multipart form data (no JSON content-type). */
+  /** Upload multipart form data (no JSON content-type). Uses longer timeout for file uploads. */
   upload<T>(path: string, formData: FormData): Promise<T> {
-    return request<T>("POST", path, formData);
+    return request<T>("POST", path, formData, undefined, UPLOAD_TIMEOUT_MS);
   },
 };

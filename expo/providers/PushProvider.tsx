@@ -317,7 +317,7 @@ export const [PushProvider, usePush] = createContextHook(() => {
       addLocalMessage(msg);
 
       // Navigate based on type
-      if (type === "new_discount" && discountId) {
+      if ((type === "new_discount" || type === "like_comment") && discountId) {
         router.push(`/discount/${discountId}`);
       } else {
         router.push("/notifications");
@@ -339,7 +339,7 @@ export const [PushProvider, usePush] = createContextHook(() => {
       duration: 200,
       useNativeDriver: true,
     }).start(() => setBanner(null));
-    if (banner.type === "new_discount" && banner.discountId) {
+    if ((banner.type === "new_discount" || banner.type === "like_comment") && banner.discountId) {
       router.push(`/discount/${banner.discountId}`);
     } else {
       router.push("/notifications");
