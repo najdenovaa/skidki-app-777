@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Camera, Check, ImageIcon, MapPin, MessageSquareText, Navigation, Plus, X } from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { PercentSpinnerCentered } from "@/components/PercentSpinner";
 import { CityPicker } from "@/components/CityPicker";
@@ -30,6 +30,8 @@ import { useDiscounts } from "@/providers/DiscountsProvider";
 import { api } from "@/services/api";
 import type { SelectedCity } from "@/types/api";
 import type { Category } from "@/types/discount";
+import { isRemoteImageUri, type PickedImage } from "@/types/pickedImage";
+import WebImagePickerInput, { type WebImagePickerRef } from "@/components/WebImagePickerInput";
 
 const EXPIRY_OPTIONS: { id: "today" | "date" | "stock"; label: string }[] = [
   { id: "today", label: "Только сегодня" },
@@ -67,8 +69,9 @@ export default function EditPostScreen() {
   const { user, guestCity } = useAuth();
   const { discounts, updatePost } = useDiscounts();
 
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<PickedImage[]>([]);
   const [cameraFacing, setCameraFacing] = useState<ImagePicker.CameraType>(ImagePicker.CameraType.back);
+  const webPickerRef = useRef<WebImagePickerRef>(null);
   const [title, setTitle] = useState<string>("");
   const [category, setCategory] = useState<Category>("other");
   const [percentInput, setPercentInput] = useState<string>("");
@@ -104,7 +107,7 @@ export default function EditPostScreen() {
     if (d.note) setNote(d.note);
     if (d.lat) setLat(d.lat);
     if (d.lng) setLng(d.lng);
-    if (d.images) setImages(d.images);
+    if (d.images) setImages(d.images.map((uri) => ({ uri })));
     if (d.cityName && d.cityId) {
       setSelectedCity({
         cityId: String(d.cityId),
@@ -157,7 +160,7 @@ export default function EditPostScreen() {
       cameraType: cameraFacing,
     });
     if (!result.canceled && result.assets.length > 0) {
-      setImages((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
+      setImages((prev) => [...prev, ...result.assets.map((a) => ({ uri: a.uri }))]);
     }
   }, [images.length, cameraFacing]);
 
@@ -173,14 +176,19 @@ export default function EditPostScreen() {
       exif: false,
     });
     if (!result.canceled && result.assets.length > 0) {
-      setImages((prev) => [...prev, ...result.assets.map((a) => a.uri)]);
+      setImages((prev) => [...prev, ...result.assets.map((a) => ({ uri: a.uri }))]);
     }
   }, [images.length]);
 
-  /** Show native action sheet: camera or gallery */
+  /** Show native action sheet: camera or gallery (web: file picker) */
   const showImageSource = useCallback(() => {
     const remaining = 5 - images.length;
     if (remaining <= 0) return;
+
+    if (Platform.OS === "web") {
+      webPickerRef.current?.open();
+      return;
+    }
 
     const options = ["Снять фото", "Выбрать из галереи", "Отмена"];
     const cancelIdx = 2;
@@ -251,12 +259,12 @@ export default function EditPostScreen() {
     const disc = parseFloat(discountedPrice);
 
     // Upload new images (local URIs only — skip already-uploaded URLs)
-    const newUris = images.filter((uri) => !uri.startsWith("http"));
-    const existingUrls = images.filter((uri) => uri.startsWith("http"));
+    const newImages = images.filter((img) => !isRemoteImageUri(img.uri));
+    const existingUrls = images.filter((img) => isRemoteImageUri(img.uri)).map((img) => img.uri);
     let imageUrls: string[] = [...existingUrls];
 
-    if (newUris.length > 0) {
-      const uploadRes = await api.uploadImages(newUris);
+    if (newImages.length > 0) {
+      const uploadRes = await api.uploadImages(newImages);
       if (!uploadRes.success || !uploadRes.data) {
         Alert.alert("Ошибка", uploadRes.error ?? "Не удалось загрузить изображения");
         return;
@@ -342,9 +350,9 @@ export default function EditPostScreen() {
       >
           <View style={styles.imagesSection}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imagesRow}>
-              {images.map((uri, i) => (
+              {images.map((img, i) => (
                 <View key={i} style={styles.thumbnailWrap}>
-                  <Image source={{ uri }} style={styles.thumbnail} contentFit="cover" />
+                  <Image source={{ uri: img.uri }} style={styles.thumbnail} contentFit="cover" />
                   <Pressable
                     onPress={() => removeImage(i)}
                     style={styles.thumbnailRemove}
@@ -563,6 +571,8 @@ export default function EditPostScreen() {
 
           <View style={{ height: 40 }} />
       </KeyboardSafeScrollView>
+
+      <WebImagePickerInput ref={webPickerRef} onPick={(imgs) => setImages((prev) => [...prev, ...imgs])} />
 
       <CityPicker
         visible={cityPickerOpen}

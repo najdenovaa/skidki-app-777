@@ -1,5 +1,6 @@
 import { http, setToken } from "./http";
-import { prepareImageForUpload, buildUploadFile } from "@/utils/prepareImageForUpload";
+import { buildUploadFile } from "@/utils/prepareImageForUpload";
+import type { PickedImage } from "@/types/pickedImage";
 import type {
   AdminDiscount,
   AdminStats,
@@ -391,11 +392,13 @@ export const api = {
     }
   },
 
-  async uploadImage(uri: string): Promise<ApiResponse<{ url: string }>> {
+  async uploadImage(input: string | PickedImage): Promise<ApiResponse<{ url: string }>> {
     try {
-      const file = await buildUploadFile(uri);
+      const uri = typeof input === "string" ? input : input.uri;
+      const webFile = typeof input === "string" ? undefined : input.file;
+      const file = await buildUploadFile(uri, webFile);
       const formData = new FormData();
-      formData.append("images", file as unknown as Blob);
+      formData.append("images", file as unknown as Blob, "photo.jpg");
 
       const data = await http.upload<{ url?: string; urls?: string[] }>("/media/upload", formData);
       const uploaded = data.url ?? data.urls?.[0];
@@ -407,11 +410,11 @@ export const api = {
   },
 
   /** Upload multiple images one by one (not all in one FormData to avoid memory issues). */
-  async uploadImages(uris: string[]): Promise<ApiResponse<{ urls: string[] }>> {
+  async uploadImages(inputs: (string | PickedImage)[]): Promise<ApiResponse<{ urls: string[] }>> {
     try {
       const urls: string[] = [];
-      for (const uri of uris) {
-        const res = await api.uploadImage(uri);
+      for (const input of inputs) {
+        const res = await api.uploadImage(input);
         if (res.success && res.data) {
           urls.push(res.data.url);
         } else {

@@ -22,13 +22,16 @@ export async function prepareImageForUpload(uri: string): Promise<string> {
 /**
  * Build a FormData-compatible file object for upload.
  *
- * Web:     fetch the blob so FormData receives a real Blob.
- * Native:  run ImageManipulator, return { uri, type, name }.
+ * Web + webFile:     return the File directly.
+ * Web + blob/data:   fetch the blob so FormData receives a real Blob.
+ * Native:            run ImageManipulator, return { uri, type, name }.
  */
 export async function buildUploadFile(
   uri: string,
+  webFile?: File,
 ): Promise<{ uri: string; type: string; name: string } | Blob> {
   if (Platform.OS === "web") {
+    if (webFile) return webFile;
     const response = await fetch(uri);
     return await response.blob();
   }
