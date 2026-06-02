@@ -1,5 +1,5 @@
 import { Share } from "react-native";
-import * as Linking from "expo-linking";
+import { ENV } from "@/config/env";
 import { CATEGORY_MAP } from "@/constants/categories";
 import { formatFullDate, formatTimeUntil, isIndefinite, formatDistance } from "@/utils/time";
 import type { Discount } from "@/types/discount";
@@ -61,10 +61,9 @@ function buildShareText(discount: Discount): string {
   if (discount.going > 0) stats.push(`🚶 ${discount.going} идут`);
   if (stats.length > 0) lines.push(stats.join(" · "));
 
-  // Links
+  // Link
   lines.push("");
-  lines.push(`🔗 Открыть в приложении: ${Linking.createURL(`discount/${discount.id}`)}`);
-  lines.push(`🌐 https://rork.com/discount/${discount.id}`);
+  lines.push(`🔗 Открыть: ${ENV.WEB_URL}/discount/${discount.id}`);
 
   return lines.join("\n");
 }

@@ -75,7 +75,8 @@ export interface ApiResponse<T> {
 export interface NotificationSettings {
   pushEnabled: boolean;
   newDiscounts: boolean;
-  likesComments: boolean;
+  likesEnabled: boolean;
+  commentsEnabled: boolean;
 }
 
 export interface NotificationSubscription {

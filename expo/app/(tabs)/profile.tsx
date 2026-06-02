@@ -174,23 +174,31 @@ function AuthenticatedProfile() {
             </Pressable>
           )}
 
-          {/* Notifications button */}
-          <Pressable onPress={() => router.push("/notifications")} style={styles.notifBtn}>
-            <Bell size={18} color={Colors.primary} strokeWidth={1.5} />
-            <Text style={styles.notifBtnText}>Уведомления</Text>
-            {unreadCount > 0 && (
-              <View style={styles.notifBadge}>
-                <Text style={styles.notifBadgeText}>
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </Text>
-              </View>
-            )}
-          </Pressable>
+          {/* Profile actions row: Notifications + Account */}
+          <View style={styles.profileActionsRow}>
+            <Pressable
+              onPress={() => router.push("/notifications")}
+              style={styles.profileActionBtn}
+            >
+              <Bell size={18} color={Colors.primary} strokeWidth={1.5} />
+              <Text style={styles.profileActionText}>Уведомления</Text>
+              {unreadCount > 0 && (
+                <View style={styles.notifBadge}>
+                  <Text style={styles.notifBadgeText}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </Pressable>
 
-          {/* Edit profile button */}
-          <Pressable onPress={handleEditProfile} style={styles.editBtn}>
-            <Text style={styles.editBtnText}>Учётная запись</Text>
-          </Pressable>
+            <Pressable
+              onPress={handleEditProfile}
+              style={styles.profileActionBtn}
+            >
+              <UserIcon size={18} color={Colors.primary} strokeWidth={1.5} />
+              <Text style={styles.profileActionText}>Учётная запись</Text>
+            </Pressable>
+          </View>
         </SafeAreaView>
 
         {/* Segments — underline style */}
@@ -427,10 +435,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
 
-  // notifications button
-  notifBtn: {
+  // profile actions row
+  profileActionsRow: {
+    flexDirection: "row" as const,
     marginHorizontal: 20,
     marginTop: 12,
+    gap: 10,
+  },
+  profileActionBtn: {
+    flex: 1,
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
@@ -439,11 +452,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     height: 42,
   },
-  notifBtnText: {
-    fontSize: 15,
+  profileActionText: {
+    fontSize: 14,
     fontWeight: "600" as const,
     color: Colors.text,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   notifBadge: {
     backgroundColor: Colors.danger,
@@ -477,24 +490,6 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
     color: Colors.primary,
     letterSpacing: -0.3,
-  },
-
-  // edit profile button
-  editBtn: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 10,
-    height: 36,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  editBtnText: {
-    fontSize: 14,
-    fontWeight: "600" as const,
-    color: Colors.text,
-    letterSpacing: -0.2,
   },
 
   // segment — underline style

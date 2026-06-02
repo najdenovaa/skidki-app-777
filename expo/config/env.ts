@@ -2,4 +2,6 @@ export const ENV = {
   API_URL: "https://api.skidos.store/api",
   S3_BUCKET: "skidki-media",
   APP_VERSION: "1.0.0",
+  WEB_URL: "https://app.skidos.store",
+  LEGAL_URL: "https://app.skidos.store/legal.html",
 };

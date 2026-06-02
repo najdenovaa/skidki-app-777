@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { AppState, Platform, StyleSheet, Text, View } from "react-native";
+import { AppState, Platform, StyleSheet, View } from "react-native";
 
 import Colors from "@/constants/colors";
 import { useAuth } from "@/providers/AuthProvider";
@@ -29,13 +29,15 @@ export function setBiometricEnabled(enabled: boolean): Promise<void> {
 interface BiometricSettingCtx {
   enabled: boolean;
   available: boolean;
-  setEnabled: (v: boolean) => void;
+  setEnabled: (v: boolean) => Promise<boolean>;
+  refresh: () => Promise<void>;
 }
 
 const BiometricSettingContext = createContext<BiometricSettingCtx>({
   enabled: false,
   available: false,
-  setEnabled: () => {},
+  setEnabled: async () => false,
+  refresh: async () => {},
 });
 
 export function useBiometricSetting(): BiometricSettingCtx {
@@ -56,6 +58,7 @@ export function BiometricGate({ children }: BiometricGateProps) {
   const [locked, setLocked] = useState<boolean>(false);
   const wasBackgrounded = useRef<boolean>(false);
   const authInProgress = useRef<boolean>(false);
+  const attemptingRef = useRef<boolean>(false);
 
   // ── Check biometric availability on mount ────────────────────────────
   useEffect(() => {
@@ -74,17 +77,39 @@ export function BiometricGate({ children }: BiometricGateProps) {
     });
   }, []);
 
-  // ── Listen for AppState changes ──────────────────────────────────────
+  // ── Authenticate using system dialog only ────────────────────────────
+  const authenticate = useCallback(async () => {
+    if (authInProgress.current || attemptingRef.current) return;
+    authInProgress.current = true;
+    attemptingRef.current = true;
+    try {
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Подтвердите вход",
+        fallbackLabel: "Ввести пароль",
+      });
+      if (result.success) {
+        setLocked(false);
+      }
+    } catch {
+      // user cancelled or error — stay locked
+    } finally {
+      authInProgress.current = false;
+      attemptingRef.current = false;
+    }
+  }, []);
+
+  // ── Listen for AppState changes (background→active only) ─────────────
   useEffect(() => {
+    if (Platform.OS === "web") return;
     const sub = AppState.addEventListener("change", (nextState) => {
       if (nextState === "background") {
         wasBackgrounded.current = true;
       }
-      // Only lock when returning from actual background, not from
-      // inactive→active transitions (e.g. Face ID dialog dismissal).
+      // Only lock when returning from actual background,
+      // NOT from inactive→active (e.g. Face ID dialog dismissal).
       if (wasBackgrounded.current && nextState === "active") {
         wasBackgrounded.current = false;
-        if (enabled && user) {
+        if (enabled && user && !authInProgress.current) {
           setLocked(true);
         }
       }
@@ -101,37 +126,46 @@ export function BiometricGate({ children }: BiometricGateProps) {
     }
   }, [hydrated, enabled, user]);
 
-  // ── Authenticate ─────────────────────────────────────────────────────
-  const authenticate = useCallback(async () => {
-    if (authInProgress.current) return;
-    authInProgress.current = true;
-    try {
-      const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Подтвердите вход",
-        fallbackLabel: "Ввести пароль",
-      });
-      if (result.success) {
-        setLocked(false);
-      }
-    } catch {
-      // user cancelled or error — stay locked
-    } finally {
-      authInProgress.current = false;
+  // ── Auto-authenticate when locked ────────────────────────────────────
+  useEffect(() => {
+    if (locked && !authInProgress.current) {
+      authenticate();
     }
+  }, [locked, authenticate]);
+
+  // ── Refresh stored value ─────────────────────────────────────────────
+  const refresh = useCallback(async () => {
+    const stored = await getBiometricEnabled();
+    setEnabledState(stored);
   }, []);
 
-  // ── Setter with AsyncStorage persistence ─────────────────────────────
+  // ── Setter: on web returns false, on enable requires auth ────────────
   const setEnabled = useCallback(
-    async (v: boolean) => {
+    async (v: boolean): Promise<boolean> => {
+      if (Platform.OS === "web") return false;
+
+      if (v) {
+        // Require successful biometric auth to enable
+        try {
+          const res = await LocalAuthentication.authenticateAsync({
+            promptMessage: "Подтвердите для включения",
+          });
+          if (!res.success) return false;
+        } catch {
+          return false;
+        }
+      }
+
       setEnabledState(v);
       await setBiometricEnabled(v);
+      return true;
     },
     []
   );
 
-  const ctxValue = useMemo(
-    () => ({ enabled, available, setEnabled }),
-    [enabled, available, setEnabled]
+  const ctxValue = useMemo<BiometricSettingCtx>(
+    () => ({ enabled, available, setEnabled, refresh }),
+    [enabled, available, setEnabled, refresh]
   );
 
   // Web — skip biometric entirely
@@ -145,90 +179,17 @@ export function BiometricGate({ children }: BiometricGateProps) {
 
   return (
     <BiometricSettingContext.Provider value={ctxValue}>
+      {/* Empty dark overlay while locked — no text, no button, system dialog only */}
+      {locked && <View style={styles.lockOverlay} />}
       {children}
-
-      {/* Lock overlay */}
-      {locked && (
-        <View style={styles.overlay}>
-          <View style={styles.card}>
-            <Text style={styles.lockIcon}>🔒</Text>
-            <Text style={styles.title}>Вход по биометрии</Text>
-            <Text style={styles.hint}>
-              Подтвердите вход с помощью Face ID / Touch ID
-            </Text>
-            <View style={styles.buttonOuter}>
-              <View style={styles.button} onTouchEnd={authenticate}>
-                <Text style={styles.buttonText}>
-                  Face ID / Touch ID
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
     </BiometricSettingContext.Provider>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  lockOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.overlay,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: Colors.background,
     zIndex: 10000,
-  },
-  card: {
-    backgroundColor: Colors.card,
-    borderRadius: 20,
-    paddingHorizontal: 32,
-    paddingVertical: 36,
-    alignItems: "center",
-    marginHorizontal: 40,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
-    shadowColor: "rgba(0,0,0,0.5)",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 12,
-  },
-  lockIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.text,
-    letterSpacing: -0.3,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  hint: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 28,
-    letterSpacing: -0.1,
-  },
-  buttonOuter: {
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  button: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 28,
-    paddingVertical: 14,
-    borderRadius: 14,
-    minWidth: 200,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    letterSpacing: -0.2,
   },
 });

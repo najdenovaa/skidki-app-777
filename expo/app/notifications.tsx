@@ -43,7 +43,8 @@ type SubState = Record<Category, NotificationSubscription | null>;
 const DEFAULT_SETTINGS: NotificationSettings = {
   pushEnabled: true,
   newDiscounts: true,
-  likesComments: true,
+  likesEnabled: true,
+  commentsEnabled: true,
 };
 
 type Tab = "messages" | "settings";
@@ -80,7 +81,7 @@ export default function NotificationsScreen() {
   const { messages, unreadCount, markRead, markAllRead, refreshMessages } = usePush();
   const [tab, setTab] = useState<Tab>(unreadCount > 0 ? "messages" : "messages");
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const { enabled: biometricEnabled, available: biometricAvailable, setEnabled: setBiometricEnabled } = useBiometricSetting();
+  const { enabled: biometricEnabled, available: biometricAvailable, setEnabled: setBiometricEnabled, refresh: refreshBiometric } = useBiometricSetting();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -157,7 +158,7 @@ export default function NotificationsScreen() {
     [messages, refreshing, onRefresh, renderMessage, markAllRead]
   );
 
-  // ── Settings Tab (existing logic) ──────────────────────────────────────
+  // ── Settings Tab ──────────────────────────────────────────────────────
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS);
   const [subs, setSubs] = useState<SubState>(
     () =>
@@ -292,17 +293,37 @@ export default function NotificationsScreen() {
             <View style={styles.rowLeft}>
               <Heart size={20} color={Colors.primary} strokeWidth={2} />
               <View style={styles.rowLeftText}>
-                <Text style={styles.rowLabel}>Лайки и комментарии</Text>
+                <Text style={styles.rowLabel}>Лайки</Text>
                 <Text style={styles.rowHint}>
-                  Уведомления об активности на моих скидках
+                  Уведомления о новых лайках на моих скидках
                 </Text>
               </View>
             </View>
             <Switch
-              value={settings.likesComments}
-              onValueChange={(v) => updateSetting("likesComments", v)}
+              value={settings.likesEnabled}
+              onValueChange={(v) => updateSetting("likesEnabled", v)}
               trackColor={{ false: Colors.borderLight, true: Colors.primaryDark }}
-              thumbColor={settings.likesComments ? Colors.primary : Colors.textMuted}
+              thumbColor={settings.likesEnabled ? Colors.primary : Colors.textMuted}
+            />
+          </View>
+
+          <View style={styles.separator} />
+
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <MessageCircle size={20} color={Colors.primary} strokeWidth={2} />
+              <View style={styles.rowLeftText}>
+                <Text style={styles.rowLabel}>Комментарии</Text>
+                <Text style={styles.rowHint}>
+                  Уведомления о новых комментариях на моих скидках
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={settings.commentsEnabled}
+              onValueChange={(v) => updateSetting("commentsEnabled", v)}
+              trackColor={{ false: Colors.borderLight, true: Colors.primaryDark }}
+              thumbColor={settings.commentsEnabled ? Colors.primary : Colors.textMuted}
             />
           </View>
         </View>
@@ -324,9 +345,10 @@ export default function NotificationsScreen() {
                 </View>
                 <Switch
                   value={biometricEnabled}
-                  onValueChange={(v) => {
+                  onValueChange={async (v) => {
                     impact();
-                    void (async () => { await setBiometricEnabled(v); })();
+                    const ok = await setBiometricEnabled(v);
+                    if (!ok) await refreshBiometric();
                   }}
                   trackColor={{ false: Colors.borderLight, true: Colors.primaryDark }}
                   thumbColor={biometricEnabled ? Colors.primary : Colors.textMuted}
@@ -383,7 +405,7 @@ export default function NotificationsScreen() {
         <View style={{ height: 60 }} />
       </ScrollView>
     ),
-    [settings, subs, cityId, user, updateSetting, toggleCategory]
+    [settings, subs, cityId, user, updateSetting, toggleCategory, biometricEnabled, biometricAvailable, setBiometricEnabled, refreshBiometric]
   );
 
   return (
@@ -568,7 +590,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  // ── Settings (same as before) ─────────────────────────────────────
+  // ── Settings ─────────────────────────────────────────────────────
   settingsScroll: { paddingHorizontal: 20, paddingTop: 12 },
   sectionLabel: {
     fontSize: 11,
