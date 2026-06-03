@@ -6,6 +6,7 @@ import { Stack, useRouter } from "expo-router";
 import { Camera, Check, ImageIcon, MapPin, MessageSquareText, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { CategoryPicker } from "@/components/CategoryPicker";
 import { CityPicker } from "@/components/CityPicker";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { Open2GisLink } from "@/components/Open2GisLink";
@@ -86,6 +87,7 @@ export default function PostModalScreen() {
   const [cityPickerOpen, setCityPickerOpen] = useState<boolean>(false);
   const [expiry, setExpiry] = useState<"today" | "date" | "stock">("today");
   const [publishing, setPublishing] = useState<boolean>(false);
+  const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
 
   // Init city from profile / guest on mount
   useEffect(() => {
@@ -387,27 +389,14 @@ export default function PostModalScreen() {
           </Field>
 
           <Field label="Категория">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-              {CATEGORIES.map((c) => {
-                const active = category === c.id;
-                const IconCm = c.icon;
-                return (
-                  <Pressable
-                    key={c.id}
-                    onPress={() => setCategory(c.id)}
-                    style={[
-                      styles.catChip,
-                      { backgroundColor: active ? c.color : Colors.card },
-                    ]}
-                  >
-                    <IconCm size={14} color={active ? Colors.text : c.color} strokeWidth={2} />
-                    <Text style={[styles.catLabel, { color: active ? Colors.text : Colors.textSecondary }]}>
-                      {c.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+            <CategoryPicker
+              value={category}
+              onChange={(v) => setCategory(v as Category)}
+              open={categoryOpen}
+              onOpenChange={setCategoryOpen}
+              variant="form"
+              includeAll={false}
+            />
           </Field>
 
           <Field label="Скидка">

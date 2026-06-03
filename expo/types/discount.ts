@@ -13,6 +13,12 @@ export type Category =
   | "household"
   | "renovation"
   | "automoto"
+  | "electronics"
+  | "appliances"
+  | "clothing"
+  | "kids"
+  | "garden"
+  | "furniture"
   | "other";
 
 export interface CategoryInfo {

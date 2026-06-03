@@ -4,6 +4,8 @@ import {
   Bell,
   BellOff,
   CheckCheck,
+  ChevronDown,
+  ChevronUp,
   Fingerprint,
   Heart,
   Mail,
@@ -168,6 +170,7 @@ export default function NotificationsScreen() {
       ) as SubState
   );
   const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState<boolean>(false);
 
   const cityId = user?.cityId != null ? String(user.cityId) : "";
 
@@ -200,7 +203,6 @@ export default function NotificationsScreen() {
       if (res.success && res.data) {
         setSettings(res.data);
       } else if (!res.success) {
-        // Rollback only on failure; if success but no data, keep optimistic
         setSettings(settings);
       }
     },
@@ -217,13 +219,13 @@ export default function NotificationsScreen() {
         if (!res.success) {
           setSubs((prev) => ({ ...prev, [catId]: existing }));
         }
-      } else if (cityId) {
-        setSubs((prev) => ({ ...prev, [catId]: { id: "pending", categoryId: catId, cityId } }));
-        const res = await api.subscribeCategory(catId, cityId);
+      } else {
+        const cityParam = cityId || undefined;
+        setSubs((prev) => ({ ...prev, [catId]: { id: "pending", categoryId: catId, cityId: cityParam ?? "" } }));
+        const res = await api.subscribeCategory(catId, cityParam);
         if (res.success && res.data) {
           setSubs((prev) => ({ ...prev, [catId]: res.data! }));
         } else if (res.success) {
-          // API succeeded but returned no data — reload all subscriptions
           const reload = await api.getSubscriptions();
           if (reload.success && reload.data) {
             const map = { ...subs } as SubState;
@@ -360,53 +362,96 @@ export default function NotificationsScreen() {
         ) : null}
 
         {/* ── Category subscriptions ── */}
-        <Text style={styles.sectionLabel}>
-          Уведомлять о новых скидках в:
-        </Text>
-        <View style={styles.group}>
-          {CATEGORIES.map((cat, i) => {
-            const Icon = cat.icon;
-            const sub = subs[cat.id];
-            const isSubscribed = sub !== null;
-
-            return (
-              <View key={cat.id}>
-                {i > 0 && <View style={styles.separator} />}
-                <View style={styles.row}>
-                  <View style={styles.rowLeft}>
-                    <View
-                      style={[
-                        styles.catIconDot,
-                        { backgroundColor: cat.color },
-                      ]}
-                    >
-                      <Icon size={12} color="#fff" strokeWidth={2.5} />
-                    </View>
-                    <View style={styles.rowLeftText}>
-                      <Text style={styles.rowLabel}>{cat.label}</Text>
-                      {isSubscribed && cityId ? (
-                        <Text style={styles.rowHint}>
-                          в городе: {user?.city || "Москва"}
-                        </Text>
-                      ) : null}
-                    </View>
+        <Pressable
+          style={styles.sectionHeader}
+          onPress={() => setCategoriesExpanded((v) => !v)}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.sectionLabel, { marginTop: 0, marginBottom: 4 }]}>
+              Категории скидок
+            </Text>
+            {!categoriesExpanded && (() => {
+              const activeIds = CATEGORIES.filter((c) => subs[c.id] !== null);
+              const activeCount = activeIds.length;
+              return (
+                <View style={styles.catSummary}>
+                  <Text style={styles.catSummaryText}>
+                    {activeCount} из {CATEGORIES.length} включено
+                  </Text>
+                  <View style={styles.catChipsRow}>
+                    {activeIds.slice(0, 5).map((c) => (
+                      <View
+                        key={c.id}
+                        style={[styles.catMiniChip, { backgroundColor: c.color + "30" }]}
+                      >
+                        <View style={[styles.catMiniDot, { backgroundColor: c.color }]} />
+                      </View>
+                    ))}
+                    {activeIds.length > 5 && (
+                      <Text style={styles.catMoreText}>+{activeIds.length - 5}</Text>
+                    )}
                   </View>
-                  <Switch
-                    value={isSubscribed}
-                    onValueChange={() => toggleCategory(cat.id)}
-                    trackColor={{ false: Colors.borderLight, true: Colors.primaryDark }}
-                    thumbColor={isSubscribed ? Colors.primary : Colors.textMuted}
-                  />
                 </View>
-              </View>
-            );
-          })}
-        </View>
+              );
+            })()}
+          </View>
+          {categoriesExpanded ? (
+            <ChevronUp size={18} color={Colors.textMuted} strokeWidth={2} />
+          ) : (
+            <ChevronDown size={18} color={Colors.textMuted} strokeWidth={2} />
+          )}
+        </Pressable>
+
+        {categoriesExpanded ? (
+          <View style={styles.group}>
+            {CATEGORIES.map((cat, i) => {
+              const Icon = cat.icon;
+              const sub = subs[cat.id];
+              const isSubscribed = sub !== null;
+              const switchDisabled = !settings.pushEnabled || !settings.newDiscounts;
+
+              return (
+                <View key={cat.id}>
+                  {i > 0 && <View style={styles.separator} />}
+                  <View style={styles.row}>
+                    <View style={styles.rowLeft}>
+                      <View
+                        style={[
+                          styles.catIconDot,
+                          { backgroundColor: cat.color },
+                        ]}
+                      >
+                        <Icon size={12} color="#fff" strokeWidth={2.5} />
+                      </View>
+                      <View style={styles.rowLeftText}>
+                        <Text style={styles.rowLabel}>{cat.label}</Text>
+                        {isSubscribed && cityId ? (
+                          <Text style={styles.rowHint}>
+                            в городе: {user?.city || "Москва"}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                    <Switch
+                      value={isSubscribed}
+                      onValueChange={() => toggleCategory(cat.id)}
+                      disabled={switchDisabled}
+                      trackColor={{ false: Colors.borderLight, true: cat.color + "40" }}
+                      thumbColor={isSubscribed ? cat.color : Colors.textMuted}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={styles.group} />
+        )}
 
         <View style={{ height: 60 }} />
       </ScrollView>
     ),
-    [settings, subs, cityId, user, updateSetting, toggleCategory, biometricEnabled, biometricAvailable, setBiometricEnabled, refreshBiometric]
+    [settings, subs, cityId, user, updateSetting, toggleCategory, categoriesExpanded, biometricEnabled, biometricAvailable, setBiometricEnabled, refreshBiometric]
   );
 
   return (
@@ -601,6 +646,47 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 10,
     marginLeft: 4,
+  },
+  sectionHeader: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    marginTop: 24,
+    paddingVertical: 8,
+    paddingRight: 4,
+  },
+  catSummary: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 10,
+    marginTop: 4,
+    marginLeft: 4,
+  },
+  catSummaryText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    letterSpacing: -0.2,
+  },
+  catChipsRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+  },
+  catMiniChip: {
+    width: 16,
+    height: 16,
+    borderRadius: 5,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  catMiniDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  catMoreText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginLeft: 2,
   },
   group: {
     backgroundColor: Colors.card,

@@ -6,7 +6,7 @@ import { api } from "@/services/api";
 import { getToken } from "@/services/http";
 import type { SelectedCity } from "@/types/api";
 import type { User } from "@/types/user";
-import { validateEmail, validatePassword } from "@/types/user";
+import { isPhoneInput, normalisePhone, validateEmail, validatePassword, validatePhone } from "@/types/user";
 
 const GUEST_CITY_KEY = "skidki.guest.city";
 
@@ -64,21 +64,38 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const signUp = useCallback(
     async (input: SignUpInput): Promise<SignUpError> => {
-      const email = input.email.trim().toLowerCase();
-      if (!validateEmail(email)) return "weakPassword";
+      const rawLogin = input.email.trim();
       if (!validatePassword(input.password)) return "weakPassword";
 
-      const res = await api.signUp({
-        name: input.name,
-        email,
-        password: input.password,
-        cityId: input.cityId,
-        regionId: input.regionId,
-        acceptedTerms: input.acceptedTerms,
-      });
+      let dto: Parameters<typeof api.signUp>[0];
+
+      if (isPhoneInput(rawLogin)) {
+        const phone = normalisePhone(rawLogin);
+        if (!validatePhone(phone)) return "weakPassword";
+        dto = {
+          name: input.name,
+          phone,
+          password: input.password,
+          cityId: input.cityId,
+          regionId: input.regionId,
+          acceptedTerms: input.acceptedTerms,
+        };
+      } else {
+        if (!validateEmail(rawLogin)) return "weakPassword";
+        dto = {
+          name: input.name,
+          email: rawLogin.toLowerCase(),
+          password: input.password,
+          cityId: input.cityId,
+          regionId: input.regionId,
+          acceptedTerms: input.acceptedTerms,
+        };
+      }
+
+      const res = await api.signUp(dto);
 
       if (!res.success) {
-        if (res.error?.includes("уже зарегистрирован")) return "emailTaken";
+        if (res.error?.includes("уже зарегистрирован") || res.error?.includes("уже занят")) return "emailTaken";
         return "weakPassword";
       }
 

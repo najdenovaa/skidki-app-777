@@ -20,7 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CategoryChips } from "@/components/CategoryChips";
+import { CategoryPicker } from "@/components/CategoryPicker";
 import { CityPicker } from "@/components/CityPicker";
 import { DiscountCard } from "@/components/DiscountCard";
 import { DraggableFab } from "@/components/DraggableFab";
@@ -135,6 +135,7 @@ export default function FeedScreen() {
   const { user, guestCity, isGuest } = useAuth();
   const insets = useSafeAreaInsets();
   const hasCity = !!(user?.cityId || guestCity?.cityId);
+  const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
 
   const handleFabPress = useCallback(() => {
     if (isGuest) {
@@ -166,13 +167,14 @@ export default function FeedScreen() {
       } else if (dy > 6) {
         chipsVisible.value = withTiming(0, { duration: 200 });
         tabBarVisible.value = withTiming(0, { duration: 200 });
+        if (categoryOpen) setCategoryOpen(false);
       } else if (dy < -6) {
         chipsVisible.value = withTiming(1, { duration: 200 });
         tabBarVisible.value = withTiming(1, { duration: 200 });
       }
       lastY.value = y;
     },
-    [chipsVisible, tabBarVisible, lastY]
+    [chipsVisible, tabBarVisible, lastY, categoryOpen]
   );
 
   const chipsContainerStyle = useAnimatedStyle(() => ({
@@ -253,12 +255,12 @@ export default function FeedScreen() {
         {/* Clean header row */}
         <FeedHeader />
 
-        {/* Collapsible category chips */}
+        {/* Collapsible category picker */}
         <Animated.View
           style={[styles.chipsWrapper, chipsContainerStyle]}
           pointerEvents="box-none"
         >
-          <CategoryChips value={filter} onChange={setFilter} />
+          <CategoryPicker value={filter} onChange={setFilter} open={categoryOpen} onOpenChange={setCategoryOpen} />
         </Animated.View>
       </SafeAreaView>
     </View>
@@ -345,6 +347,7 @@ const styles = StyleSheet.create({
 
   chipsWrapper: {
     overflow: "hidden",
+    paddingHorizontal: 20,
   },
 
   empty: { padding: 60, alignItems: "center" as const, gap: 12 },

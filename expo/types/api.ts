@@ -21,7 +21,8 @@ export interface CreateDiscountDTO {
 
 export interface SignUpDTO {
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   password: string;
   cityId?: string;
   regionId?: string;

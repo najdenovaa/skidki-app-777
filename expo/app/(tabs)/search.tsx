@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { withTiming } from "react-native-reanimated";
 
-import { CategoryChips } from "@/components/CategoryChips";
+import { CategoryPicker } from "@/components/CategoryPicker";
 import { DraggableFab } from "@/components/DraggableFab";
 import { Open2GisLink } from "@/components/Open2GisLink";
 import Colors from "@/constants/colors";
@@ -48,6 +48,7 @@ export default function SearchScreen() {
   const [mapMode, setMapMode] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [radius, setRadius] = useState<number>(0);
+  const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
   const lastY = useRef<number>(0);
 
   const onScroll = useCallback(
@@ -58,12 +59,13 @@ export default function SearchScreen() {
         tabBarVisible.value = withTiming(1, { duration: 200 });
       } else if (dy > 6) {
         tabBarVisible.value = withTiming(0, { duration: 200 });
+        if (categoryOpen) setCategoryOpen(false);
       } else if (dy < -6) {
         tabBarVisible.value = withTiming(1, { duration: 200 });
       }
       lastY.current = y;
     },
-    [tabBarVisible]
+    [tabBarVisible, categoryOpen]
   );
 
   const results = useMemo<Discount[]>(() => {
@@ -219,7 +221,7 @@ export default function SearchScreen() {
                 </Pressable>
               ))}
             </View>
-            <CategoryChips value={filter} onChange={setFilter} />
+            <CategoryPicker value={filter} onChange={setFilter} open={categoryOpen} onOpenChange={setCategoryOpen} />
           </SafeAreaView>
 
           {/* Results */}

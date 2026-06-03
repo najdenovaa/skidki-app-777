@@ -1,4 +1,26 @@
-import { Activity, Building2, Car, Dumbbell, Ellipsis, Factory, Hammer, Heart, Paintbrush, PawPrint, Plane, ShoppingBasket, Sparkles, UtensilsCrossed, Wrench } from "lucide-react-native";
+import {
+  Activity,
+  Armchair,
+  Baby,
+  Building2,
+  Car,
+  Dumbbell,
+  Ellipsis,
+  Factory,
+  Flower2,
+  Hammer,
+  Heart,
+  Paintbrush,
+  PawPrint,
+  Plane,
+  Shirt,
+  ShoppingBasket,
+  Smartphone,
+  Sparkles,
+  UtensilsCrossed,
+  WashingMachine,
+  Wrench,
+} from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 
 import type { Category, CategoryInfo } from "@/types/discount";
@@ -23,6 +45,12 @@ export const CATEGORIES: CategoryDef[] = [
   { id: "household", label: "Хозяйство", color: "#8B5CF6", icon: Wrench },
   { id: "renovation", label: "Ремонт помещений", color: "#14B8A6", icon: Paintbrush },
   { id: "automoto", label: "Авто-мото", color: "#64748B", icon: Car },
+  { id: "electronics", label: "Электроника", color: "#0EA5E9", icon: Smartphone },
+  { id: "appliances", label: "Бытовая техника", color: "#7C3AED", icon: WashingMachine },
+  { id: "clothing", label: "Одежда", color: "#D946EF", icon: Shirt },
+  { id: "kids", label: "Детские товары", color: "#FB7185", icon: Baby },
+  { id: "garden", label: "Дача/огород", color: "#84CC16", icon: Flower2 },
+  { id: "furniture", label: "Мебель", color: "#B45309", icon: Armchair },
   { id: "other", label: "Разное", color: "#6B7280", icon: Ellipsis },
 ];
 

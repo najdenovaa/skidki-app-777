@@ -356,7 +356,7 @@ export const api = {
     }
   },
 
-  async subscribeCategory(categoryId: string, cityId: string): Promise<ApiResponse<NotificationSubscription>> {
+  async subscribeCategory(categoryId: string, cityId?: string): Promise<ApiResponse<NotificationSubscription>> {
     try {
       const data = await http.post<NotificationSubscription>("/notifications/subscriptions", { categoryId, cityId });
       return ok(data);

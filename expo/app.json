@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#071A10"
       },
-      "package": "store.skidos.store"
+      "package": "store.skidos.app"
     },
     "web": {
       "favicon": "./assets/images/favicon.png",
