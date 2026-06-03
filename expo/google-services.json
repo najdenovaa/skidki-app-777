@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "413550591844",
+    "project_id": "skidos-34e21",
+    "storage_bucket": "skidos-34e21.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413550591844:android:d27613828acbb7b6e74471",
+        "android_client_info": {
+          "package_name": "store.skidos.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzmiEOJxOXm9uIB3J8uQRWhZUTeqpKvxY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

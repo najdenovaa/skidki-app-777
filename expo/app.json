@@ -18,12 +18,13 @@
       "bundleIdentifier": "store.skidos.store"
     },
     "android": {
+      "package": "store.skidos.app",
+      "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#071A10"
-      },
-      "package": "store.skidos.app"
+      }
     },
     "web": {
       "favicon": "./assets/images/favicon.png",

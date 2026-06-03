@@ -3,7 +3,7 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import createContextHook from "@nkzw/create-context-hook";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, AppState, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Colors from "@/constants/colors";
@@ -192,6 +192,16 @@ export const [PushProvider, usePush] = createContextHook(() => {
           vibrationPattern: [0, 250, 250, 250],
           lightColor: Colors.primary,
         });
+
+        if (Number(Platform.Version) >= 33) {
+          const result = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          );
+          if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+            setPermissionGranted(false);
+            return;
+          }
+        }
       }
 
       const { status: existing } = await Notifications.getPermissionsAsync();
@@ -199,6 +209,7 @@ export const [PushProvider, usePush] = createContextHook(() => {
       if (existing !== "granted") {
         const { status } = await Notifications.requestPermissionsAsync({
           ios: { allowAlert: true, allowBadge: true, allowSound: true },
+          android: {},
         });
         finalStatus = status;
       }
@@ -224,15 +235,25 @@ export const [PushProvider, usePush] = createContextHook(() => {
   // ── Re-fetch push token when user changes (login/logout) ──────────────
   useEffect(() => {
     if (isGuest || !permissionGranted) return;
-    fetchPushToken().then((pushToken) => {
+    const load = async () => {
+      await new Promise((r) => setTimeout(r, 500));
+      const pushToken = await fetchPushToken();
       if (pushToken) setToken(pushToken);
-    }).catch(() => {});
+    };
+    load().catch(() => {});
   }, [user?.id, isGuest, permissionGranted]);
 
   // ── Send token to server when authenticated ───────────────────────────
   useEffect(() => {
     if (!token || isGuest) return;
-    api.registerPushToken(token, Platform.OS).catch(() => {});
+    const send = async () => {
+      for (let i = 0; i < 3; i++) {
+        const res = await api.registerPushToken(token, Platform.OS);
+        if (res.success) return;
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    };
+    send().catch(() => {});
   }, [token, isGuest, user?.id]);
 
   // ── Refresh messages when app becomes active ──────────────────────────
