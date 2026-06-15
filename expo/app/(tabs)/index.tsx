@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { Bell, LifeBuoy, MapPin, Tag } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -139,6 +139,10 @@ export default function FeedScreen() {
   const hasCity = !!(user?.cityId || guestCity?.cityId);
   const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const flatListRef = useRef<FlatList<any>>(null);
+  const expandedAtIndex = useRef<number | null>(null);
+  const expandedAtScrollY = useRef<number>(0);
+  const scrollY = useRef<number>(0);
 
   const handleFabPress = useCallback(() => {
     if (isGuest) {
@@ -160,14 +164,12 @@ export default function FeedScreen() {
   const chipsVisible = useSharedValue<number>(1);
   const lastY = useSharedValue<number>(0);
 
-  const onScrollBeginDrag = useCallback(() => {
-    if (expandedCardId) setExpandedCardId(null);
-  }, [expandedCardId]);
-
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const y = e.nativeEvent.contentOffset.y;
       const dy = y - lastY.value;
+      scrollY.current = y;
+
       if (y <= 8) {
         chipsVisible.value = withTiming(1, { duration: 200 });
         tabBarVisible.value = withTiming(1, { duration: 200 });
@@ -179,15 +181,46 @@ export default function FeedScreen() {
         chipsVisible.value = withTiming(1, { duration: 200 });
         tabBarVisible.value = withTiming(1, { duration: 200 });
       }
+
+      // Auto-collapse only when scrolled far past the expanded card
+      if (expandedAtIndex.current !== null) {
+        const dist = Math.abs(y - expandedAtScrollY.current);
+        if (dist > 350) {
+          setExpandedCardId(null);
+          expandedAtIndex.current = null;
+        }
+      }
+
       lastY.value = y;
     },
     [chipsVisible, tabBarVisible, lastY, categoryOpen]
   );
 
-  const handleToggleExpand = useCallback((id: string) => {
+  const handleToggleExpand = useCallback((id: string, index: number) => {
     if (Platform.OS === "ios") LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedCardId((prev) => (prev === id ? null : id));
-  }, []);
+    const wasExpanded = expandedCardId === id;
+
+    if (wasExpanded) {
+      setExpandedCardId(null);
+      expandedAtIndex.current = null;
+    } else {
+      expandedAtIndex.current = index;
+      expandedAtScrollY.current = scrollY.current;
+      setExpandedCardId(id);
+
+      // Auto-scroll so the expanded card is fully visible
+      setTimeout(() => {
+        if (flatListRef.current && expandedAtIndex.current === index) {
+          flatListRef.current.scrollToIndex({
+            index,
+            animated: true,
+            viewPosition: 0.15,
+            viewOffset: insets.top + 100,
+          });
+        }
+      }, 150);
+    }
+  }, [expandedCardId, insets.top]);
 
   const chipsContainerStyle = useAnimatedStyle(() => ({
     height: interpolate(chipsVisible.value, [0, 1], [0, CHIPS_HEIGHT], Extrapolation.CLAMP),
@@ -205,7 +238,7 @@ export default function FeedScreen() {
         discount={item}
         index={index}
         isExpanded={expandedCardId === item.id}
-        onToggleExpand={() => handleToggleExpand(item.id)}
+        onToggleExpand={() => handleToggleExpand(item.id, index)}
       />
     ),
     [expandedCardId, handleToggleExpand]
@@ -221,6 +254,7 @@ export default function FeedScreen() {
         </View>
       ) : (
       <FlatList
+        ref={flatListRef}
         data={filtered}
         keyExtractor={(d) => String(d.id)}
         renderItem={renderItem}
@@ -228,7 +262,6 @@ export default function FeedScreen() {
         contentContainerStyle={[styles.list, { paddingTop: HEADER_HEIGHT }]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
-        onScrollBeginDrag={onScrollBeginDrag}
         scrollEventThrottle={16}
         removeClippedSubviews
         windowSize={7}
@@ -237,6 +270,15 @@ export default function FeedScreen() {
         refreshing={refreshing}
         onRefresh={onRefresh}
         progressViewOffset={HEADER_HEIGHT}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            flatListRef.current?.scrollToIndex({
+              index: info.index,
+              animated: true,
+              viewPosition: 0,
+            });
+          }, 200);
+        }}
         ListHeaderComponent={<View style={{ height: 8 }} />}
         ListEmptyComponent={
           !hasCity ? (
