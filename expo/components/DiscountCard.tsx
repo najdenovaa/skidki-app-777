@@ -25,18 +25,21 @@ import { shareDiscount } from "@/utils/share";
 interface Props {
   discount: Discount;
   index?: number;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 function impact(style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) {
   if (Platform.OS !== "web") Haptics.impactAsync(style).catch(() => {});
 }
 
-function DiscountCardBase({ discount, index = 0 }: Props) {
+function DiscountCardBase({ discount, index = 0, isExpanded: expandedProp, onToggleExpand: onToggleExpandProp }: Props) {
   useTick(1000);
   const router = useRouter();
   const { isGuest } = useAuth();
   const { toggleGoing, toggleLike, toggleSave } = useDiscounts();
-  const [expanded, setExpanded] = useState(false);
+  const [expandedLocal, setExpandedLocal] = useState(false);
+  const expanded = expandedProp !== undefined ? expandedProp : expandedLocal;
   const cat = CATEGORY_MAP[discount.category];
   const Icon = cat.icon;
   const elapsed = formatTimeSince(discount.postedAt);
@@ -44,10 +47,14 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
   const indefinite = isIndefinite(discount.expiresAt);
   const expired = discount.expired === true || (discount.expiresAt > 0 && discount.expiresAt <= Date.now());
 
-  const onToggleExpand = useCallback(() => {
-    if (isIos) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpanded((v) => !v);
-  }, []);
+  const handleToggleExpand = useCallback(() => {
+    if (onToggleExpandProp) {
+      onToggleExpandProp();
+    } else {
+      if (isIos) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setExpandedLocal((v) => !v);
+    }
+  }, [onToggleExpandProp]);
 
   const promptAuth = useCallback(() => {
     Alert.alert("Вход", "Войди в аккаунт, чтобы использовать эту функцию", [
@@ -218,7 +225,7 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
           </View>
 
           {/* ── Expand / collapse chevron ── */}
-          <Pressable onPress={onToggleExpand} hitSlop={6} style={[styles.chevronBtn, expanded && styles.chevronBtnExpanded]}>
+          <Pressable onPress={handleToggleExpand} hitSlop={6} style={[styles.chevronBtn, expanded && styles.chevronBtnExpanded]}>
             <ChevronDown
               size={16}
               color={expanded ? Colors.text : Colors.textMuted}

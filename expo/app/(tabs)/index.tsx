@@ -4,6 +4,8 @@ import React, { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
+  LayoutAnimation,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -136,6 +138,7 @@ export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const hasCity = !!(user?.cityId || guestCity?.cityId);
   const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
 
   const handleFabPress = useCallback(() => {
     if (isGuest) {
@@ -157,6 +160,10 @@ export default function FeedScreen() {
   const chipsVisible = useSharedValue<number>(1);
   const lastY = useSharedValue<number>(0);
 
+  const onScrollBeginDrag = useCallback(() => {
+    if (expandedCardId) setExpandedCardId(null);
+  }, [expandedCardId]);
+
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const y = e.nativeEvent.contentOffset.y;
@@ -177,6 +184,11 @@ export default function FeedScreen() {
     [chipsVisible, tabBarVisible, lastY, categoryOpen]
   );
 
+  const handleToggleExpand = useCallback((id: string) => {
+    if (Platform.OS === "ios") LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedCardId((prev) => (prev === id ? null : id));
+  }, []);
+
   const chipsContainerStyle = useAnimatedStyle(() => ({
     height: interpolate(chipsVisible.value, [0, 1], [0, CHIPS_HEIGHT], Extrapolation.CLAMP),
     opacity: chipsVisible.value,
@@ -189,9 +201,14 @@ export default function FeedScreen() {
 
   const renderItem = useCallback(
     ({ item, index }: { item: Discount; index: number }) => (
-      <DiscountCard discount={item} index={index} />
+      <DiscountCard
+        discount={item}
+        index={index}
+        isExpanded={expandedCardId === item.id}
+        onToggleExpand={() => handleToggleExpand(item.id)}
+      />
     ),
-    []
+    [expandedCardId, handleToggleExpand]
   );
 
   return (
@@ -210,6 +227,7 @@ export default function FeedScreen() {
         contentContainerStyle={[styles.list, { paddingTop: HEADER_HEIGHT }]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
+        onScrollBeginDrag={onScrollBeginDrag}
         scrollEventThrottle={16}
         removeClippedSubviews
         windowSize={7}
