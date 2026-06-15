@@ -224,6 +224,7 @@ export default function FeedScreen() {
         data={filtered}
         keyExtractor={(d) => String(d.id)}
         renderItem={renderItem}
+        extraData={expandedCardId}
         contentContainerStyle={[styles.list, { paddingTop: HEADER_HEIGHT }]}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}

@@ -664,13 +664,13 @@ const styles = StyleSheet.create({
   imagesSection: { marginBottom: 0 },
   imagesRow: { gap: 10, paddingVertical: 4 },
   thumbnailWrap: {
-    width: 80,
-    height: 80,
+    width: 120,
+    height: 120,
     borderRadius: 12,
     overflow: "hidden",
     position: "relative",
   },
-  thumbnail: { width: 80, height: 80 },
+  thumbnail: { width: 120, height: 120 },
   thumbnailRemove: {
     position: "absolute",
     top: 4,
@@ -683,8 +683,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   addPhotoBtn: {
-    width: 80,
-    height: 80,
+    width: 120,
+    height: 120,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: Colors.borderLight,
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  addPhotoLabel: { fontSize: 13, color: Colors.textMuted },
+  addPhotoLabel: { fontSize: 15, color: Colors.textMuted },
   imagesHint: { fontSize: 14, color: Colors.textMuted, marginTop: 4, marginBottom: 16 },
 
   inputBox: {

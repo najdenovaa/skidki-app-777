@@ -175,7 +175,7 @@ export default function DiscountDetailScreen() {
       >
           {/* ── Hero carousel ── */}
           <View style={styles.heroWrap}>
-            <ImageCarousel images={discount.images.map(resolveImageUrl)} height={300}>
+            <ImageCarousel images={discount.images.map(resolveImageUrl)} height={400} contentFit="contain">
               {/* Header overlay */}
               <SafeAreaView edges={["top"]} style={styles.heroHeader} pointerEvents="box-none">
                 <View style={styles.heroHeaderRow}>
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   // ── Hero image ──
   heroWrap: {
     width: "100%",
-    height: 300,
+    height: 400,
     backgroundColor: Colors.cardSecondary,
     position: "relative",
   },
