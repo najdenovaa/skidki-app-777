@@ -185,7 +185,7 @@ export default function FeedScreen() {
       // Auto-collapse only when scrolled far past the expanded card
       if (expandedAtIndex.current !== null) {
         const dist = Math.abs(y - expandedAtScrollY.current);
-        if (dist > 350) {
+        if (dist > 500) {
           setExpandedCardId(null);
           expandedAtIndex.current = null;
         }
