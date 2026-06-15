@@ -76,15 +76,16 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 focused ? styles.capsuleActive : styles.capsuleInactive,
               ]}
             >
+              {focused && <View style={styles.glow} />}
               <Icon
                 size={20}
-                color={focused ? Colors.text : Colors.textMuted}
-                strokeWidth={2}
+                color={focused ? Colors.text : Colors.tabInactiveText}
+                strokeWidth={focused ? 2.4 : 2}
               />
               <Text
                 style={[
                   styles.label,
-                  { color: focused ? Colors.text : Colors.textMuted },
+                  focused ? styles.labelActive : styles.labelInactive,
                 ]}
                 numberOfLines={1}
               >
@@ -140,16 +141,36 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   capsuleInactive: {
-    backgroundColor: Colors.card,
-    borderColor: Colors.border,
+    backgroundColor: Colors.tabInactiveBg,
+    borderColor: Colors.tabInactiveBorder,
   },
   capsuleActive: {
     backgroundColor: Colors.primary,
     borderColor: "transparent",
+    shadowColor: "#22C55E",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  glow: {
+    position: "absolute",
+    top: -2,
+    left: 12,
+    right: 12,
+    height: 2,
+    borderRadius: 2,
+    backgroundColor: Colors.tabGlow,
   },
   label: {
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: -0.3,
+  },
+  labelActive: {
+    color: Colors.text,
+  },
+  labelInactive: {
+    color: Colors.tabInactiveText,
   },
 });
