@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { Home, Search, User } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -61,6 +62,12 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       ]}
       pointerEvents="box-none"
     >
+      <LinearGradient
+        colors={["transparent", "rgba(14, 30, 20, 0.45)", "rgba(14, 30, 20, 0.85)"]}
+        locations={[0, 0.35, 1]}
+        style={styles.barGradient}
+        pointerEvents="none"
+      />
       <View style={styles.bar} pointerEvents="box-none">
         {state.routes.map((route, index) => {
           const focused = state.index === index;
@@ -123,9 +130,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(14, 30, 20, 0.72)",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "rgba(22, 163, 74, 0.18)",
+    paddingTop: 48,
+  },
+  barGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   bar: {
     flexDirection: "row",

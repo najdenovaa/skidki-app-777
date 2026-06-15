@@ -29,7 +29,7 @@ export function PercentSpinner({ size = 56, color = Colors.primary }: Props) {
   });
 
   return (
-    <View style={[styles.wrap, { width: size, height: size, borderRadius: size / 2 }]}>
+    <View style={[styles.wrap, { width: size, height: size }]}>
       <Animated.View style={{ transform: [{ rotate: spin }] }}>
         <Text style={[styles.pct, { fontSize: size * 0.6, color }]}>%</Text>
       </Animated.View>
@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.cardSecondary,
   },
   pct: {
     fontWeight: "800",
