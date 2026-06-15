@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Bookmark, ChevronDown, Eye, Heart, MapPin, MessageCircle, Share2, Users } from "lucide-react-native";
 import React, { memo, useCallback, useState } from "react";
-import { Alert, LayoutAnimation, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, LayoutAnimation, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 const isIos = Platform.OS === "ios";
@@ -95,7 +95,13 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
     >
       <View style={styles.card}>
         {/* ── Image carousel (Instagram-style) ── */}
-        <ImageCarousel images={discount.images.map(resolveImageUrl)} height={240} onPress={onOpen} gradient>
+        <ImageCarousel
+          images={discount.images.map(resolveImageUrl)}
+          height={expanded ? 420 : 240}
+          onPress={onOpen}
+          gradient
+          contentFit={expanded ? "contain" : "cover"}
+        >
           {/* Discount badge */}
           <View style={styles.discountBadge} pointerEvents="box-none">
             <Text style={styles.discountNumber}>−{discount.percent}%</Text>
@@ -268,6 +274,26 @@ function DiscountCardBase({ discount, index = 0 }: Props) {
                 )}
               </View>
             )}
+
+            {/* Note */}
+            {discount.note ? (
+              <View style={styles.noteBox}>
+                <Text style={styles.noteText}>{discount.note}</Text>
+              </View>
+            ) : null}
+
+            {/* Link */}
+            {discount.link ? (
+              <Pressable
+                onPress={() => {
+                  const url = discount.link!.startsWith("http") ? discount.link! : `https://${discount.link}`;
+                  Linking.openURL(url).catch(() => {});
+                }}
+                style={styles.linkBox}
+              >
+                <Text style={styles.linkText} numberOfLines={1}>{discount.link}</Text>
+              </Pressable>
+            ) : null}
 
             {/* CTA */}
             <Pressable
@@ -593,4 +619,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   goingPillText: { color: Colors.success, fontSize: 12 },
+
+  // ── Note in expanded body ──
+  noteBox: {
+    backgroundColor: Colors.cardSecondary,
+    borderRadius: 10,
+    padding: 12,
+  },
+  noteText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+    letterSpacing: -0.2,
+  },
+
+  // ── Link in expanded body ──
+  linkBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.cardSecondary,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  linkText: {
+    fontSize: 14,
+    color: Colors.primary,
+    letterSpacing: -0.1,
+    textDecorationLine: "underline" as const,
+    flex: 1,
+  },
 });

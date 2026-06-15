@@ -26,6 +26,8 @@ interface Props {
   inactiveDotColor?: string;
   /** Show a dark gradient overlay at the bottom of each photo */
   gradient?: boolean;
+  /** Image content fit mode — "cover" crops, "contain" shows full image */
+  contentFit?: "cover" | "contain";
 }
 
 /**
@@ -40,6 +42,7 @@ export function ImageCarousel({
   activeDotColor = Colors.primary,
   inactiveDotColor = "rgba(255,255,255,0.45)",
   gradient = false,
+  contentFit = "cover",
 }: Props) {
   const [current, setCurrent] = useState<number>(0);
   const [carouselWidth, setCarouselWidth] = useState<number>(0);
@@ -83,7 +86,7 @@ export function ImageCarousel({
             <Image
               source={{ uri }}
               style={{ width: "100%", height: "100%" }}
-              contentFit="cover"
+              contentFit={contentFit}
               cachePolicy="memory-disk"
               recyclingKey={uri}
               transition={Platform.OS === "android" ? 0 : 200}

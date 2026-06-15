@@ -15,6 +15,7 @@ export interface CreateDiscountDTO {
   placeName?: string;
   address?: string;
   note?: string;
+  link?: string;
   expiresAt: number;
   cityId?: string;
 }

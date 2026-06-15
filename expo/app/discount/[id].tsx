@@ -6,6 +6,7 @@ import {
   Bookmark,
   ChevronLeft,
   Clock,
+  ExternalLink,
   Eye,
   Heart,
   MapPin,
@@ -18,6 +19,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   AppState,
+  Linking,
   Platform,
   Pressable,
   StyleSheet,
@@ -395,6 +397,23 @@ export default function DiscountDetailScreen() {
               </View>
             ) : null}
 
+            {/* ── Link ── */}
+            {discount.link ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Ссылка</Text>
+                <Pressable
+                  onPress={() => {
+                    const url = discount.link!.startsWith("http") ? discount.link! : `https://${discount.link}`;
+                    Linking.openURL(url).catch(() => {});
+                  }}
+                  style={styles.linkBox}
+                >
+                  <ExternalLink size={16} color={Colors.primary} strokeWidth={2} />
+                  <Text style={styles.linkText} numberOfLines={2}>{discount.link}</Text>
+                </Pressable>
+              </View>
+            ) : null}
+
             {/* ── Where to find ── */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Где найти</Text>
@@ -726,20 +745,37 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   noteText: {
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 24,
     letterSpacing: -0.2,
+  },
+
+  // ── Link ──
+  linkBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 14,
+  },
+  linkText: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.primary,
+    letterSpacing: -0.1,
+    textDecorationLine: "underline" as const,
   },
 
   // ── Section (Map / Comments) ──
   section: { marginTop: 12, gap: 12 },
   sectionHeader: { marginBottom: 4 },
   sectionTitle: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    letterSpacing: 0.5,
-    textTransform: "uppercase" as const,
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.textSecondary,
+    letterSpacing: 0.3,
   },
   addressText: {
     fontSize: 15,

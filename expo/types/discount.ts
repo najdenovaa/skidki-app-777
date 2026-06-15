@@ -60,6 +60,7 @@ export interface Discount {
   placeName?: string;
   address?: string;
   note?: string;
+  link?: string;
   expired?: boolean;
 }
 

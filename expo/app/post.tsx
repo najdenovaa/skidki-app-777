@@ -3,7 +3,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { Stack, useRouter } from "expo-router";
-import { Camera, Check, ImageIcon, MapPin, MessageSquareText, Navigation, Plus, X } from "lucide-react-native";
+import { Camera, Check, ImageIcon, Link, MapPin, MessageSquareText, Navigation, Plus, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CategoryPicker } from "@/components/CategoryPicker";
@@ -80,6 +80,7 @@ export default function PostModalScreen() {
   const [placeName, setPlaceName] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [note, setNote] = useState<string>("");
+  const [link, setLink] = useState<string>("");
   const [lat, setLat] = useState<number | undefined>(undefined);
   const [lng, setLng] = useState<number | undefined>(undefined);
   const [addressFromGps, setAddressFromGps] = useState<boolean>(false);
@@ -283,6 +284,7 @@ export default function PostModalScreen() {
       placeName: placeName.trim() || undefined,
       address: address.trim() || undefined,
       note: note.trim() || undefined,
+      link: link.trim() || undefined,
       expiresAt: getExpiresAt(expiry),
       cityId,
     });
@@ -300,7 +302,7 @@ export default function PostModalScreen() {
     } finally {
       setPublishing(false);
     }
-  }, [publishing, title, category, images, address, placeName, note, lat, lng, addressFromGps, displayCity, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
+  }, [publishing, title, category, images, address, placeName, note, link, lat, lng, addressFromGps, displayCity, effectivePercent, originalPrice, discountedPrice, expiry, addPost, router, selectedCity, user, guestCity]);
 
   return (
     <View style={styles.root}>
@@ -491,7 +493,7 @@ export default function PostModalScreen() {
 
           <Field label="Примечание">
             <View style={styles.noteBox}>
-              <MessageSquareText size={16} color={Colors.primary} strokeWidth={2} style={{ marginTop: 16 }} />
+              <MessageSquareText size={18} color={Colors.primary} strokeWidth={2} style={{ marginTop: 16 }} />
               <TextInput
                 value={note}
                 onChangeText={setNote}
@@ -501,6 +503,22 @@ export default function PostModalScreen() {
                 numberOfLines={4}
                 textAlignVertical="top"
                 style={styles.noteInput}
+              />
+            </View>
+          </Field>
+
+          <Field label="Ссылка">
+            <View style={styles.linkBox}>
+              <Link size={18} color={Colors.primary} strokeWidth={2} style={{ marginLeft: 2 }} />
+              <TextInput
+                value={link}
+                onChangeText={setLink}
+                placeholder="https://example.com/akciya"
+                placeholderTextColor={Colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                style={styles.linkInput}
               />
             </View>
           </Field>
@@ -581,9 +599,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const fieldStyles = StyleSheet.create({
   field: { marginTop: 14 },
   label: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    letterSpacing: 0.3,
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: Colors.textSecondary,
+    letterSpacing: 0.2,
     marginBottom: 10,
   },
 });
@@ -700,8 +719,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  addPhotoLabel: { fontSize: 11, color: Colors.textMuted },
-  imagesHint: { fontSize: 12, color: Colors.textMuted, marginTop: 4, marginBottom: 16 },
+  addPhotoLabel: { fontSize: 13, color: Colors.textMuted },
+  imagesHint: { fontSize: 14, color: Colors.textMuted, marginTop: 4, marginBottom: 16 },
 
   inputBox: {
     backgroundColor: Colors.backgroundSecondary,
@@ -709,12 +728,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   input: {
-    fontSize: 15,
+    fontSize: 17,
     color: Colors.text,
     paddingVertical: 14,
     letterSpacing: -0.2,
   },
-  hint: { fontSize: 13, color: Colors.primary, marginTop: 10, letterSpacing: -0.2 },
+  hint: { fontSize: 15, color: Colors.primary, marginTop: 10, letterSpacing: -0.2 },
 
   chipsRow: { gap: 8, paddingVertical: 2 },
   catChip: {
@@ -737,7 +756,7 @@ const styles = StyleSheet.create({
     minWidth: 60,
     alignItems: "center",
   },
-  percentChipText: { fontSize: 15, color: Colors.textSecondary, letterSpacing: -0.3 },
+  percentChipText: { fontSize: 17, color: Colors.textSecondary, letterSpacing: -0.3 },
   percentCustom: {
     paddingHorizontal: 12,
     backgroundColor: Colors.backgroundSecondary,
@@ -746,7 +765,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   percentInput: {
-    fontSize: 15,
+    fontSize: 17,
     color: Colors.text,
     paddingVertical: 10,
     textAlign: "center",
@@ -770,7 +789,7 @@ const styles = StyleSheet.create({
   },
   addressField: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 17,
     color: Colors.text,
     paddingVertical: 14,
     letterSpacing: -0.2,
@@ -797,12 +816,31 @@ const styles = StyleSheet.create({
   },
   noteInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 17,
     color: Colors.text,
     paddingVertical: 14,
     letterSpacing: -0.2,
-    lineHeight: 22,
+    lineHeight: 24,
     minHeight: 100,
+  },
+
+  linkBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  linkInput: {
+    flex: 1,
+    fontSize: 17,
+    color: Colors.primary,
+    paddingVertical: 14,
+    letterSpacing: -0.2,
   },
 
   expiryRow: { gap: 10 },
@@ -816,13 +854,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: Colors.borderLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  expLabel: { fontSize: 15, color: Colors.textSecondary, letterSpacing: -0.2 },
+  expLabel: { fontSize: 17, color: Colors.textSecondary, letterSpacing: -0.2 },
 });
