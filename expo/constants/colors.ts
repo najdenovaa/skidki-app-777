@@ -25,9 +25,9 @@ const palette = {
   overlay: "rgba(2, 10, 6, 0.82)",
   tabBar: "#263D30",
   tabBarInactive: "#6E9A7B",
-  tabInactiveBg: "rgba(22, 163, 74, 0.16)",
-  tabInactiveBorder: "rgba(22, 163, 74, 0.30)",
-  tabInactiveText: "#A3D9B3",
+  tabInactiveBg: "rgba(22, 163, 74, 0.32)",
+  tabInactiveBorder: "rgba(22, 163, 74, 0.48)",
+  tabInactiveText: "#D6F7E4",
   tabGlow: "rgba(34, 197, 94, 0.15)",
   textInverse: "#071A10",
 };

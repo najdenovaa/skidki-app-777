@@ -123,6 +123,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: "rgba(14, 30, 20, 0.72)",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(22, 163, 74, 0.18)",
   },
   bar: {
     flexDirection: "row",
