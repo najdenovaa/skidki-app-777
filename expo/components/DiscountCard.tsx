@@ -304,16 +304,6 @@ function DiscountCardBase({
               onPress={onGoing}
               style={[styles.ctaMain, discount.isGoing && styles.ctaMainActive]}
             >
-              <LinearGradient
-                colors={
-                  discount.isGoing
-                    ? [Colors.successLight, Colors.successLight]
-                    : [Colors.primary, Colors.primaryDark]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.ctaMainGradient}
-              />
               <Text style={[styles.ctaMainText, discount.isGoing && styles.ctaMainTextActive]}>
                 {discount.isGoing
                   ? `Я иду · ${discount.going} ${pluralGoing(discount.going)}`
@@ -671,6 +661,9 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primary,
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
@@ -678,14 +671,10 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   ctaMainActive: {
+    backgroundColor: Colors.successLight,
     shadowColor: "transparent",
     shadowOpacity: 0,
     elevation: 0,
-  },
-  ctaMainGradient: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   ctaMainText: {
     color: Colors.textInverse,
