@@ -358,10 +358,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: "hidden",
     shadowColor: "#1E293B",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 8,
   },
 
   // ── Percentage badge — orange-to-gold gradient ──

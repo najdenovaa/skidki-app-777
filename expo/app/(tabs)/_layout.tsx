@@ -61,9 +61,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       ]}
       pointerEvents="box-none"
     >
-      {/* Frosted backdrop */}
-      <View style={styles.backdrop} />
-      <View style={styles.topBorder} />
       <View style={styles.bar} pointerEvents="box-none">
         {state.routes.map((route, index) => {
           const focused = state.index === index;
@@ -125,25 +122,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingTop: 32,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.tabBar,
-  },
-  topBorder: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.borderLight,
+    paddingTop: 12,
+    paddingBottom: 6,
   },
   bar: {
     flexDirection: "row",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     justifyContent: "center",
-    gap: 10,
+    gap: 12,
   },
   capsule: {
     flexDirection: "row",
@@ -155,15 +141,20 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   capsuleInactive: {
-    backgroundColor: "transparent",
+    backgroundColor: Colors.card,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   capsuleActive: {
     backgroundColor: Colors.primary,
     shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
   },
   label: {
     fontSize: 13,
