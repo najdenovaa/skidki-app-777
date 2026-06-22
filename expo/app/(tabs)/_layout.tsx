@@ -125,11 +125,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingTop: 24,
+    paddingTop: 32,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.88)",
+    backgroundColor: Colors.background,
   },
   topBorder: {
     position: "absolute",
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.borderLight,
+    backgroundColor: Colors.border,
   },
   bar: {
     flexDirection: "row",
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   capsuleInactive: {
-    backgroundColor: Colors.tabInactiveBg,
+    backgroundColor: "transparent",
   },
   capsuleActive: {
     backgroundColor: Colors.primary,
@@ -175,5 +175,6 @@ const styles = StyleSheet.create({
   },
   labelInactive: {
     color: Colors.tabInactiveText,
+    opacity: 0.7,
   },
 });

@@ -338,10 +338,10 @@ const styles = StyleSheet.create({
   },
   headerLeft: { gap: 2 },
   brandTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "800" as const,
     color: Colors.text,
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
   brandSubtitle: {
     fontSize: 13,

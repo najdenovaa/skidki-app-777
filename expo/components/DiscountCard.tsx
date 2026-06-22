@@ -10,7 +10,6 @@ import {
   MapPin,
   MessageCircle,
   Share2,
-  Users,
 } from "lucide-react-native";
 import React, { memo, useCallback, useState } from "react";
 import {
@@ -149,26 +148,28 @@ function DiscountCardBase({
             <Text style={styles.pctText}>−{discount.percent}%</Text>
           </View>
 
-          {/* Timer pill — dark semi-transparent backdrop */}
+          {/* Timer pill */}
           <View style={styles.timerPill} pointerEvents="none">
             <View style={styles.timerBg} />
-            <Text style={styles.timerElapsed}>{elapsed}</Text>
+            <Text style={styles.timerElapsed} numberOfLines={1}>{elapsed}</Text>
             {!indefinite && (
               <>
-                <View style={styles.timerDivider} />
-                <Text style={styles.timerExpiry}>{expiresIn}</Text>
+                <Text style={styles.timerDot}>·</Text>
+                <Text style={styles.timerExpiry} numberOfLines={1}>{expiresIn}</Text>
               </>
             )}
           </View>
 
           {/* Bookmark button */}
           <Pressable onPress={onSave} hitSlop={10} style={styles.bookmarkBtn}>
-            <Bookmark
-              size={20}
-              color={discount.saved ? Colors.primary : "#FFFFFF"}
-              strokeWidth={2.2}
-              fill={discount.saved ? Colors.primary : "transparent"}
-            />
+            <View style={styles.bookmarkBg}>
+              <Bookmark
+                size={18}
+                color={discount.saved ? Colors.primary : "#FFFFFF"}
+                strokeWidth={2.2}
+                fill={discount.saved ? Colors.primary : "transparent"}
+              />
+            </View>
           </Pressable>
         </ImageCarousel>
 
@@ -302,7 +303,11 @@ function DiscountCardBase({
             {/* CTA: "Я иду" — main emerald button */}
             <Pressable
               onPress={onGoing}
-              style={[styles.ctaMain, discount.isGoing && styles.ctaMainActive]}
+              style={({ pressed }) => [
+                styles.ctaMain,
+                discount.isGoing && styles.ctaMainActive,
+                pressed && !discount.isGoing && styles.ctaMainPressed,
+              ]}
             >
               <Text style={[styles.ctaMainText, discount.isGoing && styles.ctaMainTextActive]}>
                 {discount.isGoing
@@ -377,13 +382,13 @@ const styles = StyleSheet.create({
   // ── Card shell ──
   card: {
     backgroundColor: Colors.card,
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: "hidden",
     shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
 
   // ── Percentage badge — orange-to-gold gradient ──
@@ -391,60 +396,65 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     left: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: "hidden",
     shadowColor: Colors.percentGradientStart,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 5,
   },
   pctGradient: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   pctText: {
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "800" as const,
     letterSpacing: -0.6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
 
   // ── Timer pill ──
   timerPill: {
     position: "absolute",
     top: 12,
-    right: 50,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    right: 52,
+    flexDirection: "row",
     alignItems: "center",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    gap: 3,
     overflow: "hidden",
   },
   timerBg: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15, 23, 42, 0.55)",
+    backgroundColor: "rgba(15, 23, 42, 0.48)",
     borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   timerElapsed: {
     fontSize: 12,
-    fontVariant: ["tabular-nums"],
+    fontVariant: ["tabular-nums"] as const,
     letterSpacing: 0.2,
-    color: "rgba(255,255,255,0.92)",
+    color: "rgba(255,255,255,0.9)",
+    fontWeight: "500" as const,
   },
-  timerDivider: {
-    width: 14,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    marginVertical: 1,
+  timerDot: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.3)",
+    marginHorizontal: 1,
   },
   timerExpiry: {
     fontSize: 11,
-    fontVariant: ["tabular-nums"],
+    fontVariant: ["tabular-nums"] as const,
     letterSpacing: 0.1,
     color: Colors.accent,
+    fontWeight: "600" as const,
   },
 
   // ── Bookmark ──
@@ -452,10 +462,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
+  },
+  bookmarkBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(15, 23, 42, 0.35)",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
 
   // ── Expired banner ──
@@ -464,7 +478,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.danger + "20",
+    borderBottomColor: Colors.danger + "15",
   },
   expiredBannerText: {
     fontSize: 12,
@@ -478,41 +492,42 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingVertical: 14,
     gap: 10,
   },
-  infoBarLeft: { flex: 1, gap: 6, minWidth: 0 },
+  infoBarLeft: { flex: 1, gap: 8, minWidth: 0 },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700" as const,
     color: Colors.text,
     letterSpacing: -0.4,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   statsMini: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
   },
   statItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
   },
   statText: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textMuted,
-    fontVariant: ["tabular-nums"],
+    fontVariant: ["tabular-nums"] as const,
     letterSpacing: -0.1,
+    fontWeight: "500" as const,
   },
   statTextLiked: { color: Colors.danger },
 
   // ── Chevron ──
   chevronBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.cardSecondary,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.backgroundSecondary,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     flexShrink: 0,
@@ -527,8 +542,8 @@ const styles = StyleSheet.create({
   // ── Expanded body ──
   expandedBody: {
     paddingHorizontal: 16,
-    paddingBottom: 18,
-    gap: 14,
+    paddingBottom: 20,
+    gap: 16,
   },
 
   // ── Divider ──
@@ -540,14 +555,14 @@ const styles = StyleSheet.create({
   // ── Venue row ──
   venueRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
   },
   venueTextCol: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
   venueName: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600" as const,
     color: Colors.text,
     letterSpacing: -0.3,
@@ -566,14 +581,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   authorAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.cardSecondary,
   },
   authorTextCol: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
   authorName: {
     fontSize: 14,
@@ -586,7 +601,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   authorDate: {
-    fontSize: 12,
+    fontSize: 13,
     color: Colors.textMuted,
     letterSpacing: -0.1,
   },
@@ -600,16 +615,16 @@ const styles = StyleSheet.create({
   tag: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: Colors.cardSecondary,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    backgroundColor: Colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: Colors.border,
   },
   tagText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "500" as const,
     color: Colors.textSecondary,
     letterSpacing: -0.1,
@@ -618,23 +633,23 @@ const styles = StyleSheet.create({
   // ── Info card (note / where to find) ──
   infoCard: {
     backgroundColor: Colors.backgroundSecondary,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 6,
+    gap: 8,
   },
   infoCardLabel: {
     fontSize: 11,
     fontWeight: "600" as const,
     color: Colors.textMuted,
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
     textTransform: "uppercase" as const,
   },
   infoCardText: {
     fontSize: 14,
     color: Colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 21,
     letterSpacing: -0.2,
   },
 
@@ -643,9 +658,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.backgroundSecondary,
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -654,21 +669,27 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     letterSpacing: -0.1,
     flex: 1,
+    fontWeight: "500" as const,
   },
 
   // ── CTA: "Я иду" ──
   ctaMain: {
-    height: 50,
-    borderRadius: 25,
-    overflow: "hidden",
+    height: 52,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.primary,
     shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  ctaMainPressed: {
+    backgroundColor: Colors.primaryDark,
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
   ctaMainActive: {
     backgroundColor: Colors.successLight,
@@ -691,7 +712,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingVertical: 4,
+    paddingVertical: 6,
   },
   socialBtn: {
     flexDirection: "row",
@@ -699,9 +720,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   socialCount: {
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.textMuted,
-    fontVariant: ["tabular-nums"],
+    fontVariant: ["tabular-nums"] as const,
     letterSpacing: -0.1,
+    fontWeight: "500" as const,
   },
 });
