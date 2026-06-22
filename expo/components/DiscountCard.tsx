@@ -357,9 +357,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
     borderRadius: 24,
     overflow: "hidden",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
+    shadowColor: "#1E293B",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
   },
@@ -510,6 +510,8 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     justifyContent: "center" as const,
     flexShrink: 0,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
   },
   chevronBtnExpanded: {
     backgroundColor: Colors.primary,
@@ -672,14 +674,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
+  ctaMainTextActive: {
+    color: Colors.primary,
+  },
   ctaMainText: {
     color: Colors.textInverse,
     fontSize: 17,
     fontWeight: "700" as const,
     letterSpacing: -0.3,
-  },
-  ctaMainTextActive: {
-    color: Colors.primary,
   },
 
   // ── Social row ──

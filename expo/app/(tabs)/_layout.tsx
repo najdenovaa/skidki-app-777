@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.tabBar,
   },
   topBorder: {
     position: "absolute",
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.borderLight,
   },
   bar: {
     flexDirection: "row",
