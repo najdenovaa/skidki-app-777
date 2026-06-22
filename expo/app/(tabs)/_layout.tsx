@@ -1,6 +1,5 @@
 import { Tabs } from "expo-router";
 import { Home, Search, User } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -57,17 +56,14 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     <Animated.View
       style={[
         styles.barWrap,
-        { paddingBottom: insets.bottom + 8 },
+        { paddingBottom: insets.bottom + 6 },
         barAnimated,
       ]}
       pointerEvents="box-none"
     >
-      <LinearGradient
-        colors={["transparent", "rgba(240, 245, 240, 0.50)", "rgba(255, 255, 255, 0.92)"]}
-        locations={[0, 0.35, 1]}
-        style={styles.barGradient}
-        pointerEvents="none"
-      />
+      {/* Frosted backdrop */}
+      <View style={styles.backdrop} />
+      <View style={styles.topBorder} />
       <View style={styles.bar} pointerEvents="box-none">
         {state.routes.map((route, index) => {
           const focused = state.index === index;
@@ -83,11 +79,10 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 focused ? styles.capsuleActive : styles.capsuleInactive,
               ]}
             >
-              {focused && <View style={styles.glow} />}
               <Icon
                 size={20}
-                color={focused ? Colors.text : Colors.tabInactiveText}
-                strokeWidth={focused ? 2.4 : 2}
+                color={focused ? Colors.textInverse : Colors.tabInactiveText}
+                strokeWidth={focused ? 2.4 : 1.8}
               />
               <Text
                 style={[
@@ -130,14 +125,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingTop: 48,
+    paddingTop: 24,
   },
-  barGradient: {
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.88)",
+  },
+  topBorder: {
     position: "absolute",
+    top: 0,
     left: 0,
     right: 0,
-    top: 0,
-    bottom: 0,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.borderLight,
   },
   bar: {
     flexDirection: "row",
@@ -153,29 +153,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 50,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   capsuleInactive: {
     backgroundColor: Colors.tabInactiveBg,
-    borderColor: Colors.tabInactiveBorder,
   },
   capsuleActive: {
     backgroundColor: Colors.primary,
-    borderColor: "transparent",
-    shadowColor: "#22C55E",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  glow: {
-    position: "absolute",
-    top: -2,
-    left: 12,
-    right: 12,
-    height: 2,
-    borderRadius: 2,
-    backgroundColor: Colors.tabGlow,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   label: {
     fontSize: 13,
@@ -183,7 +171,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   labelActive: {
-    color: Colors.text,
+    color: Colors.textInverse,
   },
   labelInactive: {
     color: Colors.tabInactiveText,

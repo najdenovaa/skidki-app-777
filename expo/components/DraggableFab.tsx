@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     width: GLOW_SIZE,
     height: GLOW_SIZE,
     borderRadius: GLOW_SIZE / 2,
-    backgroundColor: "rgba(22, 163, 74, 0.14)",
+    backgroundColor: "rgba(5, 150, 105, 0.14)",
     zIndex: 19,
   },
   hintWrap: {

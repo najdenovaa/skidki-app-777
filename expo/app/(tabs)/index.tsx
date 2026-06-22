@@ -81,15 +81,13 @@ function FeedHeader() {
     <>
       <View style={styles.headerRow} pointerEvents="box-none">
         <View style={styles.headerLeft}>
-          <Text style={styles.brandTitle}>
-            <Text style={{ color: "#50D848", marginRight: 3 }}>С</Text>кидос
-          </Text>
+          <Text style={styles.brandTitle}>Скидос</Text>
           <Pressable
             onPress={() => setCityPickerOpen(true)}
             style={styles.cityRow}
             hitSlop={8}
           >
-            <MapPin size={11} color={Colors.textMuted} strokeWidth={2} />
+            <MapPin size={11} color={Colors.primary} strokeWidth={2} />
             <Text style={styles.cityLabel} numberOfLines={1}>
               {cityLabel || "Выбери город"}
             </Text>
@@ -97,10 +95,10 @@ function FeedHeader() {
         </View>
         <View style={styles.headerActions}>
           <Pressable hitSlop={10} style={styles.iconBtn} onPress={onSupportPress}>
-            <LifeBuoy size={22} color={Colors.text} strokeWidth={2} />
+            <LifeBuoy size={20} color={Colors.textSecondary} strokeWidth={1.8} />
           </Pressable>
           <Pressable hitSlop={10} style={styles.iconBtn} onPress={onBellPress}>
-            <Bell size={24} color={Colors.text} strokeWidth={2} />
+            <Bell size={22} color={Colors.textSecondary} strokeWidth={1.8} />
             {unreadCount > 0 ? (
               <View style={styles.notifyBadge}>
                 <Text style={styles.notifyBadgeText}>
@@ -328,7 +326,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: Colors.background,
     zIndex: 10,
   },
   headerRow: {
@@ -342,9 +339,9 @@ const styles = StyleSheet.create({
   headerLeft: { gap: 2 },
   brandTitle: {
     fontSize: 28,
-    fontWeight: "700",
+    fontWeight: "800" as const,
     color: Colors.text,
-    letterSpacing: -0.7,
+    letterSpacing: -0.8,
   },
   brandSubtitle: {
     fontSize: 13,
@@ -359,8 +356,9 @@ const styles = StyleSheet.create({
   },
   cityLabel: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: Colors.primary,
     letterSpacing: -0.2,
+    fontWeight: "500" as const,
   },
   headerActions: { flexDirection: "row", gap: 12, paddingTop: 4 },
   iconBtn: {
@@ -409,7 +407,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
     zIndex: 5,
     paddingTop: 0,
   },

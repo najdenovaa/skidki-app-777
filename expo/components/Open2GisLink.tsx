@@ -18,7 +18,7 @@ export function Open2GisLink({ lat, lng, address, city }: Props) {
       onPress={() => openIn2Gis({ lat, lng, address, city })}
       style={styles.btn}
     >
-      <Navigation size={14} color={Colors.primary} strokeWidth={2} />
+      <Navigation size={16} color={Colors.textSecondary} strokeWidth={1.8} />
       <Text style={styles.btnText}>Открыть в 2ГИС</Text>
     </Pressable>
   );
@@ -31,12 +31,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     height: 46,
-    borderRadius: 12,
-    backgroundColor: Colors.card,
+    borderRadius: 14,
+    backgroundColor: Colors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   btnText: {
-    color: Colors.text,
+    color: Colors.textSecondary,
     fontSize: 14,
+    fontWeight: "500" as const,
     letterSpacing: -0.2,
   },
 });
