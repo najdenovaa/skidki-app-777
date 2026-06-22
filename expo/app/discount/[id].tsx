@@ -256,10 +256,13 @@ export default function DiscountDetailScreen() {
 
             {/* Title */}
             <Text style={styles.title}>{discount.title}</Text>
-            {/* Place name + distance on same line */}
+            {/* Place name · address + distance on same line */}
             {discount.placeName ? (
               <View style={styles.placeRow}>
-                <Text style={styles.placeName} numberOfLines={1}>{discount.placeName}</Text>
+                <Text style={styles.placeName} numberOfLines={1}>
+                  {discount.placeName}
+                  {discount.address ? `  ·  ${discount.address}` : ""}
+                </Text>
                 {isValidCoords(discount.lat, discount.lng) ? (
                   <View style={styles.distanceBadge}>
                     <Text style={styles.distanceBadgeText}>
