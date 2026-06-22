@@ -63,7 +63,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       pointerEvents="box-none"
     >
       <LinearGradient
-        colors={["transparent", "rgba(210, 230, 210, 0.55)", "rgba(210, 230, 210, 0.90)"]}
+        colors={["transparent", "rgba(240, 245, 240, 0.50)", "rgba(255, 255, 255, 0.92)"]}
         locations={[0, 0.35, 1]}
         style={styles.barGradient}
         pointerEvents="none"

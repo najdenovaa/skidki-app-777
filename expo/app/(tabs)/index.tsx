@@ -141,7 +141,6 @@ export default function FeedScreen() {
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList<any>>(null);
   const expandedAtIndex = useRef<number | null>(null);
-  const expandedAtScrollY = useRef<number>(0);
   const scrollY = useRef<number>(0);
 
   const handleFabPress = useCallback(() => {
@@ -182,15 +181,6 @@ export default function FeedScreen() {
         tabBarVisible.value = withTiming(1, { duration: 200 });
       }
 
-      // Auto-collapse only when scrolled far past the expanded card
-      if (expandedAtIndex.current !== null) {
-        const dist = Math.abs(y - expandedAtScrollY.current);
-        if (dist > 500) {
-          setExpandedCardId(null);
-          expandedAtIndex.current = null;
-        }
-      }
-
       lastY.value = y;
     },
     [chipsVisible, tabBarVisible, lastY, categoryOpen]
@@ -205,7 +195,6 @@ export default function FeedScreen() {
       expandedAtIndex.current = null;
     } else {
       expandedAtIndex.current = index;
-      expandedAtScrollY.current = scrollY.current;
       setExpandedCardId(id);
 
       // Auto-scroll so the expanded card is fully visible
@@ -239,6 +228,7 @@ export default function FeedScreen() {
         index={index}
         isExpanded={expandedCardId === item.id}
         onToggleExpand={() => handleToggleExpand(item.id, index)}
+
       />
     ),
     [expandedCardId, handleToggleExpand]
