@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { Bookmark, ChevronDown, Eye, Heart, MessageCircle, Share2, Users } from "lucide-react-native";
+import { Bookmark, ChevronDown, Eye, Heart, MapPin, MessageCircle, Share2, Users } from "lucide-react-native";
 import React, { memo, useCallback, useState } from "react";
 import { Alert, LayoutAnimation, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -191,6 +191,17 @@ function DiscountCardBase({ discount, index = 0, isExpanded: expandedProp, onTog
         {/* ── Expanded body: minimal, airy ── */}
         {expanded && (
           <View style={styles.expandedBody}>
+            {/* Location: store name + address */}
+            <View style={styles.locationRow}>
+              <MapPin size={16} color={Colors.primary} strokeWidth={2} style={{ marginTop: 1 }} />
+              <View style={styles.locationTextCol}>
+                <Text style={styles.locationName}>{discount.locationName}</Text>
+                {discount.address ? (
+                  <Text style={styles.locationAddress}>{discount.address}</Text>
+                ) : null}
+              </View>
+            </View>
+
             {/* Note */}
             {discount.note ? (
               <View style={styles.noteBox}>
@@ -382,11 +393,33 @@ const styles = StyleSheet.create({
   // ── Expanded body: minimal ──
   expandedBody: {
     paddingHorizontal: 14,
-    paddingTop: 4,
+    paddingTop: 10,
     paddingBottom: 14,
     gap: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: Colors.border,
+  },
+
+  // ── Location (store name + address) ──
+  locationRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingVertical: 4,
+  },
+  locationTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  locationName: {
+    fontSize: 15,
+    fontWeight: "600" as const,
+    color: Colors.text,
+    letterSpacing: -0.3,
+  },
+  locationAddress: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    letterSpacing: -0.1,
   },
 
   // ── CTA ──
