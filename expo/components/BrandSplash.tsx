@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   restLetters: {
     fontSize: 58,
     fontWeight: "900",
-    color: Colors.text,
+    color: "#FFFFFF",
     letterSpacing: 4,
     textShadowColor: "rgba(255,255,255,0.2)",
     textShadowOffset: { width: 0, height: 0 },

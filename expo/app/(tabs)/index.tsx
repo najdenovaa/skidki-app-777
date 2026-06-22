@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    backgroundColor: "transparent",
     zIndex: 5,
     paddingTop: 0,
   },

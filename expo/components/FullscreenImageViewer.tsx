@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   Modal,
@@ -27,9 +27,10 @@ const DISMISS_THRESHOLD = SCREEN_H * 0.12;
 const SWIPE_THRESHOLD = SCREEN_W * 0.15;
 const SWIPE_VELOCITY_THRESHOLD = 400;
 const DISMISS_VELOCITY_THRESHOLD = 500;
+const SPRING_CONFIG = { damping: 20, stiffness: 200 } as const;
 
-/** Clamp translation so the zoomed image never leaves the screen entirely. */
 function clampTranslation(offset: number, s: number, screenSize: number): number {
+  "worklet";
   const img = screenSize * s;
   const max = Math.max(0, (img - screenSize) / 2);
   if (max <= 0) return 0;
@@ -65,11 +66,9 @@ export function FullscreenImageViewer({
   // Track ongoing gesture to suppress tap
   const gestureActive = useSharedValue(false);
   const panMoved = useSharedValue(false);
-
-  // Double-tap detection via manual timing
   const lastTapTs = useSharedValue(0);
 
-  // Reset everything when modal opens
+  // ── Reset everything when modal opens ──
   useEffect(() => {
     if (visible) {
       setCurrentIndex(initialIndex);
@@ -81,37 +80,24 @@ export function FullscreenImageViewer({
       baseTranslateY.value = 0;
       bgOpacity.value = 1;
       lastTapTs.value = 0;
+      gestureActive.value = false;
+      panMoved.value = false;
     }
   }, [visible, initialIndex]);
 
-  // ── Helpers (worklets) ──
-
-  const resetZoom = useCallback(() => {
-    "worklet";
-    scale.value = withSpring(1, { damping: 20, stiffness: 200 });
-    translateX.value = withSpring(0, { damping: 20, stiffness: 200 });
-    translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
-    baseTranslateX.value = 0;
-    baseTranslateY.value = 0;
-    savedScale.value = 1;
-    bgOpacity.value = withTiming(1, { duration: 200 });
-  }, []);
-
-  const navigateTo = useCallback(
-    (idx: number) => {
-      "worklet";
-      resetZoom();
-      runOnJS(setCurrentIndex)(idx);
-    },
-    [resetZoom],
-  );
-
-  const dismissScreen = useCallback(() => {
-    "worklet";
-    runOnJS(onClose)();
+  // ── JS callbacks (stable via useCallback) ──
+  const handleClose = useCallback(() => {
+    onClose();
   }, [onClose]);
 
-  // ── Pinch-to-zoom gesture ──
+  const handleChangeIndex = useCallback(
+    (idx: number) => {
+      setCurrentIndex(idx);
+    },
+    [],
+  );
+
+  // ── Pinch-to-zoom ──
   const pinchGesture = Gesture.Pinch()
     .onStart(() => {
       gestureActive.value = true;
@@ -125,12 +111,18 @@ export function FullscreenImageViewer({
     .onEnd(() => {
       gestureActive.value = false;
       savedScale.value = scale.value;
+      // Snap back if below min
       if (scale.value < MIN_SCALE) {
-        resetZoom();
+        scale.value = withSpring(1, SPRING_CONFIG);
+        translateX.value = withSpring(0, SPRING_CONFIG);
+        translateY.value = withSpring(0, SPRING_CONFIG);
+        savedScale.value = 1;
+        baseTranslateX.value = 0;
+        baseTranslateY.value = 0;
       }
     });
 
-  // ── Pan gesture (dismiss / carousel / pan-zoomed) ──
+  // ── Pan (dismiss / carousel / pan-zoomed) ──
   const panGesture = Gesture.Pan()
     .minPointers(1)
     .maxPointers(2)
@@ -141,7 +133,8 @@ export function FullscreenImageViewer({
       baseTranslateY.value = translateY.value;
     })
     .onUpdate((e) => {
-      if (e.numberOfPointers >= 2) return; // pinch handles it
+      // Let pinch handle 2-finger gestures
+      if (e.numberOfPointers >= 2) return;
 
       const dx = e.translationX;
       const dy = e.translationY;
@@ -155,7 +148,6 @@ export function FullscreenImageViewer({
         translateX.value = baseTranslateX.value + dx;
         translateY.value = baseTranslateY.value + dy;
       } else {
-        // 1x — horizontal for carousel, vertical for dismiss
         if (images.length > 1) {
           translateX.value = dx;
         }
@@ -172,10 +164,18 @@ export function FullscreenImageViewer({
 
       if (zoomed) {
         // Clamp zoomed image position
-        const cx = clampTranslation(baseTranslateX.value + e.translationX, scale.value, SCREEN_W);
-        const cy = clampTranslation(baseTranslateY.value + e.translationY, scale.value, SCREEN_H);
-        translateX.value = withSpring(cx, { damping: 20, stiffness: 200 });
-        translateY.value = withSpring(cy, { damping: 20, stiffness: 200 });
+        const cx = clampTranslation(
+          baseTranslateX.value + e.translationX,
+          scale.value,
+          SCREEN_W,
+        );
+        const cy = clampTranslation(
+          baseTranslateY.value + e.translationY,
+          scale.value,
+          SCREEN_H,
+        );
+        translateX.value = withSpring(cx, SPRING_CONFIG);
+        translateY.value = withSpring(cy, SPRING_CONFIG);
         baseTranslateX.value = cx;
         baseTranslateY.value = cy;
       } else {
@@ -190,10 +190,10 @@ export function FullscreenImageViewer({
           (absY > DISMISS_THRESHOLD || velY > DISMISS_VELOCITY_THRESHOLD)
         ) {
           const targetY = e.translationY > 0 ? SCREEN_H : -SCREEN_H;
-          translateX.value = withSpring(0, { damping: 20, stiffness: 150 });
-          translateY.value = withSpring(targetY, { damping: 20, stiffness: 150 });
-          bgOpacity.value = withTiming(0, { duration: 250 }, (done) => {
-            if (done) runOnJS(onClose)();
+          translateX.value = withSpring(0, SPRING_CONFIG);
+          translateY.value = withSpring(targetY, SPRING_CONFIG);
+          bgOpacity.value = withTiming(0, { duration: 250 }, () => {
+            runOnJS(handleClose)();
           });
           return;
         }
@@ -204,43 +204,62 @@ export function FullscreenImageViewer({
           absX > absY &&
           (absX > SWIPE_THRESHOLD || velX > SWIPE_VELOCITY_THRESHOLD)
         ) {
-          if (e.translationX > 0 && currentIndex > 0) {
-            translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
-            translateX.value = withSpring(SCREEN_W * 1.1, { damping: 20, stiffness: 200 });
-            bgOpacity.value = withTiming(0.85, { duration: 150 });
-            runOnJS(setCurrentIndex)(currentIndex - 1);
-            // Reset after navigation
-            scale.value = withSpring(1, { damping: 20, stiffness: 200 });
-            translateX.value = withSpring(0, { damping: 20, stiffness: 200 }, (done) => {
-              if (done) {
-                bgOpacity.value = withTiming(1, { duration: 150 });
-              }
-            });
+          const swipeRight = e.translationX > 0;
+          if (swipeRight && currentIndex > 0) {
+            // Swipe right → go to previous image
+            translateY.value = withSpring(0, SPRING_CONFIG);
+            bgOpacity.value = withTiming(0.6, { duration: 100 });
+            translateX.value = withSpring(
+              SCREEN_W,
+              SPRING_CONFIG,
+              () => {
+                // On complete: switch index and reset position
+                runOnJS(handleChangeIndex)(currentIndex - 1);
+                scale.value = 1;
+                savedScale.value = 1;
+                translateX.value = 0;
+                baseTranslateX.value = 0;
+                baseTranslateY.value = 0;
+                bgOpacity.value = withTiming(1, { duration: 100 });
+              },
+            );
             return;
-          } else if (e.translationX < 0 && currentIndex < images.length - 1) {
-            translateY.value = withSpring(0, { damping: 20, stiffness: 200 });
-            translateX.value = withSpring(-SCREEN_W * 1.1, { damping: 20, stiffness: 200 });
-            bgOpacity.value = withTiming(0.85, { duration: 150 });
-            runOnJS(setCurrentIndex)(currentIndex + 1);
-            scale.value = withSpring(1, { damping: 20, stiffness: 200 });
-            translateX.value = withSpring(0, { damping: 20, stiffness: 200 }, (done) => {
-              if (done) {
-                bgOpacity.value = withTiming(1, { duration: 150 });
-              }
-            });
+          } else if (!swipeRight && currentIndex < images.length - 1) {
+            // Swipe left → go to next image
+            translateY.value = withSpring(0, SPRING_CONFIG);
+            bgOpacity.value = withTiming(0.6, { duration: 100 });
+            translateX.value = withSpring(
+              -SCREEN_W,
+              SPRING_CONFIG,
+              () => {
+                runOnJS(handleChangeIndex)(currentIndex + 1);
+                scale.value = 1;
+                savedScale.value = 1;
+                translateX.value = 0;
+                baseTranslateX.value = 0;
+                baseTranslateY.value = 0;
+                bgOpacity.value = withTiming(1, { duration: 100 });
+              },
+            );
             return;
           }
         }
 
         // ── Bounce back ──
-        resetZoom();
+        scale.value = withSpring(1, SPRING_CONFIG);
+        translateX.value = withSpring(0, SPRING_CONFIG);
+        translateY.value = withSpring(0, SPRING_CONFIG);
+        baseTranslateX.value = 0;
+        baseTranslateY.value = 0;
+        savedScale.value = 1;
+        bgOpacity.value = withTiming(1, { duration: 200 });
       }
     });
 
-  // ── Tap gesture ──
+  // ── Tap (dismiss / double-tap zoom / single-tap reset) ──
   const tapGesture = Gesture.Tap()
     .onEnd((e) => {
-      // If we were panning / pinching, ignore this tap
+      // If we were panning / pinching, ignore
       if (gestureActive.value || panMoved.value) {
         gestureActive.value = false;
         panMoved.value = false;
@@ -251,12 +270,20 @@ export function FullscreenImageViewer({
       const prev = lastTapTs.value;
 
       if (now - prev < 300) {
-        // Double-tap → zoom in / out
+        // Double-tap → toggle zoom
         lastTapTs.value = 0;
 
         if (savedScale.value > 1.01) {
-          resetZoom();
+          // Zoom out
+          scale.value = withSpring(1, SPRING_CONFIG);
+          translateX.value = withSpring(0, SPRING_CONFIG);
+          translateY.value = withSpring(0, SPRING_CONFIG);
+          savedScale.value = 1;
+          baseTranslateX.value = 0;
+          baseTranslateY.value = 0;
+          bgOpacity.value = withTiming(1, { duration: 200 });
         } else {
+          // Zoom in centered on tap point
           const targetScale = 2.8;
           scale.value = withSpring(targetScale, { damping: 15, stiffness: 180 });
           savedScale.value = targetScale;
@@ -270,23 +297,33 @@ export function FullscreenImageViewer({
           bgOpacity.value = withTiming(0.85, { duration: 200 });
         }
       } else {
-        // Single tap → reset zoom or dismiss
+        // Single tap
         lastTapTs.value = now;
 
         if (savedScale.value > 1.01) {
-          resetZoom();
+          // Reset zoom
+          scale.value = withSpring(1, SPRING_CONFIG);
+          translateX.value = withSpring(0, SPRING_CONFIG);
+          translateY.value = withSpring(0, SPRING_CONFIG);
+          savedScale.value = 1;
+          baseTranslateX.value = 0;
+          baseTranslateY.value = 0;
+          bgOpacity.value = withTiming(1, { duration: 200 });
         } else {
-          runOnJS(onClose)();
+          // Close viewer
+          runOnJS(handleClose)();
         }
       }
     });
 
-  // ── Compose gestures ──
-  // Image gesture (pinch + pan together)
-  const imageGesture = Gesture.Simultaneous(pinchGesture, panGesture);
-  // Tap gestures (double-tap detection is manual inside tapGesture)
-  // Race: image interaction wins over taps (tap only activates if no pan/pinch occurs)
-  const composedGesture = Gesture.Race(imageGesture, tapGesture);
+  // ── Compose: all three gestures simultaneously ──
+  // Pinch vs pan: both can be active (Simultaneous is default for different types).
+  // Tap guards itself via gestureActive/panMoved flags.
+  const composedGesture = Gesture.Simultaneous(
+    pinchGesture,
+    panGesture,
+    tapGesture,
+  );
 
   // ── Animated styles ──
   const imageStyle = useAnimatedStyle(() => ({
@@ -307,7 +344,7 @@ export function FullscreenImageViewer({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
       <StatusBar
         barStyle="light-content"
@@ -318,7 +355,7 @@ export function FullscreenImageViewer({
         {/* Header bar */}
         <View style={styles.header} pointerEvents="box-none">
           <Pressable
-            onPress={onClose}
+            onPress={handleClose}
             hitSlop={12}
             style={styles.closeBtn}
           >
@@ -348,12 +385,18 @@ export function FullscreenImageViewer({
 
             {/* Arrow hints for carousel */}
             {images.length > 1 && currentIndex > 0 && (
-              <View style={[styles.arrowHint, styles.arrowLeft]} pointerEvents="none">
+              <View
+                style={[styles.arrowHint, styles.arrowLeft]}
+                pointerEvents="none"
+              >
                 <Text style={styles.arrowSymbol}>‹</Text>
               </View>
             )}
             {images.length > 1 && currentIndex < images.length - 1 && (
-              <View style={[styles.arrowHint, styles.arrowRight]} pointerEvents="none">
+              <View
+                style={[styles.arrowHint, styles.arrowRight]}
+                pointerEvents="none"
+              >
                 <Text style={styles.arrowSymbol}>›</Text>
               </View>
             )}
