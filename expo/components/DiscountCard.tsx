@@ -349,7 +349,7 @@ function pluralGoing(n: number): string {
 export const DiscountCard = memo(DiscountCardBase);
 
 const styles = StyleSheet.create({
-  outer: { paddingHorizontal: 16, paddingTop: 10 },
+  outer: { paddingHorizontal: 16, paddingTop: 18 },
   outerExpired: { opacity: 0.55 },
 
   // ── Card shell ──
