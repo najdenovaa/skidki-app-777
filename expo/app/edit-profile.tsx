@@ -389,8 +389,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: Colors.card,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontSize: 15,
@@ -411,8 +413,10 @@ const styles = StyleSheet.create({
   phoneInputRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: Colors.card,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
     paddingHorizontal: 14,
     gap: 10,
   },
