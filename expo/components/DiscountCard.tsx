@@ -185,6 +185,55 @@ function DiscountCardBase({
             <Text style={styles.cardTitle} numberOfLines={2}>
               {discount.title}
             </Text>
+            {discount.locationName ? (
+              <Text style={styles.infoBarStore} numberOfLines={1}>{discount.locationName}</Text>
+            ) : null}
+            {!expanded && (
+              <View style={styles.statsMini}>
+                <Pressable onPress={onLike} hitSlop={8} style={styles.statItem}>
+                  <Heart
+                    size={14}
+                    color={discount.liked ? Colors.danger : Colors.textMuted}
+                    strokeWidth={2}
+                    fill={discount.liked ? Colors.danger : "transparent"}
+                  />
+                  <Text style={[styles.statText, discount.liked && styles.statTextLiked]}>
+                    {discount.likes}
+                  </Text>
+                </Pressable>
+                <View style={styles.statItem}>
+                  <Eye size={14} color={Colors.textMuted} strokeWidth={2} />
+                  <Text style={styles.statText}>{formatViews(discount.views)}</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <MessageCircle size={14} color={Colors.textMuted} strokeWidth={2} />
+                  <Text style={styles.statText}>{discount.comments}</Text>
+                </View>
+              </View>
+            )}
+          </View>
+          <View style={styles.infoBarRight}>
+            {isValidCoords(discount.lat, discount.lng) ? (
+              <Text style={styles.infoBarDistance}>{formatDistance(discount.distanceKm)}</Text>
+            ) : null}
+            <View style={[styles.chevronBtn, expanded && styles.chevronBtnExpanded]}>
+              <ChevronDown
+                size={16}
+                color={expanded ? Colors.textInverse : Colors.textMuted}
+                strokeWidth={2.5}
+                style={expanded && styles.chevronRotated}
+              />
+            </View>
+          </View>
+        </Pressable>
+
+        {/* ── Expanded body ── */}
+        {expanded && (
+          <View style={styles.expandedBody}>
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Stats row — same compact style as collapsed */}
             <View style={styles.statsMini}>
               <Pressable onPress={onLike} hitSlop={8} style={styles.statItem}>
                 <Heart
@@ -206,35 +255,10 @@ function DiscountCardBase({
                 <Text style={styles.statText}>{discount.comments}</Text>
               </View>
             </View>
-          </View>
-          <View style={[styles.chevronBtn, expanded && styles.chevronBtnExpanded]}>
-            <ChevronDown
-              size={16}
-              color={expanded ? Colors.textInverse : Colors.textMuted}
-              strokeWidth={2.5}
-              style={expanded && styles.chevronRotated}
-            />
-          </View>
-        </Pressable>
 
-        {/* ── Expanded body ── */}
-        {expanded && (
-          <View style={styles.expandedBody}>
-            {/* Divider */}
             <View style={styles.divider} />
 
-            {/* Venue name + address */}
-            <View style={styles.venueRow}>
-              <MapPin size={15} color={Colors.primary} strokeWidth={2} style={{ marginTop: 1 }} />
-              <View style={styles.venueTextCol}>
-                <Text style={styles.venueName}>{discount.locationName}</Text>
-                {discount.address ? (
-                  <Text style={styles.venueAddress}>{discount.address}</Text>
-                ) : null}
-              </View>
-            </View>
-
-            {/* Author row */}
+            {/* Author row + category chip on same line */}
             <View style={styles.authorRow}>
               <Image
                 source={{ uri: resolveImageUrl(discount.author.avatar) }}
@@ -250,23 +274,13 @@ function DiscountCardBase({
                 </Text>
                 <Text style={styles.authorDate}>{formatTimeAgo(discount.postedAt)}</Text>
               </View>
-            </View>
-
-            {/* Tags: category + location */}
-            <View style={styles.tagsRow}>
               <View style={styles.tag}>
                 {React.createElement(cat.icon, { size: 13, color: cat.color, strokeWidth: 2 })}
                 <Text style={[styles.tagText, { color: cat.color }]}>{cat.label}</Text>
               </View>
-              {isValidCoords(discount.lat, discount.lng) && (
-                <View style={styles.tag}>
-                  <MapPin size={13} color={Colors.textMuted} strokeWidth={2} />
-                  <Text style={styles.tagText}>{formatDistance(discount.distanceKm)}</Text>
-                </View>
-              )}
             </View>
 
-            {/* Note — thin bordered card */}
+            {/* Note */}
             {discount.note ? (
               <View style={styles.infoCard}>
                 <Text style={styles.infoCardLabel}>Примечание</Text>
@@ -274,33 +288,25 @@ function DiscountCardBase({
               </View>
             ) : null}
 
-            {/* Where to find — thin bordered card */}
-            {(discount.address || discount.locationName) ? (
-              <View style={styles.infoCard}>
-                <Text style={styles.infoCardLabel}>Где найти</Text>
-                <Text style={styles.infoCardText}>
-                  {discount.address || discount.locationName}
-                </Text>
+            {/* Link with label */}
+            {discount.link ? (
+              <View style={styles.linkSection}>
+                <Text style={styles.linkLabel}>Ссылка</Text>
+                <Pressable
+                  onPress={() => {
+                    const url = discount.link!.startsWith("http") ? discount.link! : `https://${discount.link}`;
+                    Linking.openURL(url).catch(() => {});
+                  }}
+                  style={styles.linkRow}
+                >
+                  <Text style={styles.linkText} numberOfLines={1}>{discount.link}</Text>
+                </Pressable>
               </View>
             ) : null}
 
-            {/* Link */}
-            {discount.link ? (
-              <Pressable
-                onPress={() => {
-                  const url = discount.link!.startsWith("http") ? discount.link! : `https://${discount.link}`;
-                  Linking.openURL(url).catch(() => {});
-                }}
-                style={styles.linkRow}
-              >
-                <Text style={styles.linkText} numberOfLines={1}>{discount.link}</Text>
-              </Pressable>
-            ) : null}
-
-            {/* Thin divider before CTAs */}
+            {/* CTA buttons */}
             <View style={[styles.divider, { marginTop: 4 }]} />
 
-            {/* CTA: "Я иду" — main emerald button */}
             <Pressable
               onPress={onGoing}
               style={({ pressed }) => [
@@ -316,7 +322,6 @@ function DiscountCardBase({
               </Text>
             </Pressable>
 
-            {/* Secondary CTA: Open in 2GIS */}
             {isValidCoords(discount.lat, discount.lng) && (
               <Open2GisLink
                 lat={discount.lat}
@@ -325,38 +330,6 @@ function DiscountCardBase({
                 city={discount.cityName}
               />
             )}
-
-            {/* Thin divider before social */}
-            <View style={styles.divider} />
-
-            {/* Social engagement row */}
-            <View style={styles.socialRow}>
-              <Pressable onPress={onLike} hitSlop={6} style={styles.socialBtn}>
-                <Heart
-                  size={20}
-                  color={discount.liked ? Colors.danger : Colors.textMuted}
-                  strokeWidth={discount.liked ? 2.5 : 1.8}
-                  fill={discount.liked ? Colors.danger : "transparent"}
-                />
-                <Text style={[styles.socialCount, discount.liked && { color: Colors.danger }]}>
-                  {discount.likes}
-                </Text>
-              </Pressable>
-
-              <Pressable onPress={onComment} hitSlop={6} style={styles.socialBtn}>
-                <MessageCircle size={20} color={Colors.textMuted} strokeWidth={1.8} />
-                <Text style={styles.socialCount}>{discount.comments}</Text>
-              </Pressable>
-
-              <View style={styles.socialBtn}>
-                <Eye size={20} color={Colors.textMuted} strokeWidth={1.8} />
-                <Text style={styles.socialCount}>{formatViews(discount.views)}</Text>
-              </View>
-
-              <Pressable hitSlop={6} style={styles.socialBtn} onPress={() => shareDiscount(discount)}>
-                <Share2 size={19} color={Colors.textMuted} strokeWidth={1.8} />
-              </Pressable>
-            </View>
           </View>
         )}
       </View>
@@ -495,7 +468,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     gap: 10,
   },
-  infoBarLeft: { flex: 1, gap: 8, minWidth: 0 },
+  infoBarLeft: { flex: 1, gap: 6, minWidth: 0 },
+  infoBarStore: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: Colors.textSecondary,
+    letterSpacing: -0.15,
+  },
   cardTitle: {
     fontSize: 16,
     fontWeight: "700" as const,
@@ -539,6 +518,19 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "180deg" }],
   },
 
+  // ── Info bar right column (distance + chevron) ──
+  infoBarRight: {
+    alignItems: "center" as const,
+    gap: 6,
+    flexShrink: 0,
+  },
+  infoBarDistance: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: Colors.primary,
+    letterSpacing: -0.1,
+  },
+
   // ── Expanded body ──
   expandedBody: {
     paddingHorizontal: 16,
@@ -550,28 +542,6 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.border,
-  },
-
-  // ── Venue row ──
-  venueRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  venueTextCol: {
-    flex: 1,
-    gap: 2,
-  },
-  venueName: {
-    fontSize: 15,
-    fontWeight: "600" as const,
-    color: Colors.text,
-    letterSpacing: -0.3,
-  },
-  venueAddress: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    letterSpacing: -0.1,
-    lineHeight: 18,
   },
 
   // ── Author row ──
@@ -606,12 +576,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
 
-  // ── Tags (category + location chips) ──
-  tagsRow: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-  },
+  // ── Tag chip ──
   tag: {
     flexDirection: "row",
     alignItems: "center",
@@ -654,6 +619,16 @@ const styles = StyleSheet.create({
   },
 
   // ── Link ──
+  linkSection: {
+    gap: 8,
+  },
+  linkLabel: {
+    fontSize: 11,
+    fontWeight: "600" as const,
+    color: Colors.textMuted,
+    letterSpacing: 0.4,
+    textTransform: "uppercase" as const,
+  },
   linkRow: {
     flexDirection: "row",
     alignItems: "center",
