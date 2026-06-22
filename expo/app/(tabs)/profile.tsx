@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   tilePercentText: {
-    color: Colors.text,
+    color: Colors.textInverse,
     fontSize: 12,
     fontWeight: "700" as const,
     letterSpacing: -0.3,

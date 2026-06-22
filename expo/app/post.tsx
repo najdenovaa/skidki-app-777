@@ -414,7 +414,7 @@ export default function PostModalScreen() {
                       active && { backgroundColor: Colors.primary },
                     ]}
                   >
-                    <Text style={[styles.percentChipText, active && { color: Colors.text }]}>
+                    <Text style={[styles.percentChipText, active && { color: Colors.textInverse }]}>
                       {p}%
                     </Text>
                   </Pressable>
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cardSecondary,
   },
   publishBtnText: {
-    color: Colors.text,
+    color: Colors.textInverse,
     fontSize: 14,
     letterSpacing: -0.2,
   },

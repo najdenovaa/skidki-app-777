@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   radiusChipTextActive: {
-    color: Colors.text,
+    color: Colors.textInverse,
   },
 
   list: { paddingBottom: 100 },

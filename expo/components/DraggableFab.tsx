@@ -184,7 +184,7 @@ export function DraggableFab({ onPress }: Props) {
       {/* The FAB itself */}
       <GestureDetector gesture={composed}>
         <Animated.View style={[styles.fab, animatedStyle]}>
-          <Plus size={24} color={Colors.text} strokeWidth={2.5} />
+          <Plus size={24} color={Colors.textInverse} strokeWidth={2.5} />
         </Animated.View>
       </GestureDetector>
     </>

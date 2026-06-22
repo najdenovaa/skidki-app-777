@@ -263,7 +263,7 @@ export default function RegisterScreen() {
             ]}
           >
             {loading ? (
-              <PercentSpinner size={20} color={Colors.text} />
+              <PercentSpinner size={20} color={Colors.textInverse} />
             ) : (
               <Text style={styles.btnText}>Создать аккаунт</Text>
             )}
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   btnText: {
     fontSize: 17,
     fontWeight: "600",
-    color: Colors.text,
+    color: Colors.textInverse,
     letterSpacing: -0.3,
   },
   footer: {

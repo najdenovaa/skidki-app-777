@@ -177,7 +177,7 @@ export default function EditProfileScreen() {
             style={[styles.saveBtn, saving && { opacity: 0.6 }]}
           >
             {saving ? (
-              <PercentSpinner size={20} color={Colors.text} />
+              <PercentSpinner size={20} color={Colors.textInverse} />
             ) : (
               <Text style={styles.saveBtnText}>Сохранить</Text>
             )}
