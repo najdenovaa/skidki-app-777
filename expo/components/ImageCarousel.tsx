@@ -17,7 +17,7 @@ import Colors from "@/constants/colors";
 interface Props {
   images: string[];
   height?: number;
-  onPress?: () => void;
+  onPress?: (index: number) => void;
   /** Overlay content rendered on top of the carousel (badges, etc.) */
   children?: React.ReactNode;
   /** Dot color override for active dot */
@@ -63,7 +63,7 @@ export function ImageCarousel({
 
   if (images.length === 0) {
     return (
-      <Pressable onPress={onPress} style={[styles.placeholder, { height }]} onLayout={onLayout}>
+      <Pressable onPress={() => onPress?.(0)} style={[styles.placeholder, { height }]} onLayout={onLayout}>
         {children}
       </Pressable>
     );
@@ -82,7 +82,7 @@ export function ImageCarousel({
         style={{ flex: 1 }}
       >
         {images.map((uri, i) => (
-          <Pressable key={i} onPress={onPress} style={{ width: carouselWidth || "100%", height }}>
+          <Pressable key={i} onPress={() => onPress?.(i)} style={{ width: carouselWidth || "100%", height }}>
             <Image
               source={{ uri }}
               style={{ width: "100%", height: "100%" }}

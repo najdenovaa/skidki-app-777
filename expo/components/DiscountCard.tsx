@@ -131,7 +131,7 @@ function DiscountCardBase({
         <ImageCarousel
           images={discount.images.map(resolveImageUrl)}
           height={expanded ? 380 : 220}
-          onPress={expanded ? undefined : onOpen}
+          onPress={() => onOpen()}
           gradient
           contentFit="cover"
           activeDotColor="#FFFFFF"

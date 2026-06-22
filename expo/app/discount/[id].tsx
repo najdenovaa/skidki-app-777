@@ -29,6 +29,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { FullscreenImageViewer } from "@/components/FullscreenImageViewer";
 import { ImageCarousel } from "@/components/ImageCarousel";
 import { KeyboardSafeScrollView } from "@/components/KeyboardSafeScrollView";
 import { KeyboardStickyFooter } from "@/components/KeyboardStickyFooter";
@@ -67,6 +68,7 @@ export default function DiscountDetailScreen() {
   const [comment, setComment] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
   const appStateRef = useRef<AppState>(AppState.currentState);
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -175,7 +177,12 @@ export default function DiscountDetailScreen() {
       >
           {/* ── Hero carousel ── */}
           <View style={styles.heroWrap}>
-            <ImageCarousel images={discount.images.map(resolveImageUrl)} height={400} contentFit="contain">
+            <ImageCarousel
+              images={discount.images.map(resolveImageUrl)}
+              height={400}
+              contentFit="contain"
+              onPress={(index?: number) => setFullscreenIndex(index ?? 0)}
+            >
               {/* Header overlay */}
               <SafeAreaView edges={["top"]} style={styles.heroHeader} pointerEvents="box-none">
                 <View style={styles.heroHeaderRow}>
@@ -249,103 +256,19 @@ export default function DiscountDetailScreen() {
 
             {/* Title */}
             <Text style={styles.title}>{discount.title}</Text>
+            {/* Place name + distance on same line */}
             {discount.placeName ? (
-              <Text style={styles.placeName}>{discount.placeName}</Text>
-            ) : null}
-
-            {/* Author row */}
-            <View style={styles.authorRow}>
-              <Image
-                source={{ uri: resolveImageUrl(discount.author.avatar) }}
-                style={styles.authorAvatar}
-                contentFit="cover"
-              />
-              <View style={styles.authorBody}>
-                <View style={styles.authorLine}>
-                  <Text style={styles.authorName}>{discount.author.name}</Text>
-                  {discount.author.verified && (
-                    <View style={styles.verifiedDot} />
-                  )}
-                </View>
-                <Text style={styles.authorTime}>
-                  {formatFullDate(discount.postedAt)}
-                </Text>
-              </View>
-            </View>
-
-            {/* Category & Location */}
-            <View style={styles.metaRow}>
-              <View style={[styles.chip, { backgroundColor: cat.color + "20" }]}>
-                <Icon size={12} color={cat.color} strokeWidth={2} />
-                <Text style={[styles.chipText, { color: cat.color }]}>
-                  {cat.label}
-                </Text>
-              </View>
-              <View style={styles.locationChip}>
-                <MapPin size={12} color={Colors.textMuted} strokeWidth={2} />
-                <Text style={styles.locationText} numberOfLines={1}>
-                  {discount.address || discount.locationName}
-                </Text>
+              <View style={styles.placeRow}>
+                <Text style={styles.placeName} numberOfLines={1}>{discount.placeName}</Text>
                 {isValidCoords(discount.lat, discount.lng) ? (
-                  <>
-                    <Text style={styles.locationDot}>·</Text>
-                    <Text style={styles.distanceText}>
+                  <View style={styles.distanceBadge}>
+                    <Text style={styles.distanceBadgeText}>
                       {formatDistance(discount.distanceKm)}
                     </Text>
-                  </>
+                  </View>
                 ) : null}
               </View>
-            </View>
-
-            {/* Prices */}
-            {discount.discountedPrice !== undefined && (
-              <View style={styles.priceRow}>
-                <Text style={styles.priceNow}>
-                  {discount.discountedPrice.toLocaleString("ru-RU")} ₽
-                </Text>
-                {discount.originalPrice !== undefined && (
-                  <>
-                    <Text style={styles.priceDash}>—</Text>
-                    <Text style={styles.priceWas}>
-                      {discount.originalPrice.toLocaleString("ru-RU")} ₽
-                    </Text>
-                    <View style={styles.savingsPill}>
-                      <Text style={styles.savingsText}>
-                        Экономия{" "}
-                        {(
-                          discount.originalPrice - discount.discountedPrice
-                        ).toLocaleString("ru-RU")}{" "}
-                        ₽
-                      </Text>
-                    </View>
-                  </>
-                )}
-              </View>
-            )}
-
-            {/* CTA — "Я иду" */}
-            <Pressable
-              onPress={() => {
-                if (isGuest) { promptAuth(); return; }
-                impact(Haptics.ImpactFeedbackStyle.Medium);
-                toggleGoing(discount.id);
-              }}
-              style={[
-                styles.cta,
-                discount.isGoing && { backgroundColor: Colors.successLight },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.ctaText,
-                  discount.isGoing && { color: Colors.success },
-                ]}
-              >
-                {discount.isGoing
-                  ? `Идёшь · ${discount.going} человек`
-                  : "Я иду"}
-              </Text>
-            </Pressable>
+            ) : null}
 
             {/* Action row: Views / Like / Comment / Share */}
             <View style={styles.actionRow}>
@@ -387,15 +310,59 @@ export default function DiscountDetailScreen() {
               </Pressable>
             </View>
 
-            {/* ── Note ── */}
-            {discount.note ? (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Примечание</Text>
-                <View style={styles.noteBox}>
-                  <Text style={styles.noteText}>{discount.note}</Text>
+            {/* Author row + category chip on same line */}
+            <View style={styles.authorRow}>
+              <Image
+                source={{ uri: resolveImageUrl(discount.author.avatar) }}
+                style={styles.authorAvatar}
+                contentFit="cover"
+              />
+              <View style={styles.authorBody}>
+                <View style={styles.authorLine}>
+                  <Text style={styles.authorName}>{discount.author.name}</Text>
+                  {discount.author.verified && (
+                    <View style={styles.verifiedDot} />
+                  )}
                 </View>
+                <Text style={styles.authorTime}>
+                  {formatFullDate(discount.postedAt)}
+                </Text>
               </View>
-            ) : null}
+              <View style={[styles.chip, { backgroundColor: cat.color + "20" }]}>
+                <Icon size={12} color={cat.color} strokeWidth={2} />
+                <Text style={[styles.chipText, { color: cat.color }]}>
+                  {cat.label}
+                </Text>
+              </View>
+            </View>
+
+
+
+            {/* Prices */}
+            {discount.discountedPrice !== undefined && (
+              <View style={styles.priceRow}>
+                <Text style={styles.priceNow}>
+                  {discount.discountedPrice.toLocaleString("ru-RU")} ₽
+                </Text>
+                {discount.originalPrice !== undefined && (
+                  <>
+                    <Text style={styles.priceDash}>—</Text>
+                    <Text style={styles.priceWas}>
+                      {discount.originalPrice.toLocaleString("ru-RU")} ₽
+                    </Text>
+                    <View style={styles.savingsPill}>
+                      <Text style={styles.savingsText}>
+                        Экономия{" "}
+                        {(
+                          discount.originalPrice - discount.discountedPrice
+                        ).toLocaleString("ru-RU")}{" "}
+                        ₽
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </View>
+            )}
 
             {/* ── Link ── */}
             {discount.link ? (
@@ -414,18 +381,51 @@ export default function DiscountDetailScreen() {
               </View>
             ) : null}
 
-            {/* ── Where to find ── */}
+            {/* ── Note ── */}
+            {discount.note ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Примечание</Text>
+                <View style={styles.noteBox}>
+                  <Text style={styles.noteText}>{discount.note}</Text>
+                </View>
+              </View>
+            ) : null}
+
+            {/* CTA buttons — "Я иду" + "2ГИС" side by side */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Где найти</Text>
-              <Text style={styles.addressText}>
-                {discount.address || discount.locationName}
-              </Text>
-              <Open2GisLink
-                lat={discount.lat}
-                lng={discount.lng}
-                address={discount.address}
-                city={discount.cityName}
-              />
+              <View style={styles.ctaRow}>
+                <Pressable
+                  onPress={() => {
+                    if (isGuest) { promptAuth(); return; }
+                    impact(Haptics.ImpactFeedbackStyle.Medium);
+                    toggleGoing(discount.id);
+                  }}
+                  style={({ pressed }) => [
+                    styles.cta,
+                    discount.isGoing && { backgroundColor: Colors.successLight },
+                    pressed && !discount.isGoing && styles.ctaPressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.ctaText,
+                      discount.isGoing && { color: Colors.success },
+                    ]}
+                  >
+                    {discount.isGoing
+                      ? `Идёшь · ${discount.going}`
+                      : "Я иду"}
+                  </Text>
+                </Pressable>
+                {isValidCoords(discount.lat, discount.lng) && (
+                  <Open2GisLink
+                    lat={discount.lat}
+                    lng={discount.lng}
+                    address={discount.address}
+                    city={discount.cityName}
+                  />
+                )}
+              </View>
             </View>
 
             {/* ── Comments ── */}
@@ -486,6 +486,16 @@ export default function DiscountDetailScreen() {
             </View>
           </SafeAreaView>
         </KeyboardStickyFooter>
+
+      {/* ── Fullscreen photo viewer ── */}
+      {fullscreenIndex !== null && (
+        <FullscreenImageViewer
+          images={discount.images.map(resolveImageUrl)}
+          initialIndex={fullscreenIndex}
+          visible={fullscreenIndex !== null}
+          onClose={() => setFullscreenIndex(null)}
+        />
+      )}
     </View>
   );
 }
@@ -593,11 +603,17 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginBottom: 4,
   },
+  placeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 16,
+  },
   placeName: {
     fontSize: 15,
     color: Colors.textSecondary,
     letterSpacing: -0.2,
-    marginBottom: 16,
+    flexShrink: 1,
   },
 
   // Author
@@ -605,7 +621,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   authorAvatar: {
     width: 36,
@@ -636,14 +652,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
 
-  // Category & Location
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 16,
-    flexWrap: "wrap" as const,
-  },
+  // Category chip (reused in author row right side)
   chip: {
     flexDirection: "row",
     alignItems: "center",
@@ -651,21 +660,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
+    flexShrink: 0,
   },
   chipText: { fontSize: 12, letterSpacing: 0.2 },
-  locationChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    flexShrink: 1,
+
+  distanceBadge: {
+    backgroundColor: Colors.successLight,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    flexShrink: 0,
   },
-  locationText: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    flexShrink: 1,
+  distanceBadgeText: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: Colors.primary,
+    letterSpacing: -0.1,
   },
-  locationDot: { color: Colors.textMuted, fontSize: 12 },
-  distanceText: { fontSize: 13, color: Colors.textMuted },
 
   // Prices
   priceRow: {
@@ -703,19 +714,34 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
 
-  // CTA
+  // CTA row — side by side
+  ctaRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
   cta: {
+    flex: 1,
     height: 52,
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.primary,
-    marginBottom: 16,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  ctaPressed: {
+    backgroundColor: Colors.primaryDark,
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
   ctaText: {
-    color: Colors.text,
-    fontSize: 17,
-    fontWeight: "600" as const,
+    color: Colors.textInverse,
+    fontSize: 16,
+    fontWeight: "700" as const,
     letterSpacing: -0.3,
   },
 
@@ -724,7 +750,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 32,
-    marginBottom: 10,
+    marginBottom: 18,
     paddingVertical: 4,
   },
   actionBtn: {
@@ -777,14 +803,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     letterSpacing: 0.3,
   },
-  addressText: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    letterSpacing: -0.2,
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-
   // ── Comments ──
   commentRow: {
     flexDirection: "row",
