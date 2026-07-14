@@ -54,14 +54,21 @@ export const [QueueProvider, useQueue] = createContextHook(() => {
     setRefreshing(false);
   }, [loadStations]);
 
+  const refreshMyQueue = useCallback(async (): Promise<void> => {
+    const res = await api.getMyQueue();
+    if (res.success) {
+      setCurrentQueue(res.data ?? null);
+    }
+  }, []);
+
   // On mount, restore an existing queue entry for logged-in users
   useEffect(() => {
     if (user) {
-      api.getMyQueue().then((res) => {
-        if (res.success && res.data) setCurrentQueue(res.data);
-      });
+      refreshMyQueue();
+    } else {
+      setCurrentQueue(null);
     }
-  }, [user]);
+  }, [user, refreshMyQueue]);
 
   const stopPing = useCallback(() => {
     if (pingIntervalRef.current) {
@@ -150,6 +157,7 @@ export const [QueueProvider, useQueue] = createContextHook(() => {
       joinQueue,
       leaveQueue,
       pingLocation,
+      refreshMyQueue,
     }),
     [
       stations,
@@ -163,6 +171,7 @@ export const [QueueProvider, useQueue] = createContextHook(() => {
       joinQueue,
       leaveQueue,
       pingLocation,
+      refreshMyQueue,
     ]
   );
 });

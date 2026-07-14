@@ -8,7 +8,6 @@ import Colors from "@/constants/colors";
 import { useAuth } from "@/providers/AuthProvider";
 import { useQueue } from "@/providers/QueueProvider";
 import { usePush } from "@/providers/PushProvider";
-import { api } from "@/services/api";
 
 const POLL_INTERVAL = 15_000;
 
@@ -34,12 +33,8 @@ const ZONE_CARD_COLOR: Record<string, string> = {
 export default function MyQueueScreen() {
   const router = useRouter();
   useAuth();
-  const { currentQueue, leaveQueue, loadStations } = useQueue();
+  const { currentQueue, leaveQueue, loadStations, refreshMyQueue } = useQueue();
   const { messages } = usePush();
-
-  const refreshMyQueue = useCallback(async () => {
-    await api.getMyQueue();
-  }, []);
 
   // Poll my queue position every 15s
   useEffect(() => {
