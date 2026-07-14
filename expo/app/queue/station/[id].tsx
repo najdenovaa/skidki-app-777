@@ -117,16 +117,6 @@ export default function StationDetailScreen() {
     }
   }, [chatInput, stationId]);
 
-  if (loading || !station) {
-    return (
-      <SafeAreaView style={[styles.root, styles.center]} edges={["top"]}>
-        <PercentSpinner />
-      </SafeAreaView>
-    );
-  }
-
-  const isActive = station.status === "active";
-
   const renderMessage = useCallback(({ item }: { item: StationMessage }) => {
     if (item.msgType === "system") {
       return (
@@ -144,6 +134,16 @@ export default function StationDetailScreen() {
       </View>
     );
   }, []);
+
+  if (loading || !station) {
+    return (
+      <SafeAreaView style={[styles.root, styles.center]} edges={["top"]}>
+        <PercentSpinner />
+      </SafeAreaView>
+    );
+  }
+
+  const isActive = station.status === "active";
 
   return (
     <SafeAreaView style={styles.root} edges={["top"]}>
