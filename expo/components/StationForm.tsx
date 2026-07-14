@@ -63,9 +63,9 @@ export function StationForm({
   const [addressFromGps, setAddressFromGps] = useState<boolean>(!!prefillAddress && !initial?.address);
   const [geoLoading, setGeoLoading] = useState<boolean>(false);
 
-  const [fuel92, setFuel92] = useState<boolean>(initial?.fuel92 ?? false);
-  const [fuel95, setFuel95] = useState<boolean>(initial?.fuel95 ?? false);
-  const [fuelDt, setFuelDt] = useState<boolean>(initial?.fuelDt ?? false);
+  const [fuel92, setFuel92] = useState<boolean>(initial?.fuel92 ?? (mode === "create" ? true : false));
+  const [fuel95, setFuel95] = useState<boolean>(initial?.fuel95 ?? (mode === "create" ? true : false));
+  const [fuelDt, setFuelDt] = useState<boolean>(initial?.fuelDt ?? (mode === "create" ? true : false));
   const [fuelLpg, setFuelLpg] = useState<boolean>(initial?.fuelLpg ?? false);
 
   const [limitLiters, setLimitLiters] = useState<string>(

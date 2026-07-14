@@ -8,6 +8,7 @@ import { PercentSpinner } from "@/components/PercentSpinner";
 import { StationForm, type StationFormValues } from "@/components/StationForm";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/providers/AuthProvider";
+
 import { api } from "@/services/api";
 import type { Station } from "@/types/queue";
 
@@ -15,7 +16,7 @@ export default function EditStationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const stationId = String(id);
   const router = useRouter();
-  const { user, guestCity } = useAuth();
+  const { isGuest, user, guestCity } = useAuth();
 
   const [station, setStation] = useState<Station | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -26,6 +27,20 @@ export default function EditStationScreen() {
   const cityName = user?.city ?? guestCity?.cityName;
 
   useEffect(() => {
+    if (isGuest) {
+      Alert.alert(
+        "Требуется авторизация",
+        "Войди или зарегистрируйся, чтобы исправить информацию",
+        [
+          { text: "Войти", onPress: () => router.replace("/auth/login") },
+          { text: "Отмена", style: "cancel" as const, onPress: () => router.back() },
+        ]
+      );
+    }
+  }, [isGuest, router]);
+
+  useEffect(() => {
+    if (isGuest) return;
     let active = true;
     (async () => {
       const res = await api.getStation(stationId);
@@ -36,7 +51,7 @@ export default function EditStationScreen() {
     return () => {
       active = false;
     };
-  }, [stationId]);
+  }, [stationId, isGuest]);
 
   useEffect(() => {
     (async () => {
@@ -91,6 +106,10 @@ export default function EditStationScreen() {
     },
     [gpsLat, gpsLng, stationId, router]
   );
+
+  if (isGuest) {
+    return <SafeAreaView style={styles.root} edges={["top"]} />;
+  }
 
   if (loading || !station) {
     return (

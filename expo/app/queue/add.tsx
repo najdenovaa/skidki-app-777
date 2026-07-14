@@ -46,11 +46,25 @@ export default function AddStationScreen() {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           setLocating(false);
+          Alert.alert(
+            "Разреши геолокацию",
+            "Добавить АЗС можно только у колонки",
+            [{ text: "ОК", onPress: () => router.back() }]
+          );
           return;
         }
         const pos = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
+        if (!pos?.coords) {
+          setLocating(false);
+          Alert.alert(
+            "Разреши геолокацию",
+            "Добавить АЗС можно только у колонки",
+            [{ text: "ОК", onPress: () => router.back() }]
+          );
+          return;
+        }
         setGpsLat(pos.coords.latitude);
         setGpsLng(pos.coords.longitude);
         const geo = await api.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
@@ -58,12 +72,18 @@ export default function AddStationScreen() {
           setPrefillAddress(geo.data.address);
         }
       } catch {
-        // GPS unavailable
+        setLocating(false);
+        Alert.alert(
+          "Разреши геолокацию",
+          "Добавить АЗС можно только у колонки",
+          [{ text: "ОК", onPress: () => router.back() }]
+        );
+        return;
       } finally {
         setLocating(false);
       }
     })();
-  }, [isGuest]);
+  }, [isGuest, router]);
 
   const handleSubmit = useCallback(
     async (values: StationFormValues) => {
@@ -120,6 +140,10 @@ export default function AddStationScreen() {
         <PercentSpinner />
       </SafeAreaView>
     );
+  }
+
+  if (gpsLat === undefined || gpsLng === undefined) {
+    return <SafeAreaView style={styles.root} edges={["top"]} />;
   }
 
   return (
