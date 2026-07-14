@@ -26,6 +26,7 @@ import type {
 } from "@/types/api";
 import type { Category, Comment, Discount } from "@/types/discount";
 import type { User } from "@/types/user";
+import type { Station, QueueEntry, StationMessage, QueueStationInfo, FuelType } from "@/types/queue";
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -664,6 +665,153 @@ export const api = {
   async getPushHistory(): Promise<ApiResponse<PushSendRecord[]>> {
     try {
       const data = await http.get<PushSendRecord[]>("/admin/push");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  // ═══ Queue (gas stations) ═══════════════════════════════════════════════
+
+  async getStations(params?: {
+    cityId?: number;
+    lat?: number;
+    lng?: number;
+  }): Promise<ApiResponse<Station[]>> {
+    try {
+      const qs = new URLSearchParams();
+      if (params?.cityId !== undefined) qs.set("city", String(params.cityId));
+      if (params?.lat !== undefined) qs.set("lat", String(params.lat));
+      if (params?.lng !== undefined) qs.set("lng", String(params.lng));
+      const path = `/stations${qs.toString() ? "?" + qs.toString() : ""}`;
+      const data = await http.get<Station[]>(path);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getStation(
+    id: string,
+    params?: { lat?: number; lng?: number }
+  ): Promise<ApiResponse<Station>> {
+    try {
+      const qs = new URLSearchParams();
+      if (params?.lat !== undefined) qs.set("lat", String(params.lat));
+      if (params?.lng !== undefined) qs.set("lng", String(params.lng));
+      const path = `/stations/${String(id)}${qs.toString() ? "?" + qs.toString() : ""}`;
+      const data = await http.get<Station>(path);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async createStation(data: {
+    name: string;
+    brand?: string;
+    lat: number;
+    lng: number;
+    cityId?: number;
+    address?: string;
+  }): Promise<ApiResponse<Station>> {
+    try {
+      const station = await http.post<Station>("/stations", data);
+      return ok(station);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async updateStationFuel(
+    id: string,
+    data: {
+      lat: number;
+      lng: number;
+      fuel92?: boolean;
+      fuel95?: boolean;
+      fuelDt?: boolean;
+      fuelLpg?: boolean;
+      note?: string;
+    }
+  ): Promise<ApiResponse<Station>> {
+    try {
+      const station = await http.patch<Station>(`/stations/${String(id)}/fuel`, data);
+      return ok(station);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async joinQueue(data: {
+    stationId: string;
+    fuelType: FuelType;
+    lat: number;
+    lng: number;
+  }): Promise<ApiResponse<QueueEntry>> {
+    try {
+      const entry = await http.post<QueueEntry>("/queue/join", data);
+      return ok(entry);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async leaveQueue(): Promise<ApiResponse<null>> {
+    try {
+      await http.del("/queue/leave");
+      return ok(null);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getMyQueue(): Promise<ApiResponse<QueueEntry | null>> {
+    try {
+      const data = await http.get<QueueEntry | null>("/queue/my");
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async pingQueue(data: { lat: number; lng: number }): Promise<ApiResponse<QueueEntry>> {
+    try {
+      const entry = await http.post<QueueEntry>("/queue/ping", data);
+      return ok(entry);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getStationQueue(stationId: string): Promise<ApiResponse<QueueStationInfo>> {
+    try {
+      const data = await http.get<QueueStationInfo>(`/queue/${String(stationId)}`);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async getStationChat(
+    stationId: string,
+    limit?: number
+  ): Promise<ApiResponse<StationMessage[]>> {
+    try {
+      const qs = limit ? `?limit=${String(limit)}` : "";
+      const data = await http.get<StationMessage[]>(`/queue/${String(stationId)}/chat${qs}`);
+      return ok(data);
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async sendStationChat(
+    stationId: string,
+    body: string
+  ): Promise<ApiResponse<StationMessage>> {
+    try {
+      const data = await http.post<StationMessage>(`/queue/${String(stationId)}/chat`, { body });
       return ok(data);
     } catch (err) {
       return handleError(err);
