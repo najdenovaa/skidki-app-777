@@ -174,7 +174,7 @@ export const [DiscountsProvider, useDiscounts] = createContextHook(() => {
 
   const updatePost = useCallback(
     async (id: string, data: Record<string, unknown>): Promise<boolean> => {
-      const res = await api.updateDiscount(id, data as Parameters<typeof api.updateDiscount>[1]);
+      const res = await api.updateDiscount(id, data as unknown as Parameters<typeof api.updateDiscount>[1]);
       if (res.success && res.data) {
         patchDiscount(id, res.data);
         // Refresh myPosts after update

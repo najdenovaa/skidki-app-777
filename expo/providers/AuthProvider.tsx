@@ -16,6 +16,7 @@ type SignUpInput = {
   password: string;
   cityId?: string;
   regionId?: string;
+  city?: string;
   acceptedTerms?: boolean;
 };
 
@@ -78,6 +79,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           password: input.password,
           cityId: input.cityId,
           regionId: input.regionId,
+          city: input.city,
           acceptedTerms: input.acceptedTerms,
         };
       } else {
@@ -88,6 +90,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           password: input.password,
           cityId: input.cityId,
           regionId: input.regionId,
+          city: input.city,
           acceptedTerms: input.acceptedTerms,
         };
       }

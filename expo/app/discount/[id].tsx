@@ -26,6 +26,7 @@ import {
   Text,
   TextInput,
   View,
+  type AppStateStatus,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -67,7 +68,7 @@ export default function DiscountDetailScreen() {
   const { user, isGuest } = useAuth();
   const [comment, setComment] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
-  const appStateRef = useRef<AppState>(AppState.currentState);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function DiscountDetailScreen() {
   // Reload on AppState active (return from background)
   useEffect(() => {
     const sub = AppState.addEventListener("change", (nextState) => {
-      if (appStateRef.current.match(/background/) && nextState === "active" && id) {
+      if (appStateRef.current === "background" && nextState === "active" && id) {
         refreshOne(id);
         api.getComments(id).then((res) => {
           if (res.success && res.data) {
@@ -124,7 +125,7 @@ export default function DiscountDetailScreen() {
     const optimistic: Comment = {
       id: optimisticId,
       text: txt,
-      author: { id: user.id, name: user.name, avatar: user.avatar ?? "" },
+      author: { id: user.id, name: user.name, avatar: user.avatar ?? "", verified: false },
       postedAt: Date.now(),
     };
     setComments((cs) => [optimistic, ...cs]);

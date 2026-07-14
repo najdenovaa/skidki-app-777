@@ -201,7 +201,7 @@ export const api = {
 
   async toggleLike(id: string): Promise<ApiResponse<{ liked: boolean; likes: number }>> {
     try {
-      const data = await http.post<{ liked: boolean }>(`/discounts/${String(id)}/like`);
+      const data = await http.post<{ liked: boolean; likes: number }>(`/discounts/${String(id)}/like`);
       return ok(data);
     } catch (err) {
       return handleError(err);
