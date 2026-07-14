@@ -28,16 +28,139 @@ import { DiscountCard } from "@/components/DiscountCard";
 import { DraggableFab } from "@/components/DraggableFab";
 import { PercentSpinner } from "@/components/PercentSpinner";
 import { SkeletonCard } from "@/components/SkeletonCard";
+import { StationCard } from "@/components/StationCard";
+import { StationMap } from "@/components/StationMap";
 import Colors from "@/constants/colors";
 import { useTabBarVisible } from "@/hooks/TabBarScrollContext";
 import { useAuth } from "@/providers/AuthProvider";
 import { useDiscounts } from "@/providers/DiscountsProvider";
 import { usePush } from "@/providers/PushProvider";
+import { useQueue } from "@/providers/QueueProvider";
 import type { Discount } from "@/types/discount";
+import type { Station } from "@/types/queue";
 
 const CHIPS_HEIGHT = 60;
 
-function FeedHeader() {
+type FeedMode = "discounts" | "queue";
+
+interface FeedModeToggleProps {
+  feedMode: FeedMode;
+  onChange: (mode: FeedMode) => void;
+}
+
+function FeedModeToggle({ feedMode, onChange }: FeedModeToggleProps) {
+  return (
+    <View style={styles.modeToggle}>
+      <Pressable
+        onPress={() => onChange("discounts")}
+        style={[
+          styles.modeToggleBtn,
+          feedMode === "discounts" ? styles.modeToggleBtnActive : styles.modeToggleBtnInactive,
+        ]}
+      >
+        <Text
+          style={[
+            styles.modeToggleLabel,
+            feedMode === "discounts" ? styles.modeToggleLabelActive : styles.modeToggleLabelInactive,
+          ]}
+        >
+          Скидки
+        </Text>
+      </Pressable>
+      <Pressable
+        onPress={() => onChange("queue")}
+        style={[
+          styles.modeToggleBtn,
+          feedMode === "queue" ? styles.modeToggleBtnActive : styles.modeToggleBtnInactive,
+        ]}
+      >
+        <Text
+          style={[
+            styles.modeToggleLabel,
+            feedMode === "queue" ? styles.modeToggleLabelActive : styles.modeToggleLabelInactive,
+          ]}
+        >
+          Очередь
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function QueueInlineFeed() {
+  const router = useRouter();
+  const { stations, currentQueue, loading, gpsLat, gpsLng } = useQueue();
+
+  const nearestStations = useMemo(() => stations.slice(0, 5), [stations]);
+
+  const goToStation = useCallback(
+    (station: Station) => {
+      router.push(`/queue/station/${station.id}`);
+    },
+    [router]
+  );
+
+  const goToMyQueue = useCallback(() => {
+    router.push("/queue/my");
+  }, [router]);
+
+  const goToFullScreen = useCallback(() => {
+    router.push("/queue");
+  }, [router]);
+
+  if (loading) {
+    return (
+      <View style={[styles.queueWrap, styles.center]}>
+        <PercentSpinner />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.queueWrap}>
+      {currentQueue ? (
+        <Pressable onPress={goToMyQueue} style={styles.queueBanner}>
+          <Text style={styles.queueBannerText}>
+            Ты #{currentQueue.position} · ~{currentQueue.estimatedMinutes} мин
+          </Text>
+        </Pressable>
+      ) : null}
+
+      <View style={styles.queueMapWrap}>
+        <StationMap
+          stations={stations}
+          onMarkerPress={goToStation}
+          userLat={gpsLat}
+          userLng={gpsLng}
+        />
+      </View>
+
+      <FlatList
+        data={nearestStations}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => (
+          <StationCard station={item} onPress={() => goToStation(item)} />
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.queueListContent}
+        ListEmptyComponent={
+          <Text style={styles.queueEmptyText}>Станций поблизости не найдено</Text>
+        }
+      />
+
+      <Pressable onPress={goToFullScreen} style={styles.queueFullScreenBtn}>
+        <Text style={styles.queueFullScreenBtnText}>Открыть полный экран</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+interface FeedHeaderProps {
+  feedMode: FeedMode;
+  onChangeFeedMode: (mode: FeedMode) => void;
+}
+
+function FeedHeader({ feedMode, onChangeFeedMode }: FeedHeaderProps) {
   const router = useRouter();
   const { isGuest, guestCity, saveGuestCity, user, updateProfile } = useAuth();
   const { unreadCount } = usePush();
@@ -81,7 +204,14 @@ function FeedHeader() {
     <>
       <View style={styles.headerRow} pointerEvents="box-none">
         <View style={styles.headerLeft}>
-          <Text style={styles.brandTitle}>Скидос</Text>
+          {feedMode === "queue" ? (
+            <View style={styles.queueTitleRow}>
+              <MapPin size={22} color={Colors.text} strokeWidth={2} />
+              <Text style={styles.brandTitle}>АЗС рядом</Text>
+            </View>
+          ) : (
+            <Text style={styles.brandTitle}>Скидос</Text>
+          )}
           <Pressable
             onPress={() => setCityPickerOpen(true)}
             style={styles.cityRow}
@@ -112,6 +242,10 @@ function FeedHeader() {
         </View>
       </View>
 
+      <View style={styles.modeToggleRow} pointerEvents="box-none">
+        <FeedModeToggle feedMode={feedMode} onChange={onChangeFeedMode} />
+      </View>
+
       <CityPicker
         visible={cityPickerOpen}
         onSelect={(c) => {
@@ -137,6 +271,7 @@ export default function FeedScreen() {
   const hasCity = !!(user?.cityId || guestCity?.cityId);
   const [categoryOpen, setCategoryOpen] = useState<boolean>(false);
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [feedMode, setFeedMode] = useState<FeedMode>("discounts");
   const flatListRef = useRef<FlatList<any>>(null);
   const expandedAtIndex = useRef<number | null>(null);
   const scrollY = useRef<number>(0);
@@ -156,7 +291,8 @@ export default function FeedScreen() {
     router.push("/post");
   }, [isGuest, router]);
 
-  const HEADER_HEIGHT = useMemo(() => insets.top + 72 + CHIPS_HEIGHT, [insets.top]);
+  const HEADER_HEIGHT = useMemo(() => insets.top + 72 + 44 + CHIPS_HEIGHT, [insets.top]);
+  const QUEUE_HEADER_HEIGHT = useMemo(() => insets.top + 72 + 44, [insets.top]);
 
   const chipsVisible = useSharedValue<number>(1);
   const lastY = useSharedValue<number>(0);
@@ -234,7 +370,11 @@ export default function FeedScreen() {
 
   return (
     <View style={styles.root}>
-      {!hydrated ? (
+      {feedMode === "queue" ? (
+        <View style={[styles.list, { paddingTop: QUEUE_HEADER_HEIGHT, flex: 1 }]}>
+          <QueueInlineFeed />
+        </View>
+      ) : !hydrated ? (
         <View style={styles.loadingWrap}>
           <SkeletonCard />
           <SkeletonCard />
@@ -287,13 +427,13 @@ export default function FeedScreen() {
       )}
 
       {/* Spinner overlay on pull-to-refresh */}
-      {refreshing && (
+      {feedMode === "discounts" && refreshing && (
         <View style={styles.refreshOverlay} pointerEvents="none">
           <PercentSpinner size={72} />
         </View>
       )}
 
-      <DraggableFab onPress={handleFabPress} />
+      {feedMode === "discounts" && <DraggableFab onPress={handleFabPress} />}
 
       {/* Transparent header */}
       <SafeAreaView
@@ -302,15 +442,17 @@ export default function FeedScreen() {
         pointerEvents="box-none"
       >
         {/* Clean header row */}
-        <FeedHeader />
+        <FeedHeader feedMode={feedMode} onChangeFeedMode={setFeedMode} />
 
         {/* Collapsible category picker */}
-        <Animated.View
-          style={[styles.chipsWrapper, chipsContainerStyle]}
-          pointerEvents="box-none"
-        >
-          <CategoryPicker value={filter} onChange={setFilter} open={categoryOpen} onOpenChange={setCategoryOpen} />
-        </Animated.View>
+        {feedMode === "discounts" && (
+          <Animated.View
+            style={[styles.chipsWrapper, chipsContainerStyle]}
+            pointerEvents="box-none"
+          >
+            <CategoryPicker value={filter} onChange={setFilter} open={categoryOpen} onOpenChange={setCategoryOpen} />
+          </Animated.View>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -347,6 +489,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
     letterSpacing: -0.2,
+  },
+  queueTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   cityRow: {
     flexDirection: "row",
@@ -394,6 +541,37 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 
+  modeToggleRow: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  modeToggle: {
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    gap: 6,
+  },
+  modeToggleBtn: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  modeToggleBtnActive: {
+    backgroundColor: Colors.primary,
+  },
+  modeToggleBtnInactive: {
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  modeToggleLabel: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+  },
+  modeToggleLabelActive: {
+    color: Colors.textInverse,
+  },
+  modeToggleLabelInactive: {
+    color: Colors.textSecondary,
+  },
+
   chipsWrapper: {
     overflow: "hidden",
     paddingHorizontal: 20,
@@ -410,5 +588,52 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     zIndex: 5,
     paddingTop: 0,
+  },
+
+  queueWrap: {
+    flex: 1,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  center: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  queueBanner: {
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  queueBannerText: {
+    color: Colors.textInverse,
+    fontSize: 15,
+    fontWeight: "700" as const,
+    textAlign: "center",
+  },
+  queueMapWrap: {
+    height: 240,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  queueListContent: {
+    paddingBottom: 12,
+  },
+  queueEmptyText: {
+    textAlign: "center",
+    color: Colors.textMuted,
+    marginTop: 12,
+  },
+  queueFullScreenBtn: {
+    backgroundColor: Colors.cardSecondary,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  queueFullScreenBtnText: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: "700" as const,
   },
 });
