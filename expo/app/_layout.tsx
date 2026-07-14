@@ -13,6 +13,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Colors from "@/constants/colors";
 import { AuthProvider, useAuth } from "@/providers/AuthProvider";
 import { DiscountsProvider } from "@/providers/DiscountsProvider";
+import { QueueProvider } from "@/providers/QueueProvider";
 import { PushProvider, usePush } from "@/providers/PushProvider";
 import type { SelectedCity } from "@/types/api";
 
@@ -91,6 +92,15 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen name="discount/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="queue/index" options={{ title: "Очередь", headerShown: false }} />
+      <Stack.Screen name="queue/station/[id]" options={{ title: "АЗС", headerShown: false }} />
+      <Stack.Screen
+        name="queue/my"
+        options={{
+          title: "Моя очередь",
+          presentation: "modal",
+        }}
+      />
       <Stack.Screen
         name="admin/index"
         options={{
@@ -214,16 +224,18 @@ export default function RootLayout() {
           <AuthProvider>
             <PushProvider>
               <DiscountsProvider>
-                <ErrorBoundary>
-                  <StatusBar style="light" />
-                  <GuestCityGate />
-                  <BiometricGate>
-                    <RootLayoutNav />
-                  </BiometricGate>
-                  {showBrandSplash && (
-                    <BrandSplash onFinish={() => setShowBrandSplash(false)} />
-                  )}
-                </ErrorBoundary>
+                <QueueProvider>
+                  <ErrorBoundary>
+                    <StatusBar style="light" />
+                    <GuestCityGate />
+                    <BiometricGate>
+                      <RootLayoutNav />
+                    </BiometricGate>
+                    {showBrandSplash && (
+                      <BrandSplash onFinish={() => setShowBrandSplash(false)} />
+                    )}
+                  </ErrorBoundary>
+                </QueueProvider>
               </DiscountsProvider>
             </PushProvider>
           </AuthProvider>
