@@ -1,4 +1,5 @@
 import { http, setToken } from "./http";
+import type { ApiEnvelope } from "./http";
 import { buildUploadFile } from "@/utils/prepareImageForUpload";
 import type { PickedImage } from "@/types/pickedImage";
 import type {
@@ -712,11 +713,45 @@ export const api = {
     brand?: string;
     lat: number;
     lng: number;
+    userLat: number;
+    userLng: number;
     cityId?: number;
     address?: string;
-  }): Promise<ApiResponse<Station>> {
+    fuel92?: boolean;
+    fuel95?: boolean;
+    fuelDt?: boolean;
+    fuelLpg?: boolean;
+    limitLiters?: number | null;
+  }): Promise<ApiResponse<Station & { existing?: boolean }>> {
     try {
-      const station = await http.post<Station>("/stations", data);
+      const res = await http.postEnvelope<Station>("/stations", data);
+      if (!res.success || !res.data) {
+        return fail(res.error ?? "Не удалось добавить АЗС");
+      }
+      return ok({ ...res.data, existing: res.existing });
+    } catch (err) {
+      return handleError(err);
+    }
+  },
+
+  async updateStation(
+    id: string,
+    data: {
+      lat: number;
+      lng: number;
+      name?: string;
+      brand?: string;
+      address?: string;
+      fuel92?: boolean;
+      fuel95?: boolean;
+      fuelDt?: boolean;
+      fuelLpg?: boolean;
+      limitLiters?: number | null;
+      note?: string;
+    }
+  ): Promise<ApiResponse<Station>> {
+    try {
+      const station = await http.patch<Station>(`/stations/${String(id)}`, data);
       return ok(station);
     } catch (err) {
       return handleError(err);

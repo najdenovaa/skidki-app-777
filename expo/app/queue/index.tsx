@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { Plus } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -30,6 +31,10 @@ export default function QueueScreen() {
     router.push("/queue/my");
   }, [router]);
 
+  const goToAddStation = useCallback(() => {
+    router.push("/queue/add");
+  }, [router]);
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.root, styles.center]} edges={["top"]}>
@@ -41,7 +46,13 @@ export default function QueueScreen() {
   return (
     <SafeAreaView style={styles.root} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Очередь на АЗС</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Очередь на АЗС</Text>
+          <Pressable onPress={goToAddStation} style={styles.addBtn}>
+            <Plus size={16} color={Colors.textInverse} strokeWidth={2.5} />
+            <Text style={styles.addBtnText}>Добавить</Text>
+          </Pressable>
+        </View>
         <View style={styles.segment}>
           <Pressable
             onPress={() => setMode("map")}
@@ -104,6 +115,18 @@ export default function QueueScreen() {
           refreshing={refreshing}
           onRefresh={onRefresh}
           contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Пока нет АЗС рядом</Text>
+              <Text style={styles.emptySubtitle}>
+                Стань первым и добавь станцию, которой нет на карте
+              </Text>
+              <Pressable onPress={goToAddStation} style={styles.emptyAddBtn}>
+                <Plus size={16} color={Colors.textInverse} strokeWidth={2.5} />
+                <Text style={styles.emptyAddBtnText}>Добавить АЗС</Text>
+              </Pressable>
+            </View>
+          }
         />
       )}
     </SafeAreaView>
@@ -125,11 +148,30 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 12,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   title: {
     fontSize: 22,
     fontWeight: "800" as const,
     color: Colors.text,
     letterSpacing: -0.4,
+  },
+  addBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  addBtnText: {
+    color: Colors.textInverse,
+    fontSize: 13,
+    fontWeight: "700" as const,
   },
   segment: {
     flexDirection: "row",
@@ -191,5 +233,39 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+    flexGrow: 1,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
+    gap: 8,
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "700" as const,
+    color: Colors.text,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: "center",
+  },
+  emptyAddBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  emptyAddBtnText: {
+    color: Colors.textInverse,
+    fontSize: 14,
+    fontWeight: "700" as const,
   },
 });

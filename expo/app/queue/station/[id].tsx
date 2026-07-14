@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Check, Send, X } from "lucide-react-native";
+import { Check, Pencil, Send, X } from "lucide-react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -229,6 +229,28 @@ export default function StationDetailScreen() {
                 </Pressable>
               )}
 
+              <Pressable
+                onPress={() =>
+                  isGuest
+                    ? Alert.alert(
+                        "Требуется авторизация",
+                        "Войди или зарегистрируйся, чтобы исправить информацию",
+                        [
+                          { text: "Войти", onPress: () => router.push("/auth/login") },
+                          { text: "Позже", style: "cancel" as const },
+                        ]
+                      )
+                    : router.push(`/queue/station/edit/${stationId}`)
+                }
+                style={styles.editBtn}
+              >
+                <Pencil size={14} color={Colors.textSecondary} />
+                <Text style={styles.editBtnText}>Исправить информацию</Text>
+              </Pressable>
+              <Text style={styles.updatedText}>
+                Данные от пользователей · обновлено {formatTimeAgo(station.updatedAt)}
+              </Text>
+
               <Text style={styles.chatLabel}>Чат станции</Text>
             </View>
           }
@@ -346,6 +368,26 @@ const styles = StyleSheet.create({
     textTransform: "uppercase" as const,
     letterSpacing: 0.4,
     marginTop: 4,
+  },
+  editBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: Colors.cardSecondary,
+    borderRadius: 12,
+    paddingVertical: 10,
+  },
+  editBtnText: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    color: Colors.textSecondary,
+  },
+  updatedText: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    textAlign: "center",
+    marginTop: -6,
   },
   chatList: {
     flex: 1,

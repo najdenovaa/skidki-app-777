@@ -95,6 +95,20 @@ function RootLayoutNav() {
       <Stack.Screen name="queue/index" options={{ title: "Очередь", headerShown: false }} />
       <Stack.Screen name="queue/station/[id]" options={{ title: "АЗС", headerShown: false }} />
       <Stack.Screen
+        name="queue/add"
+        options={{
+          title: "Добавить АЗС",
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="queue/station/edit/[id]"
+        options={{
+          title: "Исправить АЗС",
+          presentation: "modal",
+        }}
+      />
+      <Stack.Screen
         name="queue/my"
         options={{
           title: "Моя очередь",

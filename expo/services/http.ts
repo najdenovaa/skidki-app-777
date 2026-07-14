@@ -29,6 +29,14 @@ export async function setToken(token: string | null): Promise<void> {
   }
 }
 
+/** Full API response envelope, including flags like `existing`. */
+export interface ApiEnvelope<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  existing?: boolean;
+}
+
 /** Error thrown when the server responds with 401. */
 export class UnauthorizedError extends Error {
   constructor() {
@@ -141,5 +149,57 @@ export const http = {
   /** Upload multipart form data (no JSON content-type). Uses longer timeout for file uploads. */
   upload<T>(path: string, formData: FormData): Promise<T> {
     return request<T>("POST", path, formData, undefined, UPLOAD_TIMEOUT_MS);
+  },
+
+  /** POST that returns the full envelope (success/data/error/existing) instead of unwrapping `data`. */
+  async postEnvelope<T>(path: string, body?: unknown): Promise<ApiEnvelope<T>> {
+    const token = await getToken();
+    const fingerprint = await getDeviceFingerprint();
+
+    const headers: Record<string, string> = {
+      "X-Fingerprint": fingerprint,
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (body != null) headers["Content-Type"] = "application/json";
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+      const res = await fetch(`${ENV.API_URL}${path}`, {
+        method: "POST",
+        headers,
+        body: body != null ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+
+      if (res.status === 401) {
+        await setToken(null);
+        throw new UnauthorizedError();
+      }
+
+      const text = await res.text();
+      const parsed = text ? JSON.parse(text) : {};
+
+      if (!res.ok) {
+        return {
+          success: false,
+          error: parsed?.error ?? parsed?.message ?? `Ошибка ${res.status}`,
+        };
+      }
+
+      return parsed as ApiEnvelope<T>;
+    } catch (err: unknown) {
+      if (err instanceof UnauthorizedError) throw err;
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return { success: false, error: "Нет подключения к серверу" };
+      }
+      if (err instanceof TypeError && err.message.includes("Network")) {
+        return { success: false, error: "Нет подключения к серверу" };
+      }
+      return { success: false, error: err instanceof Error ? err.message : "Ошибка сервера" };
+    } finally {
+      clearTimeout(timeoutId);
+    }
   },
 };
